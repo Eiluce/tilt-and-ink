@@ -11,7 +11,7 @@ class Spinner {
     length = 70,
     height = 10,
     pointsPerRotation = 15,
-    texture = 'assets/spinner.svg',
+    texture,
     spriteScale = 0.25,
     onScore,
   }) {

@@ -54,5 +54,3 @@ The score shown is a test counter for now, not the game's real currency.
 | `src/missions.js` | Missions and ranks |
 | `src/lamps.js`, `src/effects.js` | Lit inserts, plunger, hit effects and title cards |
 | `src/physics.js`, `src/ramp.js`, `src/hole.js`, `src/slingshot.js`, `src/standups.js`, `src/flipper.js`, `src/bumper.js`, `src/spinner.js`, `src/dropTargets.js` | Physics helpers and table elements |
-
-The files in `assets/` are the earlier hand-drawn sprites and are no longer used by the game.

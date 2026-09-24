@@ -15,7 +15,7 @@ class DropTargetBank {
     points = 50,
     bonusPoints = 200,
     resetDelayMs = 1200,
-    texture = 'assets/drop-target.svg',
+    texture,
     spriteScale = 0.25,
     onScore,
     onCleared,

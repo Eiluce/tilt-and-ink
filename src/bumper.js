@@ -11,7 +11,7 @@ class Bumper {
     points = 25,
     kickSpeed = 7,
     label = 'bumper',
-    texture = 'assets/bumper.svg',
+    texture,
     // Sprite assets are drawn at 4x physics scale (radius*2*4 = image
     // width), so 0.25 is the default for every element built this way.
     spriteScale = 0.25,

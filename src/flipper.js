@@ -15,7 +15,7 @@ class Flipper {
       upSpeed = 0.55,
       downSpeed = 0.3,
       side = 'left',
-      texture = 'assets/flipper.svg',
+      texture,
       spriteScale = 0.25,
     } = options;
 
