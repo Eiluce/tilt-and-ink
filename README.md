@@ -41,10 +41,19 @@ You get 3 balls per turn. A ball that drains in the first 8 seconds after launch
 - **End-of-ball bonus:** shots and features also add to a bonus that is paid when the ball drains, times the bonus multiplier. Complete the R·O·W lanes to raise that multiplier, up to 5×.
 - **Tickets:** when a turn ends, its score is banked as Tickets (100 points = 1 Ticket), the currency the upgrade tree will spend. Your Tickets and best turn are saved in the browser.
 
-- **Ramps** advance the serial's chapter. At **Chapter V**, shoot the scoop under the UFO for a three-ball **saucer multiball**.
+- **Chapters and saucer multiball:** see below.
 - **R·O·W lanes** at the top: light all three letters to raise the end-of-ball bonus multiplier. Flipper buttons shift the lit letters.
 - **Drop targets 1-2-3**: every second time you clear them lights an **extra ball**. Collect it at the yellow kickout hole.
 - **Missions**: the side panel always offers one. Hit a standup target to switch to the next mission, and land in the kickout hole to accept it. Targets for the active mission pulse on the table. Completing missions promotes you from Cadet up to Admiral and unlocks harder missions. Your rank is saved in the browser and carries over between turns.
+
+### Chapters and saucer multiball
+
+Rocket Row is a movie serial in five chapters, shown by the I–V lights in the middle of the playfield. The next chapter's light blinks.
+
+- **Advancing:** each ramp shot that reaches the top of either ramp advances one chapter. Lighting all six standup targets (three on each side wall) also advances one chapter, and the standups then reset.
+- **Reward:** each new chapter scores 1,000 × its number (Chapter III pays 3,000, multiplied by your combo) and adds 1,000 to the end-of-ball bonus.
+- **Chapter V:** the UFO's tractor beam pulses and the scoop arrow blinks. Clear the 1-2-3 drop targets, then shoot the scoop under the UFO to start a three-ball **saucer multiball** worth a 10,000 jackpot. Until then, more ramps still score but don't add chapter points.
+- **Resetting:** starting multiball sends the chapters back to 0, so the serial starts again. Chapters carry over when you lose a ball, and reset when a new turn starts.
 
 ## Project layout
 
