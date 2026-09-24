@@ -125,6 +125,18 @@ Branches are mostly independent (build variety: a "combo rusher" vs. a "tanky ba
 
 ---
 
+**Implemented (`src/upgrades.js`, applied by `applyUpgrades()` in `src/main.js`):** 21 upgrades, 1–3 levels each, opened with U or the panel button (the game pauses; purchases apply immediately). Capstones need every other upgrade in their branch at level 1+ and 3,000 Tickets spent in other branches. Total cost ~40,000 Tickets, tuned for 2–3 hours on one table (first pass, needs playtesting).
+
+| Branch | Upgrades | Capstone |
+|---|---|---|
+| Flipper Mastery | Stronger Flippers (+10%/level swing speed), Springy Rubbers (bouncier resting flippers) | Perfect Flip: flip as the ball lands for a 25% faster shot |
+| Bumper Power | Loud Bumpers (+50%/level on pops, slings, standups), Super Pulse (10–20% SUPER hits worth 5×) | Chain Reaction: 30% chance a pop also fires another |
+| Combo & Multiplier | Longer Fuse (+0.75 s window/level), Higher Cap (×6, ×7), Bonus Head Start (bonus starts 2×/3×) | Hot Streak: combo never below ×2 |
+| Ball Control | Ball Saver (+4 s/level), Extra Balls (4, 5 per turn), Saved by the Bell (10–20% drain save) | Guardian Angel: first drain each turn always saved |
+| Charge & Skills | Ink Surge, Fast Charge (+25%/level), Slow Reels, Cheap Tricks (−15%/level cost), Bounce House, Magnet Mitt | Double Charge: meter holds two charges |
+
+Wider flippers were considered for Flipper Mastery and dropped: any extra length closes the centre drain gap entirely.
+
 ## 6. Active Skills
 
 Powered by a **charge meter** that fills from active play (bumper hits, drop-target clears, combo milestones) — mirrors a Cuphead-style super meter. Skills are unlocked as specific nodes in the **Charge & Skills** branch.
@@ -137,6 +149,8 @@ Powered by a **charge meter** that fills from active play (bumper hits, drop-tar
 4. *(capstone-tier)* **Magnet Mitt** — briefly pulls the ball toward the highest-value target on screen; highest charge cost, unlocked latest.
 
 Each skill has its own charge cost (not a shared cooldown), so a fully-built player can eventually stack multiple skill uses within a single hot streak.
+
+**Implemented (`src/skills.js`):** keys 1–4 or the panel buttons. Charge costs 35 / 45 / 75 / 60 out of a 100-point meter that empties each turn. Charge comes from play: slings and spinner 0.5, pops/standups/lanes 1, aimed shots 4, completed features 8, missions 20. Ink Surge doubles live scoring for 8 s; Slow Reels runs the table at 45% speed for 5 s; Bounce House feeds two balls from the scoop; Magnet Mitt steers balls for 3 s toward the lit scoop, else the active mission's target, else the UFO. The Charge & Skills capstone was changed from "two skills chargeable simultaneously" to "the meter holds two charges", which gives the same stacking.
 
 ---
 

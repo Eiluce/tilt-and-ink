@@ -28,6 +28,8 @@ You need an internet connection the first time, because the page loads [Matter.j
 | Hold <kbd>Space</kbd>, release | Pull the plunger and launch. A longer pull launches harder. |
 | <kbd>Z</kbd> or <kbd>←</kbd> | Left flipper |
 | <kbd>/</kbd> or <kbd>→</kbd> | Right flipper and the small upper-right flipper |
+| <kbd>1</kbd>–<kbd>4</kbd> | Fire a skill (once unlocked in the Upgrade Tree) |
+| <kbd>U</kbd> | Open or close the Upgrade Tree (pauses the game) |
 
 <kbd>↓</kbd> and <kbd>Enter</kbd> also work as the plunger.
 
@@ -55,6 +57,23 @@ Rocket Row is a movie serial in five chapters, shown by the I–V lights in the 
 - **Chapter V:** the UFO's tractor beam pulses and the scoop arrow blinks. Clear the 1-2-3 drop targets, then shoot the scoop under the UFO to start a three-ball **saucer multiball** worth a 10,000 jackpot. Until then, more ramps still score but don't add chapter points.
 - **Resetting:** starting multiball sends the chapters back to 0, so the serial starts again. Chapters carry over when you lose a ball, and reset when a new turn starts.
 
+## Upgrades and skills
+
+Tickets you bank at the end of each turn buy permanent upgrades. Press <kbd>U</kbd> (or click **Upgrade Tree** in the side panel) to open the tree. The game pauses while it's open, and upgrades apply straight away.
+
+The tree has five branches: **Flipper Mastery**, **Bumper Power**, **Combo & Multiplier**, **Ball Control** and **Charge & Skills**. Each ends in a ★ capstone that needs every other upgrade in its branch plus 3,000 Tickets spent in the other branches. Buying the whole tree costs about 40,000 Tickets, roughly 2–3 hours of play.
+
+The **Charge & Skills** branch unlocks four skills, powered by a charge meter that fills as you hit things (aimed shots and completed features fill it fastest) and empties at the start of each turn:
+
+| Key | Skill | Charge | Effect |
+|---|---|---|---|
+| <kbd>1</kbd> | Ink Surge | 35 | Double all scoring for 8 s |
+| <kbd>2</kbd> | Slow Reels | 45 | Slow motion for 5 s |
+| <kbd>3</kbd> | Bounce House | 75 | Two extra balls from the scoop |
+| <kbd>4</kbd> | Magnet Mitt | 60 | Pull the ball toward the best target for 3 s |
+
+Tickets, upgrades and rank are saved in the browser. **Reset all progress** at the bottom of the Upgrade Tree wipes them.
+
 ## Project layout
 
 | Path | What it holds |
@@ -65,5 +84,7 @@ Rocket Row is a movie serial in five chapters, shown by the I–V lights in the 
 | `src/main.js` | Table setup, rules, turns and input |
 | `src/scoring.js` | Point values, combo, end-of-ball bonus and Tickets |
 | `src/missions.js` | Missions and ranks |
+| `src/upgrades.js`, `src/upgradeScreen.js` | Upgrade Tree data, purchases and its screen |
+| `src/skills.js` | Charge meter and active skills |
 | `src/lamps.js`, `src/effects.js` | Lit inserts, plunger, hit effects and title cards |
 | `src/physics.js`, `src/ramp.js`, `src/hole.js`, `src/slingshot.js`, `src/standups.js`, `src/flipper.js`, `src/bumper.js`, `src/spinner.js`, `src/dropTargets.js` | Physics helpers and table elements |

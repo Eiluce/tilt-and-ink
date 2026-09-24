@@ -125,7 +125,7 @@ class MissionControl {
     this.active = null;
     this.completedIds.add(m.id);
     this.completedTotal += 1;
-    this.addScore(MISSION_REWARDS[m.tier], `mission: ${m.name}`, { flat: true, bonus: BONUS.mission });
+    this.addScore(MISSION_REWARDS[m.tier], `mission: ${m.name}`, { flat: true, bonus: BONUS.mission, charge: 'mission' });
     this.lastResult = { text: `${m.name} complete!`, until: performance.now() + 4000 };
 
     const newRank = this.rankFor(this.completedTotal);

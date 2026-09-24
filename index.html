@@ -17,6 +17,10 @@
     <div id="status"><span id="ball-info"></span><span id="combo">Combo ×1</span></div>
     <div id="combo-meter" aria-hidden="true"><div id="combo-bar"></div></div>
     <div id="bonus-line">End-of-ball bonus <b id="bonus">0</b> × <b id="bonus-x">1×</b></div>
+    <div id="skills" hidden>
+      <div class="charge-row"><span class="tag">Charge</span><div id="charge-meter"><div id="charge-bar"></div></div></div>
+      <div id="skill-list"></div>
+    </div>
     <div id="last-event"></div>
     <div id="message"></div>
     <section id="mission" aria-live="polite">
@@ -32,10 +36,12 @@
       <span>Tickets <b id="tickets">0</b></span>
       <span>Best turn <b id="best-turn">0</b></span>
     </div>
+    <button type="button" id="open-upgrades">Upgrade Tree <kbd>U</kbd> · <b id="upgrades-tickets">0</b> Tickets</button>
     <div id="hint">
       <p><kbd>Z</kbd> / <kbd>&larr;</kbd> left flipper</p>
       <p><kbd>/</kbd> / <kbd>&rarr;</kbd> right flippers</p>
       <p><kbd>Space</kbd> start turn · hold to pull the plunger</p>
+      <p><kbd>1</kbd>–<kbd>4</kbd> skills, once unlocked</p>
     </div>
   </aside>
   <div id="table-wrap">
@@ -43,6 +49,24 @@
     <canvas id="lamps"></canvas>
     <canvas id="table"></canvas>
     <canvas id="fx"></canvas>
+  </div>
+
+  <div id="upgrade-screen" hidden role="dialog" aria-modal="true" aria-labelledby="upgrade-title">
+    <div class="sheet">
+      <header>
+        <div>
+          <h2 id="upgrade-title">Upgrade Tree</h2>
+          <p>Spend Tickets on permanent upgrades. They apply straight away. The game is paused.</p>
+        </div>
+        <div class="balance"><span>Tickets</span><b class="tickets">0</b></div>
+        <button type="button" data-close>Close <kbd>U</kbd></button>
+      </header>
+      <div class="tree"></div>
+      <footer>
+        <span class="tree-total"></span>
+        <button type="button" data-reset>Reset all progress</button>
+      </footer>
+    </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
@@ -60,7 +84,10 @@
   <script src="src/lamps.js"></script>
   <script src="src/effects.js"></script>
   <script src="src/scoring.js"></script>
+  <script src="src/upgrades.js"></script>
+  <script src="src/skills.js"></script>
   <script src="src/missions.js"></script>
+  <script src="src/upgradeScreen.js"></script>
   <script src="src/main.js"></script>
 </body>
 </html>

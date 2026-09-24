@@ -47,10 +47,13 @@ Render.run(render);
 // so on a 120-144 Hz monitor the whole table ran 2-2.4x too fast, and a
 // single slow frame could sap a plunger launch.)
 const STEP_MS = 1000 / 60;
+const SLOW_REELS_RATE = 0.45; // game speed while the Slow Reels skill runs
 let lastFrame = performance.now();
 let pendingMs = 0;
+let paused = false; // while the Upgrade Tree is open
 function stepPhysics(now) {
-  pendingMs = Math.min(pendingMs + (now - lastFrame), 100);
+  const rate = paused ? 0 : skills.isActive('slowReels', now) ? SLOW_REELS_RATE : 1;
+  pendingMs = Math.min(pendingMs + (now - lastFrame) * rate, 100);
   lastFrame = now;
   while (pendingMs >= STEP_MS) {
     Engine.update(engine, STEP_MS);
@@ -93,8 +96,9 @@ World.add(world, plungerStop);
 
 // --- game state ------------------------------------------------------------
 
-const BALLS_PER_TURN = 3;
-const BALL_SAVE_MS = 8000;
+// Both set by the Ball Control branch of the Upgrade Tree.
+const ballsPerTurn = () => upgrades.effect('extraBalls');
+const ballSaveMs = () => upgrades.effect('ballSaver');
 const RAMP_CHAIN_MS = 4000; // left-then-right ramp window, for the Ramp Relay mission
 const ROMAN = ['I', 'II', 'III', 'IV', 'V'];
 
@@ -119,6 +123,8 @@ const balls = [];
 // --- HUD -------------------------------------------------------------------
 
 const scoring = new Scoring();
+const upgrades = new Upgrades(scoring);
+const skills = new Skills(upgrades);
 
 const scoreEl = document.getElementById('score');
 const ballInfoEl = document.getElementById('ball-info');
@@ -128,11 +134,14 @@ let lastEventTimer;
 let messageTimer;
 
 // Scores points through the combo and bonus rules in scoring.js. Options:
-// shot / flat / bonus (see Scoring.award), and `at` ({x, y}) to float the
-// points up from that spot on the table. Returns the points scored.
-function addScore(points, label, { at, ...opts } = {}) {
+// shot / flat / bonus (see Scoring.award), `at` ({x, y}) to float the points
+// up from that spot on the table, and `charge` (a CHARGE_GAIN kind in
+// skills.js; shots and features charge the meter by default). Returns the
+// points scored.
+function addScore(points, label, { at, charge, ...opts } = {}) {
   if (!game.turnActive) return 0;
   const total = scoring.award(points, opts);
+  skills.gain(charge || (opts.shot ? 'shot' : opts.bonus ? 'feature' : null));
   lastEventEl.textContent = `+${total.toLocaleString()} ${label}${scoring.combo > 1 && !opts.flat ? ` (combo ×${scoring.combo})` : ''}`;
   clearTimeout(lastEventTimer);
   lastEventTimer = setTimeout(() => {
@@ -230,7 +239,7 @@ function updateHud() {
     ballInfoEl.textContent = 'Press Space to start a turn';
     return;
   }
-  const total = BALLS_PER_TURN + game.extraBalls;
+  const total = ballsPerTurn() + game.extraBalls;
   ballInfoEl.textContent = `Ball ${game.ballNumber} of ${total}`;
 }
 
@@ -271,17 +280,36 @@ const pops = L.pops.map(([x, y]) => {
     points: POINTS.pop,
     label: 'pop bumper',
     texture: S.pop,
-    onScore: addScore,
+    onScore: (points, label) => addScore(points, label, { charge: 'pop' }),
   });
   on(pop.body, (ball) => {
     pop.hit(ball);
     missions.event('pop');
     const c = contactPoint(ball, pop.body);
     fx.ring(x, y, INK.red, L.popR, L.popR + 16);
-    fx.burst(c.x, c.y - 6, pick(BUMPER_WORDS));
+    // Super Pulse upgrade: some hits are worth 5x and kick harder.
+    if (Math.random() < upgrades.effect('superPulse')) {
+      addScore(pop.points * 4, 'SUPER pop', { at: { x, y: y - 24 }, charge: 'pop' });
+      fx.burst(c.x, c.y - 6, 'SUPER!', INK.red);
+      Body.setVelocity(ball, { x: ball.velocity.x * 1.3, y: ball.velocity.y * 1.3 });
+    } else {
+      fx.burst(c.x, c.y - 6, pick(BUMPER_WORDS));
+    }
+    // Chain Reaction capstone: sometimes another pop fires as well.
+    if (Math.random() < upgrades.effect('chainReaction')) chainPop(pop);
   });
   return pop;
 });
+
+function chainPop(from) {
+  const other = pick(pops.filter((p) => p !== from));
+  const { x, y } = other.body.position;
+  other.pulse = 1;
+  addScore(other.points, 'chain reaction', { charge: 'pop' });
+  missions.event('pop');
+  fx.ring(x, y, INK.mustard, L.popR, L.popR + 20);
+  fx.burst(x, y - 26, 'CHAIN!', INK.mustard);
+}
 
 const ufo = new Bumper(world, {
   x: L.ufo.x,
@@ -309,7 +337,7 @@ const spinner = new Spinner(world, {
   pointsPerRotation: POINTS.spinnerTurn,
   texture: S.spinner,
   onScore: (points, label) => {
-    addScore(points, label);
+    addScore(points, label, { charge: 'sling' });
     missions.event('spinner', points / POINTS.spinnerTurn);
   },
 });
@@ -353,7 +381,7 @@ const standups = new StandupBank(world, {
   height: L.standups.h,
   textures: S.standup,
   points: POINTS.standup,
-  onScore: addScore,
+  onScore: (points, label) => addScore(points, label, { charge: 'standup' }),
   onComplete: () => {
     addScore(POINTS.standupsComplete, 'standups complete', { bonus: BONUS.standupsComplete });
     advanceChapter();
@@ -367,9 +395,10 @@ for (const t of standups.targets) {
   });
 }
 
+const slingScore = (points, label) => addScore(points, label, { charge: 'sling' });
 const slings = [
-  new Slingshot(world, { vertices: L.slings.left, textures: S.slingLeft, points: POINTS.sling, onScore: addScore }),
-  new Slingshot(world, { vertices: L.slings.right, textures: S.slingRight, points: POINTS.sling, onScore: addScore }),
+  new Slingshot(world, { vertices: L.slings.left, textures: S.slingLeft, points: POINTS.sling, onScore: slingScore }),
+  new Slingshot(world, { vertices: L.slings.right, textures: S.slingRight, points: POINTS.sling, onScore: slingScore }),
 ];
 for (const sling of slings) {
   on(sling.body, (ball) => {
@@ -427,10 +456,8 @@ const scoop = new Hole(world, {
     announce('Saucer multiball!', 3000);
     fx.title('Saucer Multiball!', `Jackpot ${jackpot.toLocaleString()}`, 2000);
     fx.shake(450, 6);
-    game.ballSaveUntil = performance.now() + BALL_SAVE_MS;
-    for (let k = 1; k <= 2; k++) {
-      scoop.hold(createBall(L.scoop.x, L.scoop.y, 'held'), 1000 + k * 700);
-    }
+    game.ballSaveUntil = performance.now() + ballSaveMs();
+    feedBallsFromScoop(2);
   },
 });
 on(scoop.sensor, (ball) => scoop.capture(ball));
@@ -462,7 +489,7 @@ L.rolloverLanes.xs.forEach((x, i) => {
   const sensor = makeSensor(x, L.rolloverLanes.y, 6, 'lane');
   World.add(world, sensor);
   on(sensor, () => {
-    addScore(POINTS.lane, 'lane');
+    addScore(POINTS.lane, 'lane', { charge: 'lane' });
     missions.event('lane');
     if (game.row[i]) return;
     game.row[i] = true;
@@ -494,7 +521,7 @@ for (const [key, [points, label]] of Object.entries(ROLLOVERS)) {
   const sensor = makeSensor(L.rollovers[key], L.rollovers.y, 7, label);
   World.add(world, sensor);
   on(sensor, () => {
-    addScore(points, label);
+    addScore(points, label, { charge: 'lane' });
     game.rolloverFlash[key] = performance.now() + 1000;
   });
 }
@@ -517,6 +544,111 @@ const leftFlipper = makeFlipper(L.flippers.left, 'left', S.flipper);
 const rightFlipper = makeFlipper(L.flippers.right, 'right', S.flipper);
 const miniFlipper = makeFlipper(L.flippers.mini, 'mini', S.miniFlipper);
 const flippers = [leftFlipper, rightFlipper, miniFlipper];
+
+// Perfect Flip capstone: flipping just as the ball lands on a flipper sends
+// it 25% faster (briefly allowed past the usual speed cap).
+for (const f of flippers) on(f.body, () => { f.lastBallContact = performance.now(); });
+function perfectFlip(flipper) {
+  if (!upgrades.effect('perfectFlip')) return;
+  if (performance.now() - (flipper.lastBallContact || -Infinity) > 150) return;
+  setTimeout(() => {
+    for (const ball of balls) {
+      if (ball.plugin.mode !== 'playfield') continue;
+      const d = Math.hypot(ball.position.x - flipper.body.position.x, ball.position.y - flipper.body.position.y);
+      if (d > 55) continue;
+      ball.plugin.boostUntil = performance.now() + 400;
+      Body.setVelocity(ball, { x: ball.velocity.x * 1.25, y: ball.velocity.y * 1.25 });
+      fx.burst(ball.position.x, ball.position.y - 20, 'PERFECT!', INK.red);
+    }
+  }, 50);
+}
+
+// --- upgrades --------------------------------------------------------------------
+
+const FLIPPER_UP_SPEED = 0.55;
+
+// Pushes the current Upgrade Tree levels onto the table. Runs at start-up
+// and after every purchase, so upgrades apply immediately.
+function applyUpgrades() {
+  for (const f of flippers) {
+    f.upSpeed = FLIPPER_UP_SPEED * upgrades.effect('flipStrength');
+    f.body.restitution = upgrades.effect('springyRubbers');
+  }
+  const loud = upgrades.effect('bumperPoints');
+  for (const pop of pops) pop.points = Math.round(POINTS.pop * loud);
+  for (const sling of slings) sling.points = Math.round(POINTS.sling * loud);
+  standups.points = Math.round(POINTS.standup * loud);
+  scoring.comboWindowMs = upgrades.effect('comboFuse');
+  scoring.comboMax = upgrades.effect('comboCap');
+  scoring.comboFloor = upgrades.effect('hotStreak');
+  scoring.bonusXStart = upgrades.effect('bonusHeadStart');
+  skills.charge = Math.min(skills.charge, skills.max());
+  if (!game.turnActive) scoring.newBall();
+  updateHud();
+}
+upgrades.onChange(applyUpgrades);
+
+// --- skills ----------------------------------------------------------------------
+
+function feedBallsFromScoop(count) {
+  for (let k = 1; k <= count; k++) {
+    scoop.hold(createBall(L.scoop.x, L.scoop.y, 'held'), 400 + k * 600);
+  }
+}
+
+function useSkill(id) {
+  if (!game.turnActive || paused || !skills.use(id)) return;
+  const s = SKILLS.find((sk) => sk.id === id);
+  fx.title(s.name, s.desc, 1100);
+  if (id === 'bounceHouse') {
+    feedBallsFromScoop(2);
+    game.ballSaveUntil = Math.max(game.ballSaveUntil, performance.now() + 6000);
+  }
+}
+
+// Magnet Mitt pulls toward the most valuable target right now: the scoop
+// when multiball is lit, else the active mission's target, else the UFO.
+function magnetTarget() {
+  if (game.chapters >= 5) return L.scoop;
+  const key = missions.active ? missions.halos()[0] : null;
+  const spot = key && Lamps.HALO_SPOTS[key] ? Lamps.HALO_SPOTS[key][0] : null;
+  return spot ? { x: spot[0], y: spot[1] } : { x: L.ufo.x, y: L.ufo.y };
+}
+
+function steerToMagnet() {
+  const t = magnetTarget();
+  for (const ball of balls) {
+    if (ball.plugin.mode !== 'playfield') continue;
+    const dx = t.x - ball.position.x;
+    const dy = t.y - ball.position.y;
+    const d = Math.hypot(dx, dy) || 1;
+    Body.setVelocity(ball, {
+      x: ball.velocity.x * 0.94 + (dx / d) * 0.6,
+      y: ball.velocity.y * 0.94 + (dy / d) * 0.6,
+    });
+  }
+}
+
+function drawMagnet(ctx) {
+  const t = magnetTarget();
+  ctx.save();
+  ctx.strokeStyle = INK.red;
+  ctx.lineWidth = 2;
+  ctx.setLineDash([4, 5]);
+  ctx.lineDashOffset = -performance.now() / 30;
+  for (const ball of balls) {
+    if (ball.plugin.mode !== 'playfield') continue;
+    ctx.beginPath();
+    ctx.moveTo(ball.position.x, ball.position.y);
+    ctx.lineTo(t.x, t.y);
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.arc(t.x, t.y, 14, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
+}
 
 // --- balls & turns -------------------------------------------------------------
 
@@ -560,6 +692,8 @@ function startTurn() {
   drops.reset();
   missions.newTurn();
   scoring.newTurn();
+  skills.newTurn();
+  game.guardianUsed = false;
   announce('Hold Space to pull the plunger, release to launch', 4000);
   serveBall();
 }
@@ -574,7 +708,7 @@ function endBall() {
   fx.title(`Bonus ${b.bonus.toLocaleString()} × ${b.x}`, `= ${b.total.toLocaleString()} points`, BONUS_CARD_MS);
   scoring.newBall();
 
-  if (game.ballNumber >= BALLS_PER_TURN + game.extraBalls) {
+  if (game.ballNumber >= ballsPerTurn() + game.extraBalls) {
     game.turnActive = false;
     const earned = scoring.bankTurn();
     announce(`Turn over: ${scoring.score.toLocaleString()} points, +${earned.toLocaleString()} Tickets`, 0);
@@ -598,6 +732,19 @@ function removeBall(ball) {
     game.ballSaveUntil = 0;
     announce('Shoot again!');
     fx.title('Shoot Again!', 'Ball saved', 1200);
+    setTimeout(serveBall, 700);
+    return;
+  }
+  if (upgrades.effect('guardian') && !game.guardianUsed) {
+    game.guardianUsed = true;
+    announce('Guardian Angel!');
+    fx.title('Guardian Angel!', 'Ball returned, once per turn', 1300);
+    setTimeout(serveBall, 700);
+    return;
+  }
+  if (Math.random() < upgrades.effect('luckyDrain')) {
+    announce('Saved by the bell!');
+    fx.title('Saved by the Bell!', 'Ball returned', 1300);
     setTimeout(serveBall, 700);
     return;
   }
@@ -653,6 +800,8 @@ Events.on(engine, 'beforeUpdate', () => {
 
   missions.tick(STEP_MS, balls.some((b) => b.plugin.mode !== 'shooter'));
   scoring.tick(now);
+  scoring.surge = skills.isActive('inkSurge', now) ? 2 : 1;
+  if (skills.isActive('magnetMitt', now)) steerToMagnet();
 
   if (plunger.charging) plunger.pull = Math.min(1, plunger.pull + 0.025);
   if (plunger.releasing) {
@@ -682,7 +831,7 @@ Events.on(engine, 'beforeUpdate', () => {
         setBallMode(ball, 'playfield');
         if (game.saveArmed) {
           game.saveArmed = false;
-          game.ballSaveUntil = now + BALL_SAVE_MS;
+          game.ballSaveUntil = now + ballSaveMs();
         }
       }
     }
@@ -690,8 +839,9 @@ Events.on(engine, 'beforeUpdate', () => {
     // Speed cap keeps the ball readable and stops it tunnelling through thin
     // guides. The plunger launch is exempt: it needs the extra to clear the arch.
     const speed = Math.hypot(ball.velocity.x, ball.velocity.y);
-    if (speed > MAX_SPEED && ball.plugin.mode !== 'shooter') {
-      Body.setVelocity(ball, { x: (ball.velocity.x / speed) * MAX_SPEED, y: (ball.velocity.y / speed) * MAX_SPEED });
+    const cap = ball.plugin.boostUntil > now ? MAX_SPEED + 3 : MAX_SPEED;
+    if (speed > cap && ball.plugin.mode !== 'shooter') {
+      Body.setVelocity(ball, { x: (ball.velocity.x / speed) * cap, y: (ball.velocity.y / speed) * cap });
     }
 
     const drained = y > L.drainY && x < L.shooterWall.x;
@@ -752,8 +902,12 @@ Events.on(render, 'afterRender', () => {
   Effects.speedLines(lampLayer.ctx, balls);
   Lamps.letterDropTargets(render.context, drops);
   fx.draw(now);
+  if (skills.isActive('magnetMitt', now)) drawMagnet(fx.ctx);
+  tableWrap.classList.toggle('slow-reels', skills.isActive('slowReels', now));
+  tableWrap.classList.toggle('ink-surge', skills.isActive('inkSurge', now));
   updateMissionPanel(now);
   updateScorePanel(now);
+  updateSkillPanel(now);
 });
 
 // --- input -----------------------------------------------------------------------
@@ -771,16 +925,30 @@ function laneChange(dir) {
 }
 
 window.addEventListener('keydown', (event) => {
+  if (event.code === 'KeyU' || (event.code === 'Escape' && upgradeScreen.isOpen)) {
+    upgradeScreen.toggle();
+    return;
+  }
+  if (paused) return;
   if (LEFT_KEYS.has(event.code) || RIGHT_KEYS.has(event.code) || PLUNGER_KEYS.has(event.code)) event.preventDefault();
   if (LEFT_KEYS.has(event.code)) {
     leftFlipper.setActive(true);
-    if (!event.repeat) laneChange(-1);
+    if (!event.repeat) {
+      laneChange(-1);
+      perfectFlip(leftFlipper);
+    }
   }
   if (RIGHT_KEYS.has(event.code)) {
     rightFlipper.setActive(true);
     miniFlipper.setActive(true);
-    if (!event.repeat) laneChange(1);
+    if (!event.repeat) {
+      laneChange(1);
+      perfectFlip(rightFlipper);
+      perfectFlip(miniFlipper);
+    }
   }
+  const skill = SKILLS.find((s) => s.key === event.code);
+  if (skill && !event.repeat) useSkill(skill.id);
   if (PLUNGER_KEYS.has(event.code) && !event.repeat) {
     if (!game.turnActive) startTurn();
     else if (balls.some(ballInShooterLane)) plunger.charging = true;
@@ -796,10 +964,75 @@ window.addEventListener('keyup', (event) => {
   if (PLUNGER_KEYS.has(event.code) && plunger.charging) releasePlunger();
 });
 
+// --- Upgrade Tree screen and skill panel ------------------------------------------
+
+const tableWrap = document.getElementById('table-wrap');
+
+const upgradeScreen = new UpgradeScreen({
+  root: document.getElementById('upgrade-screen'),
+  upgrades,
+  scoring,
+  onToggle: (open) => {
+    paused = open;
+    if (open) {
+      for (const f of flippers) f.setActive(false);
+      plunger.charging = false;
+    }
+  },
+});
+
+// Clicking a HUD button must not leave it focused, or Space (the plunger)
+// would press it again.
+function hudButton(el, fn) {
+  el.addEventListener('mousedown', (e) => e.preventDefault());
+  el.addEventListener('click', (e) => {
+    fn(e);
+    el.blur();
+  });
+}
+hudButton(document.getElementById('open-upgrades'), () => upgradeScreen.open());
+
+const skillsEl = document.getElementById('skills');
+const skillListEl = document.getElementById('skill-list');
+const chargeBarEl = document.getElementById('charge-bar');
+const upgradesTicketsEl = document.getElementById('upgrades-tickets');
+skillListEl.innerHTML = SKILLS.map((s) => `<button type="button" tabindex="-1" data-skill="${s.id}"><kbd>${s.label}</kbd> <span class="name">${s.name}</span> <span class="cost"></span></button>`).join('');
+for (const btn of skillListEl.querySelectorAll('button')) hudButton(btn, () => useSkill(btn.dataset.skill));
+
+let lastSkillView = '';
+function updateSkillPanel(now) {
+  const v = {
+    show: skills.anyUnlocked(),
+    charge: Math.floor(skills.charge),
+    max: skills.max(),
+    tickets: scoring.tickets,
+    list: SKILLS.map((s) => [skills.isUnlocked(s.id), skills.cost(s.id), skills.canUse(s.id, now) && game.turnActive, Math.ceil(skills.timeLeft(s.id, now) / 1000)]),
+  };
+  const key = JSON.stringify(v);
+  if (key === lastSkillView) return;
+  lastSkillView = key;
+  upgradesTicketsEl.textContent = v.tickets.toLocaleString();
+  skillsEl.hidden = !v.show;
+  chargeBarEl.style.width = `${(v.charge / v.max) * 100}%`;
+  chargeBarEl.parentElement.classList.toggle('double', v.max > 100);
+  SKILLS.forEach((s, i) => {
+    const [unlocked, cost, ready, secs] = v.list[i];
+    const btn = skillListEl.children[i];
+    btn.hidden = !unlocked;
+    btn.disabled = !ready;
+    btn.classList.toggle('active', secs > 0);
+    btn.querySelector('.cost').textContent = secs > 0 ? `${secs}s` : cost;
+  });
+}
+
+applyUpgrades();
+
 // Test hooks for poking at the table from the console.
 Object.assign(window, {
   __game: game,
   __scoring: scoring,
+  __upgrades: upgrades,
+  __skills: skills,
   __balls: balls,
   __world: world,
   __createBall: createBall,

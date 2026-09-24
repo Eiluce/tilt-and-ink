@@ -66,7 +66,14 @@ const BANK_SAVE_KEY = 'tilt-and-ink.bank';
 class Scoring {
   constructor() {
     this.tickets = 0;
+    this.lifetimeTickets = 0; // for table unlock milestones later
     this.bestTurn = 0;
+    // Tuned by the Upgrade Tree (see applyUpgrades in main.js).
+    this.comboWindowMs = COMBO.windowMs;
+    this.comboMax = COMBO.max;
+    this.comboFloor = 1;
+    this.bonusXStart = 1;
+    this.surge = 1; // Ink Surge skill: 2 while active
     this.load();
     this.newTurn();
   }
@@ -78,22 +85,24 @@ class Scoring {
 
   newBall() {
     this.bonus = 0;
-    this.bonusX = 1;
-    this.combo = 1;
+    this.bonusX = this.bonusXStart;
+    this.combo = this.comboFloor;
     this.lastShotAt = -Infinity;
   }
 
   // Adds points and returns what was actually scored.
   //  shot:  an aimed shot; builds the combo
-  //  flat:  not multiplied by the combo (mission and rank rewards)
+  //  flat:  not multiplied by the combo or Ink Surge (mission and rank rewards)
   //  bonus: amount added to the end-of-ball bonus pool
   award(points, { shot = false, flat = false, bonus = 0 } = {}) {
     if (shot) {
       const now = performance.now();
-      this.combo = now - this.lastShotAt <= COMBO.windowMs ? Math.min(COMBO.max, this.combo + 1) : 1;
+      this.combo = now - this.lastShotAt <= this.comboWindowMs
+        ? Math.min(this.comboMax, this.combo + 1)
+        : this.comboFloor;
       this.lastShotAt = now;
     }
-    const total = flat ? points : points * this.combo;
+    const total = flat ? points : points * this.combo * this.surge;
     this.score += total;
     this.bonus += bonus;
     return total;
@@ -101,13 +110,14 @@ class Scoring {
 
   // Called every tick: the combo lapses once the window has passed.
   tick(now) {
-    if (this.combo > 1 && now - this.lastShotAt > COMBO.windowMs) this.combo = 1;
+    if (this.combo > this.comboFloor && now - this.lastShotAt > this.comboWindowMs) this.combo = this.comboFloor;
+    if (this.combo < this.comboFloor) this.combo = this.comboFloor;
   }
 
   // 1 when a shot just landed, falling to 0 as the combo window runs out.
   comboTimeLeft(now) {
-    if (this.combo <= 1) return 0;
-    return Math.max(0, 1 - (now - this.lastShotAt) / COMBO.windowMs);
+    if (this.combo <= this.comboFloor) return 0;
+    return Math.max(0, 1 - (now - this.lastShotAt) / this.comboWindowMs);
   }
 
   raiseBonusX() {
@@ -126,6 +136,7 @@ class Scoring {
   bankTurn() {
     const earned = Math.floor(this.score / POINTS_PER_TICKET);
     this.tickets += earned;
+    this.lifetimeTickets += earned;
     this.bestTurn = Math.max(this.bestTurn, this.score);
     this.save();
     return earned;
@@ -136,6 +147,7 @@ class Scoring {
       const saved = JSON.parse(localStorage.getItem(BANK_SAVE_KEY));
       if (!saved) return;
       this.tickets = Number(saved.tickets) || 0;
+      this.lifetimeTickets = Number(saved.lifetimeTickets) || this.tickets;
       this.bestTurn = Number(saved.bestTurn) || 0;
     } catch (e) {
       // No storage available: the bank starts empty each visit.
@@ -144,7 +156,11 @@ class Scoring {
 
   save() {
     try {
-      localStorage.setItem(BANK_SAVE_KEY, JSON.stringify({ tickets: this.tickets, bestTurn: this.bestTurn }));
+      localStorage.setItem(BANK_SAVE_KEY, JSON.stringify({
+        tickets: this.tickets,
+        lifetimeTickets: this.lifetimeTickets,
+        bestTurn: this.bestTurn,
+      }));
     } catch (e) {
       // Tickets just won't survive a reload.
     }

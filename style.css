@@ -59,6 +59,8 @@ body {
 
 #hud {
   width: 240px;
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
   background: var(--paper);
   color: var(--ink);
   border: 4px solid var(--ink);
@@ -271,4 +273,366 @@ kbd {
   border-radius: 4px;
   padding: 1px 6px;
   font-family: 'Special Elite', monospace;
+}
+
+/* --- charge meter and skills ------------------------------------------- */
+
+.charge-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.charge-row .tag {
+  font-family: 'Special Elite', 'Courier New', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--red);
+}
+
+#charge-meter {
+  position: relative;
+  flex: 1;
+  height: 10px;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+}
+
+/* With Double Charge the meter holds two charges: mark the halfway point. */
+#charge-meter.double::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -2px;
+  bottom: -2px;
+  border-left: 2px solid var(--ink);
+}
+
+#charge-bar {
+  height: 100%;
+  width: 0;
+  background: var(--mustard);
+  transition: width 0.15s;
+}
+
+#skill-list {
+  display: grid;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+#skill-list button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font: 600 13px 'Fredoka', sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  padding: 3px 6px;
+  cursor: pointer;
+  text-align: left;
+}
+
+#skill-list button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+#skill-list button.active {
+  opacity: 1;
+  background: var(--red);
+  color: var(--paper);
+}
+
+#skill-list .name {
+  flex: 1;
+}
+
+#skill-list .cost {
+  font-family: 'Special Elite', monospace;
+  font-size: 12px;
+}
+
+#open-upgrades {
+  margin-top: 10px;
+  font: 600 14px 'Fredoka', sans-serif;
+  color: var(--paper);
+  background: var(--ink);
+  border: none;
+  border-radius: 4px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+#open-upgrades kbd {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+#open-upgrades b {
+  font-family: 'Rye', Georgia, serif;
+  font-weight: 400;
+  color: var(--mustard);
+}
+
+#open-upgrades:hover,
+#open-upgrades:focus-visible {
+  background: var(--red);
+}
+
+/* Skill effects on the table */
+#table-wrap.slow-reels {
+  filter: sepia(0.55) contrast(1.05);
+}
+
+#table-wrap.ink-surge {
+  box-shadow: 0 0 0 4px var(--red), 0 16px 36px rgba(0, 0, 0, 0.6);
+}
+
+/* --- Upgrade Tree screen -------------------------------------------------- */
+
+#upgrade-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: rgba(23, 19, 15, 0.88);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-y: auto;
+  padding: 24px 16px;
+}
+
+#upgrade-screen[hidden] {
+  display: none;
+}
+
+#upgrade-screen .sheet {
+  width: min(1240px, 100%);
+  background: var(--paper);
+  color: var(--ink);
+  border: 4px solid var(--ink);
+  border-radius: 8px;
+  box-shadow: inset 0 0 0 3px var(--paper), inset 0 0 0 5px var(--red);
+  padding: 22px 24px;
+}
+
+#upgrade-screen header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 28px;
+  margin-bottom: 18px;
+}
+
+#upgrade-screen header > div:first-child {
+  flex: 1;
+  min-width: 240px;
+}
+
+#upgrade-screen h2 {
+  margin: 0;
+  font: 400 30px 'Rye', Georgia, serif;
+  color: var(--red);
+}
+
+#upgrade-screen header p {
+  margin: 4px 0 0;
+  font-size: 14px;
+}
+
+#upgrade-screen .balance {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: 'Special Elite', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+#upgrade-screen .balance b {
+  font: 400 28px 'Rye', Georgia, serif;
+  font-variant-numeric: tabular-nums;
+}
+
+#upgrade-screen button {
+  font: 600 13px 'Fredoka', sans-serif;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+#upgrade-screen [data-close] {
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  padding: 8px 12px;
+}
+
+#upgrade-screen [data-close] kbd {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.tree {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(210px, 1fr));
+  gap: 14px;
+  overflow-x: auto;
+  padding-bottom: 6px;
+}
+
+.branch h3 {
+  margin: 0;
+  font: 400 17px 'Rye', Georgia, serif;
+}
+
+.branch .spent {
+  font-family: 'Special Elite', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  opacity: 0.7;
+  margin-bottom: 10px;
+}
+
+.node {
+  position: relative;
+  background: var(--aged);
+  border: 2px solid var(--ink);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 18px;
+}
+
+/* connector down to the next upgrade in the branch */
+.node + .node::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -20px;
+  height: 18px;
+  border-left: 2px dashed var(--ink);
+}
+
+.node.capstone {
+  border-color: var(--red);
+  border-width: 3px;
+  background: var(--paper);
+}
+
+.node.capstone h4::before {
+  content: '★ ';
+  color: var(--red);
+}
+
+.node.locked {
+  opacity: 0.7;
+}
+
+.node.maxed {
+  background: #d6e6de;
+}
+
+.node header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+}
+
+.node h4 {
+  margin: 0;
+  font: 600 15px 'Fredoka', sans-serif;
+}
+
+.pips {
+  display: flex;
+  gap: 3px;
+}
+
+.pips i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+}
+
+.pips i.on {
+  background: var(--teal);
+}
+
+.node p {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.node .now {
+  color: var(--teal);
+  font-weight: 600;
+}
+
+.node button[data-buy] {
+  margin-top: 8px;
+  width: 100%;
+  background: var(--red);
+  color: var(--paper);
+  border: 2px solid var(--ink);
+  padding: 6px;
+}
+
+.node button[data-buy]:disabled {
+  background: var(--paper);
+  color: var(--ink);
+  opacity: 0.6;
+  cursor: default;
+}
+
+.node .maxed {
+  margin-top: 8px;
+  font-family: 'Special Elite', monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+
+.node .reasons {
+  margin: 8px 0 0;
+  padding-left: 16px;
+  font-size: 12px;
+  color: var(--red);
+}
+
+#upgrade-screen footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 2px dashed var(--ink);
+  font-size: 13px;
+}
+
+#upgrade-screen [data-reset] {
+  background: none;
+  border: 2px solid var(--ink);
+  color: var(--ink);
+  padding: 5px 10px;
+}
+
+#upgrade-screen [data-reset].armed {
+  background: var(--red);
+  color: var(--paper);
+}
+
+#upgrade-screen button:focus-visible,
+#skill-list button:focus-visible {
+  outline: 3px solid var(--teal);
+  outline-offset: 2px;
 }
