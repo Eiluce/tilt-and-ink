@@ -39,7 +39,7 @@ You get 3 balls per turn. A ball that drains in the first 8 seconds after launch
 - **Left then right ramp** (or right then left) within 4 seconds pays double.
 - **R·O·W lanes** at the top: light all three letters to raise the bonus multiplier, up to 5×. Flipper buttons shift the lit letters.
 - **Drop targets 1-2-3**: every second time you clear them lights an **extra ball**. Collect it at the yellow kickout hole.
-- **Missions**: the side panel always offers one. Hit a standup target to switch to the next mission, and land in the kickout hole to accept it. Targets for the active mission pulse on the table. Completing missions promotes you from Cadet up to Admiral and unlocks harder missions.
+- **Missions**: the side panel always offers one. Hit a standup target to switch to the next mission, and land in the kickout hole to accept it. Targets for the active mission pulse on the table. Completing missions promotes you from Cadet up to Admiral and unlocks harder missions. Your rank is saved in the browser and carries over between turns.
 
 The score shown is a test counter for now, not the game's real currency.
 

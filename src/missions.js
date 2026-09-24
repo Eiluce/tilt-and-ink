@@ -4,7 +4,11 @@
 // events (ramps, pops, drop banks...), some against the clock. Completing
 // missions promotes the player up the ranks, which unlocks harder missions.
 //
-// Missions and rank last for one turn.
+// Rank and the list of completed missions carry over from turn to turn and
+// are saved in localStorage, so they survive a reload. A mission in progress
+// ends with the turn.
+
+const MISSION_SAVE_KEY = 'tilt-and-ink.missions';
 
 const RANKS = [
   { name: 'Cadet', missions: 0 },
@@ -38,17 +42,45 @@ class MissionControl {
     this.addScore = addScore;
     this.fx = fx;
     this.announce = announce;
-    this.reset();
-  }
-
-  reset() {
     this.completedTotal = 0;
     this.completedIds = new Set();
-    this.rank = 0;
+    this.load();
+    this.rank = this.rankFor(this.completedTotal);
+    this.newTurn();
+  }
+
+  // Start of a turn: drop any unfinished mission, keep rank and progress.
+  newTurn() {
     this.active = null; // { mission, progress, timeLeftMs }
     this.offerIndex = 0;
     this.offered = this.pool()[0];
     this.lastResult = null; // { text, until } shown briefly in the panel
+  }
+
+  rankFor(completed) {
+    return RANKS.reduce((r, rank, i) => (completed >= rank.missions ? i : r), 0);
+  }
+
+  load() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(MISSION_SAVE_KEY));
+      if (!saved) return;
+      this.completedTotal = Number(saved.completedTotal) || 0;
+      this.completedIds = new Set(Array.isArray(saved.completedIds) ? saved.completedIds : []);
+    } catch (e) {
+      // No storage (private window, blocked site data): start fresh.
+    }
+  }
+
+  save() {
+    try {
+      localStorage.setItem(MISSION_SAVE_KEY, JSON.stringify({
+        completedTotal: this.completedTotal,
+        completedIds: [...this.completedIds],
+      }));
+    } catch (e) {
+      // Progress just won't survive a reload.
+    }
   }
 
   // Missions available at the current rank that haven't been done yet this
@@ -95,7 +127,8 @@ class MissionControl {
     this.addScore(m.reward, `mission: ${m.name}`);
     this.lastResult = { text: `${m.name} complete!`, until: performance.now() + 4000 };
 
-    const newRank = RANKS.reduce((r, rank, i) => (this.completedTotal >= rank.missions ? i : r), 0);
+    const newRank = this.rankFor(this.completedTotal);
+    this.save();
     if (newRank > this.rank) {
       this.rank = newRank;
       this.addScore(2500 * newRank, 'promotion');

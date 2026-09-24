@@ -175,7 +175,14 @@ let lastMissionView = '';
 function updateMissionPanel(now) {
   const v = game.turnActive
     ? missions.view(now)
-    : { rank: '—', toNext: '', label: 'Missions', name: 'Start a turn', goal: 'Hit a standup to pick a mission, then land in the kickout hole to accept it.', progress: 0, count: '', status: '', urgent: false };
+    : {
+      ...missions.view(now),
+      label: 'Missions',
+      name: 'Start a turn',
+      goal: 'Hit a standup to pick a mission, then land in the kickout hole to accept it.',
+      count: '',
+      status: '',
+    };
   const key = JSON.stringify(v);
   if (key === lastMissionView) return;
   lastMissionView = key;
@@ -521,7 +528,7 @@ function startTurn() {
   });
   standups.reset();
   drops.reset();
-  missions.reset();
+  missions.newTurn();
   scoreEl.textContent = '0';
   announce('Hold Space to pull the plunger, release to launch', 4000);
   serveBall();

@@ -140,7 +140,7 @@ In-turn objectives in the style of *3D Pinball Space Cadet*, implemented in `src
 - A mission is always **offered** in the HUD panel; hitting any standup target cycles to the next one, and landing in the **kickout saucer** accepts it.
 - Each mission is one objective counted from table events (ramp shots, pop hits, drop-bank clears, orbits, R·O·W lanes, spinner turns, UFO hits, scoop shots), some with a time limit. The clock only runs while a ball is in play. The targets involved pulse with a dashed halo on the playfield.
 - Completing missions pays a reward and promotes the player through **ranks** (Cadet → Ensign → Lieutenant → Captain → Commander → Admiral); each rank unlocks a harder tier of missions.
-- Missions and rank currently last one turn. Open question: whether rank should persist across turns and feed the Upgrade Tree or Prestige.
+- Rank and completed missions persist across turns and reloads (localStorage key `tilt-and-ink.missions`); a mission in progress ends with the turn. Open question: whether rank should feed the Upgrade Tree or reset on Prestige.
 
 ## 7. Prestige
 
