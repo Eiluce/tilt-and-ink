@@ -12,9 +12,11 @@
   <aside id="hud">
     <div id="table-name">Rocket Row</div>
     <div id="chapter-line">Chapter one · The Saucer Men</div>
-    <div id="score-label">Score (test only, not Tickets yet)</div>
+    <div id="score-label">Score</div>
     <div id="score">0</div>
-    <div id="status"><span id="ball-info"></span><span id="mult"></span></div>
+    <div id="status"><span id="ball-info"></span><span id="combo">Combo ×1</span></div>
+    <div id="combo-meter" aria-hidden="true"><div id="combo-bar"></div></div>
+    <div id="bonus-line">End-of-ball bonus <b id="bonus">0</b> × <b id="bonus-x">1×</b></div>
     <div id="last-event"></div>
     <div id="message"></div>
     <section id="mission" aria-live="polite">
@@ -26,6 +28,10 @@
       <div class="progress"><div id="mission-bar"></div><span id="mission-count"></span></div>
       <div id="mission-status"></div>
     </section>
+    <div id="bank">
+      <span>Tickets <b id="tickets">0</b></span>
+      <span>Best turn <b id="best-turn">0</b></span>
+    </div>
     <div id="hint">
       <p><kbd>Z</kbd> / <kbd>&larr;</kbd> left flipper</p>
       <p><kbd>/</kbd> / <kbd>&rarr;</kbd> right flippers</p>
@@ -53,6 +59,7 @@
   <script src="src/standups.js"></script>
   <script src="src/lamps.js"></script>
   <script src="src/effects.js"></script>
+  <script src="src/scoring.js"></script>
   <script src="src/missions.js"></script>
   <script src="src/main.js"></script>
 </body>

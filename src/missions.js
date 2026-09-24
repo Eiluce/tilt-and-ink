@@ -22,19 +22,20 @@ const RANKS = [
 // event: what counts toward the goal (see MissionControl.event callers in
 // main.js). tier: the rank index needed before it's offered. seconds: time
 // limit, if any. halos: which table features pulse while it's active.
+// The reward is MISSION_REWARDS[tier] (scoring.js).
 const MISSIONS = [
-  { id: 'flight', name: 'Flight School', goal: 'Make 3 ramp shots', event: 'ramp', count: 3, tier: 0, reward: 1500, halos: ['ramps'] },
-  { id: 'asteroids', name: 'Asteroid Field', goal: 'Hit the pop bumpers 15 times', event: 'pop', count: 15, seconds: 35, tier: 0, reward: 1500, halos: ['pops'] },
-  { id: 'target', name: 'Target Practice', goal: 'Clear the 1-2-3 drop targets', event: 'dropBank', count: 1, tier: 0, reward: 1500, halos: ['drops'] },
-  { id: 'orbit', name: 'Orbit Run', goal: 'Shoot the left orbit twice', event: 'orbit', count: 2, tier: 1, reward: 2500, halos: ['orbit'] },
-  { id: 'radio', name: 'Radio Contact', goal: 'Roll through the R·O·W lanes 5 times', event: 'lane', count: 5, tier: 1, reward: 2500, halos: ['lanes'] },
-  { id: 'satellite', name: 'Satellite Sweep', goal: 'Spin the orbit spinner 15 times', event: 'spinner', count: 15, tier: 1, reward: 2500, halos: ['spinner'] },
-  { id: 'saucer', name: 'Saucer Chase', goal: 'Hit the UFO 6 times', event: 'ufo', count: 6, seconds: 40, tier: 2, reward: 4000, halos: ['ufo'] },
-  { id: 'relay', name: 'Ramp Relay', goal: 'Make 2 left-right ramp combos', event: 'rampCombo', count: 2, seconds: 45, tier: 2, reward: 4000, halos: ['ramps'] },
-  { id: 'rescue', name: 'Tractor Beam Rescue', goal: 'Shoot the UFO scoop twice', event: 'scoop', count: 2, tier: 2, reward: 4000, halos: ['drops', 'scoop'] },
-  { id: 'cliffhanger', name: 'Cliffhanger', goal: 'Clear the drop targets 3 times', event: 'dropBank', count: 3, seconds: 60, tier: 3, reward: 6000, halos: ['drops'] },
-  { id: 'doubleFeature', name: 'Double Feature', goal: 'Make 5 ramp shots', event: 'ramp', count: 5, seconds: 45, tier: 3, reward: 6000, halos: ['ramps'] },
-  { id: 'finale', name: 'The Grand Finale', goal: 'Hit the UFO 10 times', event: 'ufo', count: 10, seconds: 45, tier: 4, reward: 10000, halos: ['ufo'] },
+  { id: 'flight', name: 'Flight School', goal: 'Make 3 ramp shots', event: 'ramp', count: 3, tier: 0, halos: ['ramps'] },
+  { id: 'asteroids', name: 'Asteroid Field', goal: 'Hit the pop bumpers 15 times', event: 'pop', count: 15, seconds: 35, tier: 0, halos: ['pops'] },
+  { id: 'target', name: 'Target Practice', goal: 'Clear the 1-2-3 drop targets', event: 'dropBank', count: 1, tier: 0, halos: ['drops'] },
+  { id: 'orbit', name: 'Orbit Run', goal: 'Shoot the left orbit twice', event: 'orbit', count: 2, tier: 1, halos: ['orbit'] },
+  { id: 'radio', name: 'Radio Contact', goal: 'Roll through the R·O·W lanes 5 times', event: 'lane', count: 5, tier: 1, halos: ['lanes'] },
+  { id: 'satellite', name: 'Satellite Sweep', goal: 'Spin the orbit spinner 15 times', event: 'spinner', count: 15, tier: 1, halos: ['spinner'] },
+  { id: 'saucer', name: 'Saucer Chase', goal: 'Hit the UFO 6 times', event: 'ufo', count: 6, seconds: 40, tier: 2, halos: ['ufo'] },
+  { id: 'relay', name: 'Ramp Relay', goal: 'Make a ramp, then the other one while its arrow blinks, twice', event: 'rampCombo', count: 2, seconds: 45, tier: 2, halos: ['ramps'] },
+  { id: 'rescue', name: 'Tractor Beam Rescue', goal: 'Shoot the UFO scoop twice', event: 'scoop', count: 2, tier: 2, halos: ['drops', 'scoop'] },
+  { id: 'cliffhanger', name: 'Cliffhanger', goal: 'Clear the drop targets 3 times', event: 'dropBank', count: 3, seconds: 60, tier: 3, halos: ['drops'] },
+  { id: 'doubleFeature', name: 'Double Feature', goal: 'Make 5 ramp shots', event: 'ramp', count: 5, seconds: 45, tier: 3, halos: ['ramps'] },
+  { id: 'finale', name: 'The Grand Finale', goal: 'Hit the UFO 10 times', event: 'ufo', count: 10, seconds: 45, tier: 4, halos: ['ufo'] },
 ];
 
 class MissionControl {
@@ -124,14 +125,14 @@ class MissionControl {
     this.active = null;
     this.completedIds.add(m.id);
     this.completedTotal += 1;
-    this.addScore(m.reward, `mission: ${m.name}`);
+    this.addScore(MISSION_REWARDS[m.tier], `mission: ${m.name}`, { flat: true, bonus: BONUS.mission });
     this.lastResult = { text: `${m.name} complete!`, until: performance.now() + 4000 };
 
     const newRank = this.rankFor(this.completedTotal);
     this.save();
     if (newRank > this.rank) {
       this.rank = newRank;
-      this.addScore(2500 * newRank, 'promotion');
+      this.addScore(POINTS.promotion * newRank, 'promotion', { flat: true });
       this.fx.title(`Promoted to ${RANKS[newRank].name}!`, `${m.name} complete`, 2200);
       this.fx.shake(300, 4);
     } else {

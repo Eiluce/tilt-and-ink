@@ -63,6 +63,13 @@ Two currencies, deliberately simple:
 - Tickets are a **single shared pool** across every unlocked table — a bumper hit on Table 3 and a bumper hit on Table 1 both pay into the same bank. This keeps balancing simple and every upgrade universally useful, per the "shared currency, unified tree" decision.
 - In-turn scoring uses a **combo multiplier** that rises with consecutive successful shots (bumpers/targets/ramps in quick succession) and decays if the ball goes quiet — rewards active, connected play without needing a tilt-risk mechanic.
 
+**Implemented scoring (`src/scoring.js`, all values in one place so upgrades can scale them):**
+
+- **Base values in 10× tiers:** contact 10–50 (slings, spinner turn, pops, standups, lanes) · target 100–250 (drop target, UFO, kickout) · shot 500–750 (ramp, orbit, scoop) · feature 1,000–5,000 (drop bank, R·O·W, standup set, chapter × its number) · jackpot 10,000–50,000 (saucer jackpot, missions by tier, promotion × rank).
+- **Combo ×1–×5:** each aimed shot (drop target, UFO, kickout, ramp, orbit, scoop) within 3 s of the previous one raises it; it falls back to ×1 after 3 quiet seconds. It multiplies everything scored live except mission and rank rewards. Bumpers and slings never raise it.
+- **End-of-ball bonus:** shots and features also add to a bonus pool, paid when the ball drains times the bonus multiplier (×1–×5, raised by completing R·O·W, reset each ball), as on a real machine.
+- **Tickets:** at the end of a turn its score banks as Tickets at 100 points = 1 Ticket, saved in localStorage with the best turn score.
+
 ---
 
 ## 4. The Table

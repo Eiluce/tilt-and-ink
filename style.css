@@ -113,8 +113,47 @@ body {
   font-size: 14px;
 }
 
-#mult {
+#combo {
+  color: var(--ink);
+  opacity: 0.5;
+}
+
+#combo.hot {
+  color: var(--red);
+  opacity: 1;
+}
+
+#combo-meter {
+  height: 4px;
+  background: var(--aged);
+}
+
+#combo-bar {
+  height: 100%;
+  width: 0;
+  background: var(--red);
+}
+
+#bonus-line {
+  font-size: 13px;
+}
+
+#bonus-line b {
   color: var(--teal);
+}
+
+#bank {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+#bank b {
+  font-family: 'Rye', Georgia, serif;
+  font-weight: 400;
+  font-size: 15px;
 }
 
 #last-event {
