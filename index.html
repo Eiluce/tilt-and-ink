@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rocket Row — Tilt &amp; Ink Prototype</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Rye&family=Special+Elite&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <aside id="hud">
+    <div id="table-name">Rocket Row</div>
+    <div id="chapter-line">Chapter one · The Saucer Men</div>
+    <div id="score-label">Score (test only, not Tickets yet)</div>
+    <div id="score">0</div>
+    <div id="status"><span id="ball-info"></span><span id="mult"></span></div>
+    <div id="last-event"></div>
+    <div id="message"></div>
+    <section id="mission" aria-live="polite">
+      <div class="rank-row"><span class="tag">Rank</span> <span id="rank"></span></div>
+      <div id="rank-next"></div>
+      <div id="mission-label" class="tag"></div>
+      <div id="mission-name"></div>
+      <div id="mission-goal"></div>
+      <div class="progress"><div id="mission-bar"></div><span id="mission-count"></span></div>
+      <div id="mission-status"></div>
+    </section>
+    <div id="hint">
+      <p><kbd>Z</kbd> / <kbd>&larr;</kbd> left flipper</p>
+      <p><kbd>/</kbd> / <kbd>&rarr;</kbd> right flippers</p>
+      <p><kbd>Space</kbd> start turn · hold to pull the plunger</p>
+    </div>
+  </aside>
+  <div id="table-wrap">
+    <div id="playfield-art"></div>
+    <canvas id="lamps"></canvas>
+    <canvas id="table"></canvas>
+    <canvas id="fx"></canvas>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+  <script src="src/layout.js"></script>
+  <script src="src/physics.js"></script>
+  <script src="src/art.js"></script>
+  <script src="src/flipper.js"></script>
+  <script src="src/bumper.js"></script>
+  <script src="src/spinner.js"></script>
+  <script src="src/dropTargets.js"></script>
+  <script src="src/ramp.js"></script>
+  <script src="src/hole.js"></script>
+  <script src="src/slingshot.js"></script>
+  <script src="src/standups.js"></script>
+  <script src="src/lamps.js"></script>
+  <script src="src/effects.js"></script>
+  <script src="src/missions.js"></script>
+  <script src="src/main.js"></script>
+</body>
+</html>

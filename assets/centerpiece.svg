@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="240" viewBox="0 0 240 240">
+  <defs>
+    <radialGradient id="domeGrad" cx="35%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#eafcff" />
+      <stop offset="100%" stop-color="#3fb6c9" />
+    </radialGradient>
+    <linearGradient id="beamGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#6fd6e0" stop-opacity="0.55" />
+      <stop offset="100%" stop-color="#6fd6e0" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+
+  <!-- tractor beam -->
+  <path d="M100,150 L140,150 L180,236 L60,236 Z" fill="url(#beamGrad)" />
+
+  <!-- saucer rim -->
+  <circle cx="120" cy="120" r="100" fill="#2c3d5e" stroke="#201a14" stroke-width="8" />
+  <circle cx="216" cy="120" r="6" fill="#f2e6cf" stroke="#201a14" stroke-width="2" />
+  <circle cx="187.9" cy="187.9" r="6" fill="#f2e6cf" stroke="#201a14" stroke-width="2" />
+  <circle cx="120" cy="216" r="6" fill="#f2e6cf" stroke="#201a14" stroke-width="2" />
+  <circle cx="52.1" cy="187.9" r="6" fill="#f2e6cf" stroke="#201a14" stroke-width="2" />
+  <circle cx="24" cy="120" r="6" fill="#f2e6cf" stroke="#201a14" stroke-width="2" />
+  <circle cx="52.1" cy="52.1" r="6" fill="#f2e6cf" stroke="#201a14" stroke-width="2" />
+  <circle cx="120" cy="24" r="6" fill="#f2e6cf" stroke="#201a14" stroke-width="2" />
+  <circle cx="187.9" cy="52.1" r="6" fill="#f2e6cf" stroke="#201a14" stroke-width="2" />
+
+  <!-- cockpit dome -->
+  <ellipse cx="120" cy="95" rx="55" ry="45" fill="url(#domeGrad)" stroke="#201a14" stroke-width="6" opacity="0.92" />
+  <ellipse cx="102" cy="78" rx="16" ry="9" fill="#ffffff" opacity="0.55" transform="rotate(-18 102 78)" />
+</svg>

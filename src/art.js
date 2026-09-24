@@ -1,0 +1,262 @@
+// Rocket Row art, "Pulp Serial Poster" direction: cream poster stock, black
+// press ink, two spot inks (tomato red, serial teal) and mustard for rewards.
+//
+// Everything is hand-coded SVG built from LAYOUT, in two kinds:
+//  - playfieldSVG(): the static printed playfield (walls, guides, ramps,
+//    unlit lamp inserts, apron). Injected inline into the page so its text
+//    can use the page's web fonts.
+//  - SPRITES: moving/reacting parts, rendered as data-URI images on the
+//    Matter bodies. Drawn at 4x and shown at 0.25 scale like the old assets.
+//    SVG-as-image can't load web fonts, so sprites carry no text; anything
+//    that needs lettering is drawn by lamps.js instead.
+
+const INK = {
+  paper: '#efe2c4',
+  aged: '#e6d4ae',
+  ink: '#1e1a16',
+  red: '#d2452f',
+  teal: '#2e7f86',
+  mustard: '#e3a92b',
+  foxing: '#c8b48c',
+  steel: '#55504a',
+};
+
+const Art = (() => {
+  const { paper: P, aged: P2, ink: K, red: R, teal: T, mustard: M, foxing: F } = INK;
+  const TYPE = "'Special Elite', 'Courier New', monospace";
+  const SLAB = "Rye, Georgia, serif";
+
+  const star = (cx, cy, ro, ri, n, rot = -90) => {
+    let d = '';
+    for (let i = 0; i < n * 2; i++) {
+      const r = i % 2 ? ri : ro;
+      const a = ((rot + (i * 180) / n) * Math.PI) / 180;
+      d += (i ? 'L' : 'M') + (cx + r * Math.cos(a)).toFixed(2) + ',' + (cy + r * Math.sin(a)).toFixed(2);
+    }
+    return d + 'Z';
+  };
+  const at = (x, y, inner, rot = 0) => `<g transform="translate(${x} ${y})${rot ? ` rotate(${rot})` : ''}">${inner}</g>`;
+  const post = (x, y, r = 4.5) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${P}" stroke="${K}" stroke-width="2.4"/>`;
+  const pts = (list) => list.map((p) => p.join(',')).join(' ');
+  const bezierPath = (c) => `M${c[0]} C${c[1]} ${c[2]} ${c[3]} C${c[4]} ${c[5]} ${c[6]}`;
+  const arcPoint = (r, a) => [LAYOUT.arch.cx + r * Math.cos(deg(a)), LAYOUT.arch.cy + r * Math.sin(deg(a))];
+
+  // --- element drawings (local coords, centred on the element) -------------
+
+  const bumper = (r) => `
+    <ellipse rx="${r * 1.55}" ry="${r * 0.42}" fill="none" stroke="${K}" stroke-width="${r * 0.28}" transform="rotate(-16)"/>
+    <circle r="${r}" fill="${R}" stroke="${K}" stroke-width="${r * 0.18}"/>
+    <path d="M${-r * 0.55},${-r * 0.2} A${r * 0.6},${r * 0.6} 0 0 1 ${-r * 0.1},${-r * 0.62}" fill="none" stroke="${P}" stroke-width="${r * 0.16}" stroke-linecap="round"/>
+    <ellipse rx="${r * 1.55}" ry="${r * 0.42}" fill="none" stroke="${M}" stroke-width="${r * 0.12}" transform="rotate(-16)" stroke-dasharray="${r * 2.4} ${r * 2.2}" stroke-dashoffset="${r * 1.2}"/>
+    <path d="${star(r * 0.2, r * 0.15, r * 0.38, r * 0.15, 5)}" fill="${P}" stroke="${K}" stroke-width="${r * 0.06}"/>`;
+
+  const ufo = (r) => `<g transform="scale(${r / 30})">
+    <ellipse rx="40" ry="16" cy="6" fill="${T}" stroke="${K}" stroke-width="5"/>
+    ${[-26, -9, 9, 26].map((x) => `<circle cx="${x}" cy="10" r="3.2" fill="${M}" stroke="${K}" stroke-width="1.5"/>`).join('')}
+    <path d="M-20,0 A20,22 0 0 1 20,0Z" fill="${P}" stroke="${K}" stroke-width="5"/>
+    <path d="M-11,-8 A11,11 0 0 1 -2,-16" stroke="${K}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <circle r="31" fill="none" stroke="${R}" stroke-width="2" stroke-dasharray="3 5"/></g>`;
+
+  const spinner = (len, h) => {
+    const w = len / 2 - 3;
+    return `<rect x="${-len / 2}" y="${-h / 2}" width="${w}" height="${h}" fill="${M}" stroke="${K}" stroke-width="1.6"/>
+      <rect x="${len / 2 - w}" y="${-h / 2}" width="${w}" height="${h}" fill="${M}" stroke="${K}" stroke-width="1.6"/>
+      <circle r="${h * 0.6}" fill="${R}" stroke="${K}" stroke-width="1.6"/>`;
+  };
+
+  // Pennant-shaped drop target; its number is lettered on by lamps.js.
+  const drop = (w, h) => `<path d="M${-w / 2},${-h / 2} L${w / 2},${-h / 2} L${w / 2},${h / 2 - 3} L0,${h / 2 + 3} L${-w / 2},${h / 2 - 3}Z" fill="${R}" stroke="${K}" stroke-width="2.4" stroke-linejoin="round"/>`;
+
+  // Pivot at 0,0; the rounded tip reaches exactly `len`.
+  const flipper = (len, rp, rt) => {
+    const tip = len - rt;
+    return `<path d="M0,${-rp} L${tip},${-rt} A${rt},${rt} 0 0 1 ${tip},${rt} L0,${rp} A${rp},${rp} 0 0 1 0,${-rp}Z" fill="${P}" stroke="${K}" stroke-width="3"/>
+      <path d="M7,-3.5 L${tip - 4},-2" stroke="${R}" stroke-width="2.6" stroke-linecap="round"/>
+      <circle r="${rp * 0.62}" fill="${R}" stroke="${K}" stroke-width="2.2"/><circle r="1.8" fill="${K}"/>`;
+  };
+
+  const ball = (r) => `<circle r="${r}" fill="${INK.steel}" stroke="${K}" stroke-width="2"/><circle cx="${-r * 0.35}" cy="${-r * 0.35}" r="${r * 0.3}" fill="${P}"/>`;
+
+  const standup = (lit) => `<rect x="-3.5" y="-9" width="7" height="18" rx="1.5" fill="${lit ? M : P}" stroke="${K}" stroke-width="2"/><circle r="1.6" fill="${K}"/>`;
+
+  // Rubber-banded slingshot; `lit` flashes the rubber when it kicks.
+  const sling = (verts, lit) => {
+    const [A, B, C] = verts;
+    const cx = (A[0] + B[0] + C[0]) / 3;
+    const cy = (A[1] + B[1] + C[1]) / 3;
+    const inner = verts.map(([x, y]) => `${(cx + (x - cx) * 0.52).toFixed(1)},${(cy + (y - cy) * 0.52).toFixed(1)}`).join(' ');
+    return `<polygon points="${pts(verts)}" fill="${R}" stroke="${K}" stroke-width="11" stroke-linejoin="round"/>
+      <polygon points="${pts(verts)}" fill="${R}" stroke="${lit ? M : P}" stroke-width="6" stroke-linejoin="round"/>
+      <polygon points="${inner}" fill="${lit ? P : M}" stroke="${K}" stroke-width="1.6"/>
+      <path d="${star(cx, cy + 2, 4.5, 1.8, 5)}" fill="${K}"/>
+      ${verts.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3" fill="${K}"/>`).join('')}`;
+  };
+
+  // --- shared lamp-insert shapes (unlit here, lit versions in lamps.js) ---
+
+  const INSERTS = {
+    arrows: [
+      { key: 'leftRamp', x: 140, y: 388, rot: -28, s: 1, color: R },
+      { key: 'rightRamp', x: 260, y: 388, rot: 28, s: 1, color: T },
+      { key: 'orbit', x: 58, y: 420, rot: -28, s: 0.85, color: M },
+      { key: 'scoop', x: 200, y: 383, rot: 0, s: 0.7, color: M },
+    ],
+    multipliers: [2, 3, 4, 5].map((n, i) => ({ n, x: 155 + i * 30, y: 460, r: 10 })),
+    chapters: ['I', 'II', 'III', 'IV', 'V'].map((t, i) => ({ t, x: 150 + i * 25, y: 518 })),
+    rowLetters: { y: 95, r: 8.5 },
+    extraBall: { x: 166, y: 549, w: 68, h: 15, label: 'EXTRA BALL' },
+    shootAgain: { x: 160, y: 578, w: 80, h: 16, label: 'SHOOT AGAIN' },
+  };
+
+  const arrowPath = (s) => `M0,${-12 * s} L${8 * s},${8 * s} L0,${3 * s} L${-8 * s},${8 * s}Z`;
+
+  // --- the printed playfield -----------------------------------------------
+
+  function playfieldSVG() {
+    const L = LAYOUT;
+    const { cx, cy } = L.arch;
+    const field = `M8,700 L8,${cy} A${L.outerR},${L.outerR} 0 0 1 392,${cy} L392,700Z`;
+    let rays = '';
+    for (let i = 0; i < 28; i += 2) {
+      const a1 = (i / 28) * Math.PI * 2;
+      const a2 = ((i + 1) / 28) * Math.PI * 2;
+      rays += `M${L.ufo.x},${L.ufo.y} L${L.ufo.x + Math.cos(a1) * 800},${L.ufo.y + Math.sin(a1) * 800} L${L.ufo.x + Math.cos(a2) * 800},${L.ufo.y + Math.sin(a2) * 800}Z`;
+    }
+    const orbitEnd = arcPoint(L.guideR, L.orbitGuide.endDeg);
+    const shooterEnd = arcPoint(L.guideR, L.shooterWall.endDeg);
+
+    let s = `<defs>
+      <pattern id="ht" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="3.5" cy="3.5" r="1.3" fill="${T}"/></pattern>
+      <pattern id="htr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="3" cy="3" r="1.1" fill="${R}"/></pattern>
+      <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="${P2}"/><line x1="0" y1="0" x2="0" y2="6" stroke="${K}" stroke-width="1.2" stroke-opacity=".35"/></pattern>
+      <clipPath id="pf"><path d="${field}"/></clipPath>
+      <filter id="rshadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="4" dy="6" stdDeviation="1.5" flood-color="${K}" flood-opacity=".35"/></filter>
+    </defs>
+    <rect width="400" height="700" fill="${K}"/>
+    <g clip-path="url(#pf)">
+      <rect width="400" height="700" fill="${P}"/>
+      <path d="${rays}" fill="${P2}"/>
+      <circle cx="340" cy="560" r="120" fill="url(#ht)" opacity=".3"/>
+      <ellipse cx="340" cy="560" rx="200" ry="34" fill="none" stroke="${T}" stroke-width="9" opacity=".22" transform="rotate(-18 340 560)"/>
+      <circle cx="70" cy="150" r="60" fill="url(#htr)" opacity=".22"/>
+      <g fill="${K}" opacity=".7">
+        <path d="${star(300, 60, 6, 2.2, 4)}"/><path d="${star(110, 60, 5, 1.8, 4)}"/><path d="${star(140, 440, 5, 1.8, 4)}"/><path d="${star(270, 470, 6, 2.2, 4)}"/><path d="${star(300, 250, 4, 1.5, 4)}"/>
+      </g>
+    </g>`;
+
+    // walls & guides
+    // dead space behind the side slopes and inlane guides
+    const [gl, gr] = [L.inlaneGuides.left, L.inlaneGuides.right];
+    s += `<path d="M8,${L.sideSlopes.left[0][1]} L${pts(gl)} L122,652 L8,652Z" fill="url(#hatch)"/>
+    <path d="M${L.shooterWall.x},${L.sideSlopes.right[0][1]} L${pts(gr)} L278,652 L${L.shooterWall.x},652Z" fill="url(#hatch)"/>
+    <g fill="none" stroke="${K}" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M8,700 L8,${cy} A${L.outerR},${L.outerR} 0 0 1 392,${cy} L392,700" stroke-width="8"/>
+      <path d="M${L.orbitGuide.x},${L.orbitGuide.bottom} L${L.orbitGuide.x},${cy} A${L.guideR},${L.guideR} 0 0 1 ${orbitEnd[0].toFixed(1)},${orbitEnd[1].toFixed(1)}" stroke-width="6"/>
+      <path d="M${L.shooterWall.x},700 L${L.shooterWall.x},${cy} A${L.guideR},${L.guideR} 0 0 0 ${shooterEnd[0].toFixed(1)},${shooterEnd[1].toFixed(1)}" stroke-width="6"/>
+      <path d="M${pts(L.sideSlopes.left)}" stroke-width="6"/>
+      <path d="M${pts(L.sideSlopes.right)}" stroke-width="6"/>
+      <path d="M${pts(L.inlaneGuides.left)}" stroke-width="5"/>
+      <path d="M${pts(L.inlaneGuides.right)}" stroke-width="5"/>
+      <path d="M${pts(L.gate)}" stroke-width="2.5"/>
+    </g>
+    <path d="M3,700 L3,${cy} A197,197 0 0 1 397,${cy} L397,700" fill="none" stroke="${R}" stroke-width="2"/>
+    ${post(L.orbitGuide.x, L.orbitGuide.bottom)}${post(L.inlaneGuides.left[0][0], L.inlaneGuides.left[0][1])}${post(L.inlaneGuides.right[0][0], L.inlaneGuides.right[0][1])}
+    ${post(orbitEnd[0], orbitEnd[1], 4)}${post(shooterEnd[0], shooterEnd[1], 4)}<circle cx="${L.gate[1][0]}" cy="${L.gate[1][1]}" r="2" fill="${K}"/>`;
+
+    // top rollover lanes (letters unlit)
+    const lg = L.laneGuides;
+    s += lg.xs.map((x) => `<rect x="${x - lg.width / 2}" y="${lg.top}" width="${lg.width}" height="${lg.bottom - lg.top}" rx="3.5" fill="${K}"/>${post(x, lg.top, 4)}${post(x, lg.bottom, 4)}`).join('');
+    s += L.rolloverLanes.xs.map((x, i) => `<line x1="${x}" y1="70" x2="${x}" y2="82" stroke="${K}" stroke-width="1.6"/>
+      <circle cx="${x}" cy="${INSERTS.rowLetters.y}" r="${INSERTS.rowLetters.r}" fill="${P2}" stroke="${K}" stroke-width="1.8"/>
+      <text x="${x}" y="${INSERTS.rowLetters.y + 4}" text-anchor="middle" font-family="${SLAB}" font-size="11" fill="${K}">${L.rolloverLanes.letters[i]}</text>`).join('');
+
+    // unlit inserts & playfield lettering
+    s += INSERTS.arrows.map((a) => at(a.x, a.y, `<path d="${arrowPath(a.s)}" fill="${P2}" stroke="${K}" stroke-width="2" stroke-linejoin="round"/>`, a.rot)).join('');
+    s += INSERTS.multipliers.map((m) => `<circle cx="${m.x}" cy="${m.y}" r="${m.r}" fill="${P2}" stroke="${K}" stroke-width="1.8"/><text x="${m.x}" y="${m.y + 3.5}" text-anchor="middle" font-family="${SLAB}" font-size="9" fill="${K}">${m.n}×</text>`).join('');
+    s += `<text x="200" y="500" text-anchor="middle" font-family="${SLAB}" font-size="25" fill="${R}" stroke="${K}" stroke-width="1">ROCKET ROW</text>`;
+    s += INSERTS.chapters.map((c) => `<rect x="${c.x - 10}" y="${c.y - 8}" width="20" height="16" rx="3" fill="${P2}" stroke="${K}" stroke-width="1.6"/><text x="${c.x}" y="${c.y + 4}" text-anchor="middle" font-family="${SLAB}" font-size="9" fill="${K}">${c.t}</text>`).join('');
+    const eb = INSERTS.extraBall;
+    const sa = INSERTS.shootAgain;
+    s += `<text x="200" y="539" text-anchor="middle" font-family="${TYPE}" font-size="7" fill="${K}" letter-spacing="1.5">A SERIAL IN FIVE CHAPTERS</text>
+      <rect x="${eb.x}" y="${eb.y}" width="${eb.w}" height="${eb.h}" rx="${eb.h / 2}" fill="${P2}" stroke="${K}" stroke-width="1.6"/><text x="200" y="${eb.y + 10.5}" text-anchor="middle" font-family="${TYPE}" font-size="7.5" fill="${K}">${eb.label}</text>
+      <rect x="${sa.x}" y="${sa.y}" width="${sa.w}" height="${sa.h}" rx="${sa.h / 2}" fill="${P2}" stroke="${K}" stroke-width="1.8"/><text x="200" y="${sa.y + 11.5}" text-anchor="middle" font-family="${TYPE}" font-size="7.5" fill="${K}">${sa.label}</text>`;
+    const ro = L.rollovers;
+    s += [ro.inL, ro.inR].map((x) => at(x, ro.y, `<circle r="7" fill="${P2}" stroke="${K}" stroke-width="1.6"/><path d="${star(0, 0.5, 5, 2, 5)}" fill="${F}" stroke="${K}" stroke-width=".8"/>`)).join('');
+    s += `<text transform="translate(380 470) rotate(-90)" font-family="${TYPE}" font-size="7.5" fill="${K}" letter-spacing="1.5">SKILL SHOT ▸ LIGHT R·O·W</text>`;
+
+    // tractor beam, scoop, kickout saucer
+    s += `<path d="M${L.ufo.x - 15},${L.ufo.y + 15} L${L.ufo.x + 15},${L.ufo.y + 15} L${L.ufo.x + 32},${L.ufo.y + 62} L${L.ufo.x - 32},${L.ufo.y + 62}Z" fill="url(#ht)" opacity=".7"/>
+      <rect x="${L.scoop.x - 14}" y="${L.scoop.y - 6}" width="28" height="12" rx="6" fill="${K}"/><rect x="${L.scoop.x - 11}" y="${L.scoop.y - 3}" width="22" height="6" rx="3" fill="#000"/>`;
+    s += at(L.kickout.x, L.kickout.y, `<circle r="12" fill="${M}" stroke="${K}" stroke-width="2.4"/><circle r="7.5" fill="${K}"/>`);
+
+    // raised ramps
+    s += ramp(L.ramps.left) + ramp(L.ramps.right);
+
+    // apron over the drain
+    s += `<rect x="150" y="660" width="100" height="40" fill="${K}"/>
+      <path d="M8,652 L130,652 Q150,652 162,672 L238,672 Q250,652 270,652 L${L.shooterWall.x},652 L${L.shooterWall.x},700 L8,700Z" fill="${F}" stroke="${K}" stroke-width="5" stroke-linejoin="round"/>
+      <rect x="46" y="660" width="98" height="34" rx="2" fill="${P}" stroke="${K}" stroke-width="1.6"/>
+      <text font-family="${TYPE}" font-size="5.2" fill="${K}"><tspan x="50" y="669">RAMPS ADVANCE THE CHAPTER.</tspan><tspan x="50" y="677">CHAPTER V LIGHTS SAUCER</tspan><tspan x="50" y="685">MULTIBALL AT THE UFO.</tspan><tspan x="50" y="692" fill="${R}">R·O·W LANES = BONUS ×</tspan></text>
+      <rect x="256" y="660" width="98" height="34" rx="2" fill="${P}" stroke="${K}" stroke-width="1.6"/>
+      <text font-family="${TYPE}" font-size="5.6" fill="${K}" text-anchor="middle"><tspan x="305" y="670">3 BALLS PER TURN</tspan><tspan x="305" y="679" font-family="${SLAB}" font-size="8" fill="${R}">NEXT WEEK:</tspan><tspan x="305" y="689">CHAPTER II AWAITS!</tspan></text>`;
+
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 700" preserveAspectRatio="none" aria-hidden="true">${s}</svg>`;
+  }
+
+  function ramp(c) {
+    const d = bezierPath(c);
+    // Entrance lip across the mouth, perpendicular to the ramp's first leg.
+    const [x0, y0] = c[0];
+    const dx = c[1][0] - x0;
+    const dy = c[1][1] - y0;
+    const len = Math.hypot(dx, dy);
+    const nx = (-dy / len) * 13;
+    const ny = (dx / len) * 13;
+    return `<g filter="url(#rshadow)">
+      <path d="${d}" fill="none" stroke="${K}" stroke-width="28" stroke-linecap="round"/>
+      <path d="${d}" fill="none" stroke="#f7efdc" stroke-width="21" stroke-linecap="round"/>
+      <path d="${d}" fill="none" stroke="${R}" stroke-width="3.5" stroke-dasharray="7 9"/>
+      <line x1="${x0 + nx}" y1="${y0 + ny}" x2="${x0 - nx}" y2="${y0 - ny}" stroke="${K}" stroke-width="7" stroke-linecap="round"/>
+      <line x1="${x0 + nx}" y1="${y0 + ny}" x2="${x0 - nx}" y2="${y0 - ny}" stroke="${M}" stroke-width="3.5" stroke-linecap="round"/>
+    </g>`;
+  }
+
+  // --- sprites ---------------------------------------------------------------
+
+  // Wraps a centred drawing into a 4x data-URI SVG; show it at scale 0.25.
+  function sprite(inner, halfW, halfH = halfW) {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${halfW * 8}" height="${halfH * 8}" viewBox="${-halfW} ${-halfH} ${halfW * 2} ${halfH * 2}">${inner}</svg>`;
+    return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+  }
+
+  // Slingshot sprites are centred on the triangle's centroid, which is where
+  // Matter puts the body's position for Bodies.fromVertices.
+  function slingSprite(verts, lit) {
+    const cx = (verts[0][0] + verts[1][0] + verts[2][0]) / 3;
+    const cy = (verts[0][1] + verts[1][1] + verts[2][1]) / 3;
+    const local = verts.map(([x, y]) => [x - cx, y - cy]);
+    const halfW = Math.max(...local.map(([x]) => Math.abs(x))) + 7;
+    const halfH = Math.max(...local.map(([, y]) => Math.abs(y))) + 7;
+    return sprite(sling(local, lit), halfW, halfH);
+  }
+
+  function flipperSprite(len, rp, rt) {
+    return sprite(`<g transform="translate(${-len / 2} 0)">${flipper(len, rp, rt)}</g>`, len / 2 + rp + 2, rp + 2);
+  }
+
+  const L = LAYOUT;
+  const SPRITES = {
+    ball: sprite(ball(10), 11.5),
+    pop: sprite(bumper(L.popR), L.popR * 1.7),
+    ufo: sprite(ufo(32), 46),
+    spinner: sprite(spinner(L.spinner.len, L.spinner.h), L.spinner.len / 2 + 1, L.spinner.h / 2 + 3),
+    drop: sprite(drop(L.drops.w, L.drops.h), L.drops.w / 2 + 2, L.drops.h / 2 + 5),
+    flipper: flipperSprite(L.flippers.left.len, 9, 5),
+    miniFlipper: flipperSprite(L.flippers.mini.len, 7, 4),
+    standup: { off: sprite(standup(false), 5.5, 10.5), on: sprite(standup(true), 5.5, 10.5) },
+    slingLeft: { off: slingSprite(L.slings.left, false), on: slingSprite(L.slings.left, true) },
+    slingRight: { off: slingSprite(L.slings.right, false), on: slingSprite(L.slings.right, true) },
+  };
+
+  return { playfieldSVG, SPRITES, INSERTS, arrowPath, star };
+})();
