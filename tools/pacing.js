@@ -17,7 +17,7 @@ const context = vm.createContext({
   performance: { now: () => 0 },
   localStorage: { getItem: (k) => store[k] ?? null, setItem: (k, v) => { store[k] = v; }, removeItem: (k) => { delete store[k]; } },
 });
-const src = ['scoring.js', 'upgrades.js', 'skills.js']
+const src = ['tables.js', 'scoring.js', 'upgrades.js', 'skills.js']
   .map((f) => fs.readFileSync(path.join(__dirname, '..', 'src', f), 'utf8')).join('\n');
 const { Scoring, Upgrades, NODES, SOURCES, CHARGE_GAIN, SKILLS, TABLES, formatPoints } =
   vm.runInContext(`${src}\n({ Scoring, Upgrades, NODES, SOURCES, CHARGE_GAIN, SKILLS, TABLES, formatPoints })`, context);

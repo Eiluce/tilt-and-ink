@@ -37,11 +37,12 @@
       <span>Best turn <b id="best-turn">0</b></span>
     </div>
     <button type="button" id="open-upgrades">Upgrade Tree <kbd>U</kbd> · <b id="upgrades-tickets">0</b> Tickets</button>
+    <button type="button" id="open-tables">Tables · <b id="tables-reached">1 of 8</b> reached</button>
     <div id="hint">
       <p><kbd>Z</kbd> / <kbd>&larr;</kbd> left flipper</p>
       <p><kbd>/</kbd> / <kbd>&rarr;</kbd> right flippers</p>
       <p><kbd>Space</kbd> start turn · hold to pull the plunger</p>
-      <p><kbd>1</kbd>–<kbd>4</kbd> skills, once unlocked</p>
+      <p><kbd>1</kbd>–<kbd>6</kbd> skills in your loadout</p>
     </div>
   </aside>
   <div id="table-wrap">
@@ -52,17 +53,31 @@
   </div>
 
   <div id="upgrade-screen" hidden role="dialog" aria-modal="true" aria-labelledby="upgrade-title">
-    <div class="sheet">
-      <header>
-        <div>
-          <h2 id="upgrade-title">Upgrade Tree</h2>
-          <p>Spend Tickets on permanent upgrades. They apply straight away. The game is paused.</p>
-        </div>
+    <div class="board">
+      <header class="board-bar">
+        <h2 id="upgrade-title">Upgrade Tree</h2>
+        <nav class="tabs" role="tablist" aria-label="Upgrade screens">
+          <button type="button" role="tab" data-tab="tree" aria-selected="true">Wiring</button>
+          <button type="button" role="tab" data-tab="tables" aria-selected="false">Tables</button>
+          <button type="button" role="tab" data-tab="loadout" aria-selected="false">Skill loadout</button>
+        </nav>
         <div class="balance"><span>Tickets</span><b class="tickets">0</b></div>
         <button type="button" data-close>Close <kbd>U</kbd></button>
       </header>
-      <div class="tree"></div>
-      <footer>
+      <section class="panel tree-view" data-panel="tree" role="tabpanel" aria-label="Upgrade Tree wiring board">
+        <svg class="wiring" aria-hidden="false"></svg>
+        <div class="legend"></div>
+        <div class="zoom">
+          <button type="button" data-zoom="in" aria-label="Zoom in">+</button>
+          <button type="button" data-zoom="out" aria-label="Zoom out">&minus;</button>
+          <button type="button" data-zoom="fit">Fit</button>
+        </div>
+        <aside class="node-card" aria-live="polite"></aside>
+        <p class="hint">Drag to pan · wheel to zoom · click a bulb for details</p>
+      </section>
+      <section class="panel tables-view" data-panel="tables" role="tabpanel" hidden></section>
+      <section class="panel loadout-view" data-panel="loadout" role="tabpanel" hidden></section>
+      <footer class="board-foot">
         <span class="tree-total"></span>
         <button type="button" data-reset>Reset all progress</button>
       </footer>
@@ -83,6 +98,7 @@
   <script src="src/standups.js"></script>
   <script src="src/lamps.js"></script>
   <script src="src/effects.js"></script>
+  <script src="src/tables.js"></script>
   <script src="src/scoring.js"></script>
   <script src="src/upgrades.js"></script>
   <script src="src/skills.js"></script>

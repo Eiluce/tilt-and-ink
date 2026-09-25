@@ -711,6 +711,7 @@ function applyUpgrades() {
     f.body.restitution = stat('springy');
   }
   skills.charge = Math.min(skills.charge, skills.max());
+  skills.fillLoadout();
   if (!game.turnActive) scoring.newBall();
   updateHud();
 }
@@ -1084,8 +1085,12 @@ window.addEventListener('keydown', (event) => {
       perfectFlip(miniFlipper);
     }
   }
-  const skill = SKILLS.find((s) => s.key === event.code);
-  if (skill && !event.repeat) useSkill(skill.id);
+  // Keys 1-6 fire the skill in that loadout slot.
+  const slot = /^Digit([1-6])$/.exec(event.code);
+  if (slot && !event.repeat) {
+    const id = skills.inSlot(Number(slot[1]) - 1);
+    if (id) useSkill(id);
+  }
   if (PLUNGER_KEYS.has(event.code) && !event.repeat) {
     if (!game.turnActive) startTurn();
     else if (balls.some(ballInShooterLane)) plunger.charging = true;
@@ -1109,6 +1114,7 @@ const upgradeScreen = new UpgradeScreen({
   root: document.getElementById('upgrade-screen'),
   upgrades,
   scoring,
+  skills,
   onToggle: (open) => {
     paused = open;
     if (open) {
@@ -1129,14 +1135,21 @@ function hudButton(el, fn) {
     el.blur();
   });
 }
-hudButton(document.getElementById('open-upgrades'), () => upgradeScreen.open());
+hudButton(document.getElementById('open-upgrades'), () => upgradeScreen.open('tree'));
+hudButton(document.getElementById('open-tables'), () => upgradeScreen.open('tables'));
+const tablesReachedEl = document.getElementById('tables-reached');
 
 const skillsEl = document.getElementById('skills');
 const skillListEl = document.getElementById('skill-list');
 const chargeBarEl = document.getElementById('charge-bar');
 const upgradesTicketsEl = document.getElementById('upgrades-tickets');
-skillListEl.innerHTML = SKILLS.map((s) => `<button type="button" tabindex="-1" data-skill="${s.id}"><kbd>${s.label}</kbd> <span class="name">${s.name}</span> <span class="cost"></span></button>`).join('');
-for (const btn of skillListEl.querySelectorAll('button')) hudButton(btn, () => useSkill(btn.dataset.skill));
+skillListEl.innerHTML = Array.from({ length: MAX_SKILL_SLOTS }, (_, i) => `<button type="button" tabindex="-1" data-slot="${i}"><kbd>${i + 1}</kbd> <span class="name"></span> <span class="cost"></span></button>`).join('');
+for (const btn of skillListEl.querySelectorAll('button')) {
+  hudButton(btn, () => {
+    const id = skills.inSlot(Number(btn.dataset.slot));
+    if (id) useSkill(id);
+  });
+}
 
 let lastSkillView = '';
 function updateSkillPanel(now) {
@@ -1145,19 +1158,26 @@ function updateSkillPanel(now) {
     charge: Math.floor(skills.charge),
     max: skills.max(),
     tickets: scoring.tickets,
-    list: SKILLS.map((s) => [skills.isUnlocked(s.id), skills.cost(s.id), skills.canUse(s.id, now) && game.turnActive, Math.ceil(skills.timeLeft(s.id, now) / 1000)]),
+    reached: upgrades.tablesReached(),
+    list: Array.from({ length: MAX_SKILL_SLOTS }, (_, i) => {
+      const id = skills.inSlot(i);
+      return id ? [id, skills.cost(id), skills.canUse(id, now) && game.turnActive, Math.ceil(skills.timeLeft(id, now) / 1000)] : null;
+    }),
   };
   const key = JSON.stringify(v);
   if (key === lastSkillView) return;
   lastSkillView = key;
   upgradesTicketsEl.textContent = formatPoints(v.tickets);
+  tablesReachedEl.textContent = `${v.reached} of ${TABLES.length}`;
   skillsEl.hidden = !v.show;
   chargeBarEl.style.width = `${(v.charge / v.max) * 100}%`;
-  chargeBarEl.parentElement.classList.toggle('double', v.max > 100);
-  SKILLS.forEach((s, i) => {
-    const [unlocked, cost, ready, secs] = v.list[i];
+  chargeBarEl.parentElement.style.setProperty('--charges', v.max / 100);
+  v.list.forEach((slot, i) => {
     const btn = skillListEl.children[i];
-    btn.hidden = !unlocked;
+    btn.hidden = !slot;
+    if (!slot) return;
+    const [id, cost, ready, secs] = slot;
+    btn.querySelector('.name').textContent = SKILLS.find((s) => s.id === id).name;
     btn.disabled = !ready;
     btn.classList.toggle('active', secs > 0);
     btn.querySelector('.cost').textContent = secs > 0 ? `${secs}s` : cost;

@@ -17,7 +17,8 @@
 // table's nodes are mostly ×N, so every table reached lifts scoring ~10×.
 //
 // Seven branches: the centre spine holds the table passes, and each of the
-// eight tables (see the `table` field) gates a ring of stronger nodes.
+// eight tables (TABLES in tables.js; see the `table` field) gates a ring of
+// stronger nodes.
 // Buying a table's pass counts as reaching it, even before the table itself
 // is built. Costs are first-pass, checked against the pacing simulation in
 // tools/pacing.js: about 1 h to the Timber Hollow pass, 15 h for everything.
@@ -30,17 +31,6 @@ const BRANCHES = [
   { id: 'rules', name: 'Rules & Features' },
   { id: 'ball', name: 'Ball Control' },
   { id: 'skills', name: 'Charge & Skills' },
-];
-
-const TABLES = [
-  { n: 1, name: 'Rocket Row', world: 'Space' },
-  { n: 2, name: 'Timber Hollow', world: 'Forest' },
-  { n: 3, name: "Davy Jones' Deep", world: 'Ocean' },
-  { n: 4, name: 'Mount Cinder', world: 'Volcano' },
-  { n: 5, name: 'Frostbite Peak', world: 'Arctic' },
-  { n: 6, name: 'Tomb of Sekhmet', world: 'Desert' },
-  { n: 7, name: 'Ghost Train', world: 'Haunted' },
-  { n: 8, name: "The Devil's Lounge", world: 'Finale' },
 ];
 
 // Value of every stat before any node. awake.* and the rest default to 0,
@@ -67,6 +57,7 @@ const STAT_BASE = {
   chargeMax: 100,
   surgeX: 2,
   skillTime: 1,
+  skillSlots: 4,
 };
 
 // Rounds a cost to two significant figures so prices read cleanly.
@@ -208,9 +199,11 @@ const NODES = [
   { id: 'magnetMitt', branch: 'skills', name: 'Magnet Mitt', desc: 'Unlocks skill 4: pull the ball toward the best target for 3 s', costs: [TIER[2] * 1.33], grants: { magnetMitt: 1 }, requires: { bounceHouse: 1 }, table: 2 },
   { id: 'sapRising', branch: 'skills', name: 'Sap Rising', desc: 'Charge meter fills 25% faster', costs: costs(TIER[2] * 1.67, 3, 2.8), grants: { chargeRate: 0.25 }, requires: { chargeRate: 1 }, table: 2 },
   { id: 'doubleCharge', branch: 'skills', name: 'Double Charge', desc: 'The charge meter holds two full charges', costs: [TIER[3] * 1.75], grants: { chargeMax: 100 }, requires: { sapRising: 1 }, table: 3 },
+  { id: 'fifthSlot', branch: 'skills', name: 'Fifth Slot', desc: 'A fifth skill slot in the loadout, on key 5', costs: [TIER[3] * 2], grants: { skillSlots: 1 }, requires: { doubleCharge: 1 }, table: 3 },
   { id: 'moltenSurge', branch: 'skills', name: 'Molten Surge', desc: 'Ink Surge triples scoring instead of doubling it', costs: [TIER[4] * 1.6], grants: { surgeX: 1 }, requires: { doubleCharge: 1 }, table: 4 },
   { id: 'cheaperTricks', branch: 'skills', name: 'Cheaper Tricks', desc: 'Skills cost 10% less charge', costs: costs(TIER[5] * 1.33, 2, 3), grants: { skillCost: -0.1 }, requires: { skillDiscount: 2 }, table: 5 },
   { id: 'longTakes', branch: 'skills', name: 'Long Takes', desc: 'Timed skills last 50% longer', costs: [TIER[6] * 1.12], grants: { skillTime: 0.5 }, requires: { moltenSurge: 1 }, table: 6 },
+  { id: 'sixthSlot', branch: 'skills', name: 'Sixth Slot', desc: 'A sixth skill slot in the loadout, on key 6', costs: [TIER[6] * 2], grants: { skillSlots: 1 }, requires: { fifthSlot: 1 }, table: 6 },
   { id: 'tripleCharge', branch: 'skills', name: 'Triple Charge', desc: 'The charge meter holds a third charge', costs: [TIER[7] * 1.11], grants: { chargeMax: 100 }, requires: { longTakes: 1 }, table: 7 },
   { id: 'hellfireSurge', branch: 'skills', name: 'Hellfire Surge', desc: 'Ink Surge multiplies scoring by 2 more', costs: [TIER[8] * 1.25], grants: { surgeX: 2 }, requires: { tripleCharge: 1 }, table: 8 },
 ];

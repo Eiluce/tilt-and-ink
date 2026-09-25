@@ -28,7 +28,7 @@ You need an internet connection the first time, because the page loads [Matter.j
 | Hold <kbd>Space</kbd>, release | Pull the plunger and launch. A longer pull launches harder. |
 | <kbd>Z</kbd> or <kbd>←</kbd> | Left flipper |
 | <kbd>/</kbd> or <kbd>→</kbd> | Right flipper and the small upper-right flipper |
-| <kbd>1</kbd>–<kbd>4</kbd> | Fire a skill (once unlocked in the Upgrade Tree) |
+| <kbd>1</kbd>–<kbd>6</kbd> | Fire the skill in that loadout slot (once unlocked in the Upgrade Tree) |
 | <kbd>U</kbd> | Open or close the Upgrade Tree (pauses the game) |
 
 <kbd>↓</kbd> and <kbd>Enter</kbd> also work as the plunger.
@@ -63,18 +63,20 @@ Once the **Chapters** node is bought, Rocket Row is a movie serial in five chapt
 
 Tickets you bank at the end of each turn buy permanent upgrades. Press <kbd>U</kbd> (or click **Upgrade Tree** in the side panel) to open the tree. The game pauses while it's open, and upgrades apply straight away.
 
+The tree is drawn as the wiring board inside the machine's backbox. Every brass socket is an upgrade, wires lead to the upgrades it unlocks, and bought bulbs light up in their branch's colour. Bulbs you can afford now pulse. Drag to pan, use the mouse wheel to zoom, and click a bulb to see what it does and buy it. The screen has two more tabs: **Tables** shows a lobby card for each of the eight tables, and **Skill loadout** chooses which skill sits on which key.
+
 The tree has seven branches: the **Tables** spine, **Bumpers & Contact**, **Targets**, **Ramps & Lanes**, **Rules & Features**, **Ball Control** and **Charge & Skills**. Rocket Row's nodes wake the table up and add percentage boosts. Each **table pass** (★) opens that table's ring of stronger nodes across every branch. The eight tables are Rocket Row, Timber Hollow, Davy Jones' Deep, Mount Cinder, Frostbite Peak, Tomb of Sekhmet, Ghost Train and The Devil's Lounge. Only Rocket Row is built so far, but buying a later table's pass still opens its nodes. Buying the whole tree takes roughly 14 hours of play.
 
-The **Charge & Skills** branch unlocks four skills, powered by a charge meter that fills as you hit things (aimed shots and completed features fill it fastest) and empties at the start of each turn:
+The **Charge & Skills** branch unlocks four skills, powered by a charge meter that fills as you hit things (aimed shots and completed features fill it fastest) and empties at the start of each turn. Each unlocked skill goes into a free loadout slot on keys <kbd>1</kbd>–<kbd>4</kbd>. Later nodes add slots on <kbd>5</kbd> and <kbd>6</kbd>.
 
-| Key | Skill | Charge | Effect |
-|---|---|---|---|
-| <kbd>1</kbd> | Ink Surge | 35 | Double all scoring for 8 s |
-| <kbd>2</kbd> | Slow Reels | 45 | Slow motion for 5 s |
-| <kbd>3</kbd> | Bounce House | 75 | Two extra balls from the scoop |
-| <kbd>4</kbd> | Magnet Mitt | 60 | Pull the ball toward the best target for 3 s |
+| Skill | Charge | Effect |
+|---|---|---|
+| Ink Surge | 35 | Double all scoring for 8 s (more with later upgrades) |
+| Slow Reels | 45 | Slow motion for 5 s |
+| Bounce House | 75 | Two extra balls from the scoop |
+| Magnet Mitt | 60 | Pull the ball toward the best target for 3 s |
 
-Tickets, upgrades and rank are saved in the browser. **Reset all progress** at the bottom of the Upgrade Tree wipes them.
+Tickets, upgrades, rank and your loadout are saved in the browser. **Reset all progress** at the bottom of the Upgrade Tree wipes them.
 
 ## Project layout
 
@@ -86,7 +88,8 @@ Tickets, upgrades and rank are saved in the browser. **Reset all progress** at t
 | `src/main.js` | Table setup, rules, turns and input |
 | `src/scoring.js` | Point values, combo, end-of-ball bonus and Tickets |
 | `src/missions.js` | Missions and ranks |
-| `src/upgrades.js`, `src/upgradeScreen.js` | Upgrade Tree data, purchases and its screen |
+| `src/upgrades.js`, `src/upgradeScreen.js` | Upgrade Tree data and purchases; the wiring-board screen, table picker and skill loadout |
+| `src/tables.js` | The eight tables: names, spot inks, emblems |
 | `src/skills.js` | Charge meter and active skills |
 | `src/pickups.js` | Star pickups that appear on the playfield |
 | `tools/pacing.js` | Pacing simulator for the tree's costs (`node tools/pacing.js`) |

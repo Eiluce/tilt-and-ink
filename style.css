@@ -300,13 +300,13 @@ kbd {
 }
 
 /* With Double Charge the meter holds two charges: mark the halfway point. */
-#charge-meter.double::after {
+/* One notch per extra charge the meter holds (--charges: 1, 2 or 3). */
+#charge-meter::after {
   content: '';
   position: absolute;
-  left: 50%;
-  top: -2px;
-  bottom: -2px;
-  border-left: 2px solid var(--ink);
+  inset: -2px 0;
+  background: repeating-linear-gradient(to right, transparent 0 calc(100% / var(--charges, 1) - 2px), var(--ink) 0 calc(100% / var(--charges, 1)));
+  pointer-events: none;
 }
 
 #charge-bar {
@@ -356,7 +356,8 @@ kbd {
   font-size: 12px;
 }
 
-#open-upgrades {
+#open-upgrades,
+#open-tables {
   margin-top: 10px;
   font: 600 14px 'Fredoka', sans-serif;
   color: var(--paper);
@@ -367,20 +368,36 @@ kbd {
   cursor: pointer;
 }
 
+#open-tables {
+  margin-top: 6px;
+  font-size: 13px;
+  background: transparent;
+  color: var(--ink);
+  border: 2px solid var(--ink);
+}
+
 #open-upgrades kbd {
   background: var(--paper);
   color: var(--ink);
 }
 
-#open-upgrades b {
+#open-upgrades b,
+#open-tables b {
   font-family: 'Rye', Georgia, serif;
   font-weight: 400;
   color: var(--mustard);
 }
 
 #open-upgrades:hover,
-#open-upgrades:focus-visible {
+#open-upgrades:focus-visible,
+#open-tables:hover,
+#open-tables:focus-visible {
   background: var(--red);
+  color: var(--paper);
+}
+
+#open-tables b {
+  color: inherit;
 }
 
 /* Skill effects on the table */
@@ -392,56 +409,108 @@ kbd {
   box-shadow: 0 0 0 4px var(--red), 0 16px 36px rgba(0, 0, 0, 0.6);
 }
 
-/* --- Upgrade Tree screen -------------------------------------------------- */
+#hud [hidden] {
+  display: none !important;
+}
+
+/* --- Upgrade Tree screen: the backbox wiring board ------------------------ */
 
 #upgrade-screen {
+  --walnut: #2b1d13;
+  --walnut-dark: #1a110b;
+  --brass: #d6aa4c;
+  --cream: #f1e4c6;
   position: fixed;
   inset: 0;
   z-index: 10;
-  background: rgba(23, 19, 15, 0.88);
+  background: rgba(10, 7, 5, 0.9);
+  padding: 12px;
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  overflow-y: auto;
-  padding: 24px 16px;
 }
 
 #upgrade-screen[hidden] {
   display: none;
 }
 
-#upgrade-screen .sheet {
-  width: min(1240px, 100%);
-  background: var(--paper);
-  color: var(--ink);
-  border: 4px solid var(--ink);
-  border-radius: 8px;
-  box-shadow: inset 0 0 0 3px var(--paper), inset 0 0 0 5px var(--red);
-  padding: 22px 24px;
+#upgrade-screen .board {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  color: var(--cream);
+  border-radius: 10px;
+  border: 3px solid #0d0905;
+  box-shadow: inset 0 0 0 2px #5a3e22, inset 0 0 80px rgba(0, 0, 0, 0.75), 0 20px 50px rgba(0, 0, 0, 0.7);
+  /* walnut grain */
+  background:
+    radial-gradient(ellipse at 50% 55%, rgba(255, 190, 110, 0.07), transparent 60%),
+    repeating-linear-gradient(97deg, rgba(0, 0, 0, 0.18) 0 2px, transparent 2px 9px, rgba(255, 220, 170, 0.04) 9px 11px, transparent 11px 23px),
+    linear-gradient(180deg, var(--walnut), var(--walnut-dark));
+  overflow: hidden;
 }
 
-#upgrade-screen header {
+/* screw heads in the corners */
+#upgrade-screen .board::before,
+#upgrade-screen .board::after {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #f3d68a, #7a5818 70%);
+  box-shadow: 0 0 0 1px #0d0905, 0 1px 2px #000;
+  top: 10px;
+  left: 10px;
+  pointer-events: none;
+}
+
+#upgrade-screen .board::after {
+  left: auto;
+  right: 10px;
+}
+
+.board-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px 28px;
-  margin-bottom: 18px;
-}
-
-#upgrade-screen header > div:first-child {
-  flex: 1;
-  min-width: 240px;
+  gap: 10px 22px;
+  padding: 12px 34px;
+  border-bottom: 2px solid rgba(214, 170, 76, 0.35);
 }
 
 #upgrade-screen h2 {
   margin: 0;
-  font: 400 30px 'Rye', Georgia, serif;
-  color: var(--red);
+  font: 400 26px 'Rye', Georgia, serif;
+  color: var(--brass);
+  text-shadow: 0 1px 0 #000;
 }
 
-#upgrade-screen header p {
-  margin: 4px 0 0;
-  font-size: 14px;
+.tabs {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+#upgrade-screen button {
+  font: 600 13px 'Fredoka', sans-serif;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.tabs button {
+  background: transparent;
+  color: var(--cream);
+  border: 1px solid rgba(214, 170, 76, 0.4);
+  padding: 6px 12px;
+}
+
+.tabs button[aria-selected='true'] {
+  background: var(--brass);
+  color: #1a110b;
+  border-color: var(--brass);
 }
 
 #upgrade-screen .balance {
@@ -451,215 +520,681 @@ kbd {
   font-family: 'Special Elite', monospace;
   font-size: 11px;
   text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--brass);
 }
 
 #upgrade-screen .balance b {
-  font: 400 28px 'Rye', Georgia, serif;
+  font: 400 26px 'Rye', Georgia, serif;
   font-variant-numeric: tabular-nums;
-}
-
-#upgrade-screen button {
-  font: 600 13px 'Fredoka', sans-serif;
-  cursor: pointer;
-  border-radius: 4px;
+  color: var(--cream);
 }
 
 #upgrade-screen [data-close] {
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--cream);
+  color: #1a110b;
   border: none;
   padding: 8px 12px;
 }
 
-#upgrade-screen [data-close] kbd {
+.panel {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+/* the wiring itself */
+.tree-view .wiring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.tree-view .wiring.dragging {
+  cursor: grabbing;
+}
+
+.wiring .ring {
+  fill: none;
+  stroke: var(--ink);
+  stroke-opacity: 0.25;
+  stroke-width: 2;
+  stroke-dasharray: 2 7;
+}
+
+.wiring .ring.open {
+  stroke-opacity: 0.6;
+}
+
+.wiring .ring-label {
+  font: 12px 'Special Elite', monospace;
+  letter-spacing: 0.12em;
+  fill: rgba(241, 228, 198, 0.35);
+}
+
+.wiring .ring-label.open {
+  fill: rgba(241, 228, 198, 0.8);
+}
+
+.wire path {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.wire .sheath {
+  stroke: #0e0906;
+  stroke-width: 7;
+}
+
+/* cloth braid on an unpowered wire */
+.wire .core {
+  stroke: #5b4a3a;
+  stroke-width: 3;
+  stroke-dasharray: 3 3;
+}
+
+.wire.ready .core {
+  stroke: var(--c);
+  stroke-opacity: 0.45;
+}
+
+.wire.live .sheath {
+  stroke: var(--c);
+  stroke-opacity: 0.22;
+  stroke-width: 11;
+}
+
+.wire.live .core {
+  stroke: var(--c);
+  stroke-dasharray: none;
+  stroke-width: 3.5;
+}
+
+.socket {
+  cursor: pointer;
+}
+
+.socket .brass {
+  stroke: #2a1c08;
+  stroke-width: 2;
+}
+
+.socket .bulb {
+  stroke: rgba(0, 0, 0, 0.6);
+  stroke-width: 1.2;
+}
+
+
+.glyph .st {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.glyph .st.thin {
+  stroke-width: 1.7;
+}
+
+.glyph .st.fat {
+  stroke-width: 3.6;
+}
+
+.socket .glyph {
+  color: rgba(241, 228, 198, 0.55);
+  fill: currentColor;
+}
+
+.socket.lit .glyph {
+  color: #1a110b;
+}
+
+.glyph .hi {
+  fill: rgba(255, 255, 255, 0.5);
+}
+
+.glyph .cut {
+  stroke: #2c2520;
+}
+
+.socket.lit .glyph .cut {
+  stroke: #fff6da;
+}
+
+.socket .ready-ring {
+  fill: none;
+  stroke: var(--c);
+  stroke-width: 2.5;
+  opacity: 0;
+}
+
+.socket.can-buy .ready-ring {
+  animation: socket-ready 1.4s ease-in-out infinite;
+}
+
+@keyframes socket-ready {
+  50% { opacity: 0.9; }
+}
+
+.socket.locked:not(.gated) {
+  opacity: 0.8;
+}
+
+.socket.gated {
+  opacity: 0.38;
+}
+
+.socket.selected .brass {
+  stroke: var(--cream);
+  stroke-width: 3;
+}
+
+.socket:focus {
+  outline: none;
+}
+
+.socket:focus-visible .brass {
+  stroke: #fff;
+  stroke-width: 4;
+}
+
+.socket .pips rect {
+  fill: #0e0906;
+  stroke: rgba(214, 170, 76, 0.6);
+}
+
+.socket.lit .pips text {
+  fill: var(--cream);
+}
+
+.socket .pips text {
+  font: 600 9px 'Fredoka', sans-serif;
+  fill: rgba(241, 228, 198, 0.6);
+}
+
+.socket .pass-label {
+  font: 11px 'Special Elite', monospace;
+  letter-spacing: 0.1em;
+  fill: var(--brass);
+}
+
+.padlock path {
+  fill: none;
+  stroke: var(--cream);
+  stroke-width: 1.8;
+}
+
+.padlock rect {
+  fill: var(--cream);
+}
+
+.legend {
+  position: absolute;
+  left: 16px;
+  bottom: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, auto);
+  gap: 2px 18px;
+  pointer-events: none;
+}
+
+.legend div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font: 12px 'Special Elite', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--c);
+}
+
+.legend b {
+  font: 400 14px 'Rye', Georgia, serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.zoom {
+  position: absolute;
+  left: 16px;
+  top: 12px;
+  display: flex;
+  gap: 4px;
+}
+
+.zoom button {
+  min-width: 32px;
+  background: rgba(14, 9, 6, 0.8);
+  color: var(--cream);
+  border: 1px solid rgba(214, 170, 76, 0.5);
+  padding: 4px 8px;
+}
+
+.tree-view .hint {
+  position: absolute;
+  left: 50%;
+  bottom: 8px;
+  transform: translateX(-50%);
+  margin: 0;
+  font: 11px 'Special Elite', monospace;
+  color: rgba(241, 228, 198, 0.45);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* detail card, printed on poster stock */
+.node-card {
+  position: absolute;
+  right: 16px;
+  top: 12px;
+  width: min(290px, calc(100% - 32px));
   background: var(--paper);
   color: var(--ink);
+  border: 3px solid var(--ink);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 2px var(--paper), inset 0 0 0 4px var(--red), 0 10px 24px rgba(0, 0, 0, 0.6);
+  padding: 14px 16px;
+  font-size: 14px;
 }
 
-.tree {
+.node-card h3 {
+  margin: 2px 0 4px;
+  font: 400 20px 'Rye', Georgia, serif;
+}
+
+.node-card p {
+  margin: 6px 0 0;
+  line-height: 1.4;
+}
+
+.node-card .card-branch {
+  display: inline-block;
+  font: 11px 'Special Elite', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--ink);
+  color: var(--c);
+}
+
+.node-card .badge {
+  display: inline-block;
+  font: 11px 'Special Elite', monospace;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--ink);
+  color: var(--paper);
+  border-left: 6px solid var(--ink);
+}
+
+.node-card .per,
+.node-card .level {
+  font-family: 'Special Elite', monospace;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.node-card button[data-buy] {
+  margin-top: 10px;
+  width: 100%;
+  background: var(--red);
+  color: var(--paper);
+  border: 2px solid var(--ink);
+  padding: 8px;
+}
+
+.node-card button[data-buy]:disabled {
+  background: var(--aged);
+  color: var(--ink);
+  opacity: 0.7;
+  cursor: default;
+}
+
+.node-card .maxed {
+  font-family: 'Special Elite', monospace;
+  text-transform: uppercase;
+  color: var(--teal);
+}
+
+.node-card .reasons {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 13px;
+  color: var(--red);
+}
+
+.node-card .cost {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+/* table picker: lobby cards */
+.tables-view,
+.loadout-view {
+  overflow-y: auto;
+  padding: 18px 34px 24px;
+}
+
+.lobby-grid {
   display: grid;
-  grid-template-columns: repeat(7, minmax(180px, 1fr));
-  gap: 14px;
-  overflow-x: auto;
-  padding-bottom: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
 }
 
-.branch h3 {
+.lobby {
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+}
+
+.lobby.locked {
+  filter: grayscale(0.75) brightness(0.8);
+}
+
+.lobby .poster {
+  position: relative;
+  background: var(--c1);
+  padding: 16px 14px 14px;
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.lobby .poster::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.13) 1px, transparent 1.3px);
+  background-size: 5px 5px;
+  pointer-events: none;
+}
+
+.lobby .poster svg {
+  width: 64px;
+  height: 64px;
+  position: relative;
+  z-index: 1;
+}
+
+.lobby .titles {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 2px;
+  color: var(--paper);
+}
+
+.lobby .world,
+.lobby .serial {
+  font: 11px 'Special Elite', monospace;
+  letter-spacing: 0.08em;
+}
+
+.lobby .world {
+  text-transform: uppercase;
+}
+
+.lobby h3 {
+  margin: 0;
+  font: 400 20px 'Rye', Georgia, serif;
+  line-height: 1.1;
+}
+
+.lobby .tag {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  font: 10px 'Special Elite', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 2px 6px;
+  border-radius: 2px;
+}
+
+.lobby-body {
+  padding: 12px 14px 14px;
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.lobby dl {
+  margin: 0;
+  display: grid;
+  grid-template-columns: 82px 1fr;
+  gap: 4px 8px;
+}
+
+.lobby dt {
+  font: 11px 'Special Elite', monospace;
+  text-transform: uppercase;
+  opacity: 0.7;
+  padding-top: 2px;
+}
+
+.lobby dd {
+  margin: 0;
+}
+
+.lobby .state {
+  margin: 0;
+  border-top: 2px dashed var(--foxing, #c8b48c);
+  padding-top: 8px;
+}
+
+.lobby .state.playing {
+  font: 400 15px 'Rye', Georgia, serif;
+  color: var(--red);
+}
+
+.lobby button[data-find] {
+  justify-self: start;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  padding: 6px 10px;
+}
+
+/* skill loadout */
+.loadout-intro {
+  margin: 0 0 14px;
+  color: rgba(241, 228, 198, 0.75);
+}
+
+.slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.slot {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: rgba(14, 9, 6, 0.7);
+  border: 2px solid rgba(214, 170, 76, 0.4);
+  cursor: pointer;
+}
+
+.slot.current {
+  border-color: var(--brass);
+  box-shadow: 0 0 0 3px rgba(214, 170, 76, 0.25);
+}
+
+.slot.locked {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.slot kbd {
+  justify-self: start;
+  background: var(--brass);
+  color: #1a110b;
+}
+
+.slot span {
+  font: 400 16px 'Rye', Georgia, serif;
+}
+
+.slot small {
+  font: 11px 'Special Elite', monospace;
+  opacity: 0.7;
+}
+
+.slot [data-unequip] {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: none;
+  color: var(--cream);
+  border: 1px solid rgba(241, 228, 198, 0.4);
+  width: 24px;
+  height: 24px;
+  padding: 0;
+}
+
+.skill-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+.skill-card {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 6px 12px;
+  align-items: start;
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.skill-card.locked {
+  opacity: 0.55;
+}
+
+.skill-card h4 {
   margin: 0;
   font: 400 17px 'Rye', Georgia, serif;
 }
 
-.branch .spent {
-  font-family: 'Special Elite', monospace;
-  font-size: 11px;
-  text-transform: uppercase;
-  opacity: 0.7;
-  margin-bottom: 10px;
-}
-
-.node {
-  position: relative;
-  background: var(--aged);
-  border: 2px solid var(--ink);
-  border-radius: 6px;
-  padding: 10px;
-  margin-bottom: 18px;
-}
-
-/* connector down to the next upgrade in the branch */
-.node + .node::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: -20px;
-  height: 18px;
-  border-left: 2px dashed var(--ink);
-}
-
-.node.capstone {
-  border-color: var(--red);
-  border-width: 3px;
-  background: var(--paper);
-}
-
-.node.capstone h4::before {
-  content: '★ ';
-  color: var(--red);
-}
-
-.node.locked {
-  opacity: 0.7;
-}
-
-.node.maxed {
-  background: #d6e6de;
-}
-
-.node header {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 8px;
-  margin: 0;
-}
-
-.node h4 {
-  margin: 0;
-  font: 600 15px 'Fredoka', sans-serif;
-}
-
-.pips {
-  display: flex;
-  gap: 3px;
-}
-
-.pips i {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 2px solid var(--ink);
-  background: var(--paper);
-}
-
-.pips i.on {
-  background: var(--teal);
-}
-
-.node p {
-  margin: 6px 0 0;
+.skill-card p {
+  margin: 2px 0;
   font-size: 13px;
-  line-height: 1.35;
 }
 
-.node .now {
-  color: var(--teal);
-  font-weight: 600;
+.skill-card small {
+  font: 11px 'Special Elite', monospace;
+  opacity: 0.75;
 }
 
-.node button[data-buy] {
-  margin-top: 8px;
-  width: 100%;
+.skill-card button {
+  grid-column: 1 / -1;
   background: var(--red);
   color: var(--paper);
   border: 2px solid var(--ink);
   padding: 6px;
 }
 
-.node button[data-buy]:disabled {
-  background: var(--paper);
-  color: var(--ink);
-  opacity: 0.6;
-  cursor: default;
+.glyph-chip {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #f6dc8a, #8a6420);
+  display: grid;
+  place-items: center;
+  color: #1a110b;
 }
 
-.node .maxed {
-  margin-top: 8px;
-  font-family: 'Special Elite', monospace;
-  font-size: 12px;
-  text-transform: uppercase;
-  color: var(--teal);
+.glyph-chip svg {
+  width: 26px;
+  height: 26px;
 }
 
-.node .badge {
-  display: inline-block;
-  margin-top: 4px;
-  padding: 1px 6px;
-  border-radius: 3px;
-  background: var(--ink);
-  color: var(--paper);
-  font-family: 'Special Elite', monospace;
-  font-size: 10px;
-  text-transform: uppercase;
+.glyph-chip .glyph {
+  fill: currentColor;
 }
 
-.node .per {
-  opacity: 0.6;
-  font-size: 11px;
-}
-
-.branch .later {
-  font-family: 'Special Elite', monospace;
-  font-size: 12px;
-  opacity: 0.7;
-}
-
-#hud [hidden] {
-  display: none !important;
-}
-
-.node .reasons {
-  margin: 8px 0 0;
-  padding-left: 16px;
-  font-size: 12px;
-  color: var(--red);
-}
-
-#upgrade-screen footer {
+.board-foot {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 10px;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 2px dashed var(--ink);
-  font-size: 13px;
+  padding: 10px 34px 12px;
+  border-top: 2px solid rgba(214, 170, 76, 0.35);
+  font: 12px 'Special Elite', monospace;
+  color: rgba(241, 228, 198, 0.75);
 }
 
 #upgrade-screen [data-reset] {
   background: none;
-  border: 2px solid var(--ink);
-  color: var(--ink);
+  border: 1px solid rgba(241, 228, 198, 0.5);
+  color: var(--cream);
   padding: 5px 10px;
 }
 
 #upgrade-screen [data-reset].armed {
   background: var(--red);
-  color: var(--paper);
+  border-color: var(--red);
 }
 
 #upgrade-screen button:focus-visible,
+#upgrade-screen .slot:focus-visible,
 #skill-list button:focus-visible {
   outline: 3px solid var(--teal);
   outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .board-bar,
+  .board-foot,
+  .tables-view,
+  .loadout-view {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .node-card {
+    top: auto;
+    bottom: 12px;
+  }
+
+  .node-card.intro {
+    display: none;
+  }
+
+  .legend,
+  .tree-view .hint {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .socket.can-buy .ready-ring {
+    animation: none;
+    opacity: 0.8;
+  }
 }
