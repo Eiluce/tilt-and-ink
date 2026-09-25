@@ -31,6 +31,24 @@ function setBallMode(ball, mode) {
   ball.render.sprite.yScale = s;
 }
 
+// Outline of a flipper with its pivot at the origin, pointing along +x: a
+// round pivot end of radius rp, straight sides, and a round tip of radius
+// rt. The art (art.js) and the physics body (flipper.js) are both built from
+// it, so the ball bounces exactly where the flipper is drawn.
+function flipperOutline(len, rp, rt, arcSteps = 8) {
+  const tip = len - rt;
+  const pts = [];
+  for (let i = 0; i <= arcSteps; i++) {
+    const a = Math.PI / 2 + (Math.PI * i) / arcSteps; // back of the pivot end
+    pts.push({ x: rp * Math.cos(a), y: rp * Math.sin(a) });
+  }
+  for (let i = 0; i <= arcSteps; i++) {
+    const a = -Math.PI / 2 + (Math.PI * i) / arcSteps; // round the tip
+    pts.push({ x: tip + rt * Math.cos(a), y: rt * Math.sin(a) });
+  }
+  return pts;
+}
+
 const Walls = {
   // Invisible static wall between two points. Square-ended: use chain() or
   // post() for rounded ends. (A chamfer can't do it: on a segment shorter

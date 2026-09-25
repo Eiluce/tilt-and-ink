@@ -35,7 +35,7 @@ You need an internet connection the first time, because the page loads [Matter.j
 
 ## How to play Rocket Row
 
-The table starts **dormant**. Your first turn is a single ball, and only the pop bumpers and slingshots score, 1 point each. Everything else is printed faded and scores nothing until you wake it up in the Upgrade Tree: the inlanes, standups, drop targets, UFO, spinner, orbit, ramps, scoop, and rules like the combo, end-of-ball bonus, chapters, multiball and missions. Early turns are slow on purpose. By the end, points come from everywhere and turns score in the billions.
+The table starts **dormant**. Your first turn is a single ball, and only the pop bumpers and slingshots score, 1 point each. Everything else is printed faded, and the ball passes straight through it, until you wake it up in the Upgrade Tree: the inlanes, standups, drop targets, UFO, spinner, orbit, ramps, scoop, and rules like the combo, end-of-ball bonus, chapters, multiball and missions. Early turns are slow on purpose. By the end, points come from everywhere and turns score in the billions.
 
 **Scoring**
 

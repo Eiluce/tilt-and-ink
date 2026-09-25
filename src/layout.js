@@ -69,10 +69,10 @@ const LAYOUT = {
   rollovers: { y: 520, inL: 79, inR: 321 },
 
   flippers: {
-    left: { x: 130, y: 612, rest: 30, active: -30, len: 64 },
-    right: { x: 270, y: 612, rest: 150, active: 210, len: 64 },
-    mini: { x: 350, y: 398, rest: 165, active: 220, len: 40 },
-    height: 14,
+    // pivotR / tipR: radii of the round pivot end and tip (art and physics).
+    left: { x: 130, y: 612, rest: 30, active: -30, len: 64, pivotR: 9, tipR: 5 },
+    right: { x: 270, y: 612, rest: 150, active: 210, len: 64, pivotR: 9, tipR: 5 },
+    mini: { x: 350, y: 398, rest: 165, active: 220, len: 40, pivotR: 7, tipR: 4 },
   },
 
   shooter: { x: 376.5, stopY: 650, pullTravel: 14 },

@@ -26,6 +26,7 @@ class DropTargetBank {
     this.onScore = onScore;
     this.onCleared = onCleared;
     this.targets = [];
+    this.enabled = true; // false while the drop targets are still dormant: the ball passes through
 
     const startX = x - ((count - 1) * spacing) / 2;
     for (let i = 0; i < count; i++) {
@@ -61,8 +62,14 @@ class DropTargetBank {
   reset() {
     for (const t of this.targets) {
       t.dropped = false;
-      t.body.collisionFilter.mask = DEFAULT_MASK;
       t.body.render.opacity = 1;
     }
+    this.setEnabled(this.enabled);
+  }
+
+  // Dormant targets are ghosts: no collisions at all until woken up.
+  setEnabled(on) {
+    this.enabled = on;
+    for (const t of this.targets) t.body.collisionFilter.mask = on && !t.dropped ? DEFAULT_MASK : 0;
   }
 }

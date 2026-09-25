@@ -9,7 +9,8 @@ class Flipper {
       pivotX,
       pivotY,
       length,
-      height = 18,
+      pivotR,
+      tipR,
       restAngle,
       activeAngle,
       upSpeed = 0.55,
@@ -24,18 +25,20 @@ class Flipper {
     this.upSpeed = upSpeed;
     this.downSpeed = downSpeed;
     this.isActive = false;
+    this.length = length;
 
-    const halfLength = length / 2;
-
-    // Build at angle 0 with the body centered halfLength to the right of the
-    // pivot, so pointB=(-halfLength,0) lands exactly on the pivot *before*
-    // any rotation. Matter's constraint rotates pointB by the body's angle
-    // *change since the constraint was created* (not its absolute angle) —
-    // so the constraint must be created while the body is still at angle 0,
-    // and only rotated into its resting pose afterward, or that reference
-    // point is wrong for the rest of the body's life.
-    this.body = Matter.Bodies.rectangle(pivotX + halfLength, pivotY, length, height, {
-      chamfer: { radius: height / 2 },
+    // The body is the drawn outline (tapered: wide round pivot end, narrow
+    // round tip). Matter centres a polygon body on its centroid, so build it
+    // at angle 0 with the centroid `c` to the right of the pivot, pinned by
+    // pointB = -c, which lands exactly on the pivot *before* any rotation.
+    // Matter's constraint rotates pointB by the body's angle *change since
+    // the constraint was created* (not its absolute angle), so the
+    // constraint must be created while the body is still at angle 0, and
+    // only rotated into its resting pose afterward, or that reference point
+    // is wrong for the rest of the body's life.
+    const outline = flipperOutline(length, pivotR, tipR);
+    const c = Matter.Vertices.centre(outline);
+    this.body = Matter.Bodies.fromVertices(pivotX + c.x, pivotY + c.y, [outline], {
       friction: 0,
       frictionAir: 0,
       restitution: 0.3,
@@ -44,9 +47,9 @@ class Flipper {
       // Flippers only need to hit balls; letting them touch the inlane
       // guides that end at their pivots just makes them jitter.
       collisionFilter: { category: CAT.DEFAULT, mask: CAT.BALL },
-      // The sprite is drawn at 4x physics scale with its pivot cap on the
-      // local -x side — the same end pointB pins to the pivot — so left and
-      // right both read correctly from rotation alone; no flip needed.
+      // The sprite is drawn at 4x physics scale, centred on the same
+      // centroid, with its pivot cap on the local -x side (the end pointB
+      // pins), so left and right both read correctly from rotation alone.
       render: {
         sprite: { texture, xScale: spriteScale, yScale: spriteScale },
       },
@@ -55,7 +58,7 @@ class Flipper {
     this.constraint = Matter.Constraint.create({
       pointA: { x: pivotX, y: pivotY },
       bodyB: this.body,
-      pointB: { x: -halfLength, y: 0 },
+      pointB: { x: -c.x, y: -c.y },
       stiffness: 1,
       length: 0,
     });

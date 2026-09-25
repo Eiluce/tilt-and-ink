@@ -42,11 +42,24 @@ const render = Render.create({
 });
 Render.run(render);
 
-// Fixed-step physics clock: always 60 steps of 1/60 s per real second,
+// Fixed-step physics clock: always 60 ticks of 1/60 s per real second,
 // whatever the screen's refresh rate. (Matter's Runner steps once per frame,
 // so on a 120-144 Hz monitor the whole table ran 2-2.4x too fast, and a
 // single slow frame could sap a plunger launch.)
+//
+// Each tick runs the game logic once (tickGame), then the physics in
+// SUBSTEPS smaller steps. A swinging flipper's tip moves up to ~35 px per
+// tick, more than the flipper and ball can overlap, so in one big step it
+// could skip right past a ball: a sweep of 2,448 shots at every flipper,
+// angle and speed found 328 tunnelling with 1 step and none with 4. Matter
+// keeps velocities in per-1/60 s units whatever the step size, so
+// sub-stepping doesn't change any speeds.
 const STEP_MS = 1000 / 60;
+const SUBSTEPS = 4;
+function physicsTick() {
+  tickGame();
+  for (let i = 0; i < SUBSTEPS; i++) Engine.update(engine, STEP_MS / SUBSTEPS);
+}
 const SLOW_REELS_RATE = 0.45; // game speed while the Slow Reels skill runs
 let lastFrame = performance.now();
 let pendingMs = 0;
@@ -56,7 +69,7 @@ function stepPhysics(now) {
   pendingMs = Math.min(pendingMs + (now - lastFrame) * rate, 100);
   lastFrame = now;
   while (pendingMs >= STEP_MS) {
-    Engine.update(engine, STEP_MS);
+    physicsTick();
     pendingMs -= STEP_MS;
   }
   requestAnimationFrame(stepPhysics);
@@ -394,7 +407,7 @@ const drops = new DropTargetBank(world, {
 });
 for (const t of drops.targets) {
   on(t.body, (ball, body) => {
-    // Dormant drop targets are just posts: they don't drop.
+    // Dormant drop targets don't collide at all (applyDormancy); belt and braces.
     if (t.dropped || !awake('dropTarget')) return;
     drops.hit(body);
     fx.burst(body.position.x, body.position.y - 12, 'WHAM!', INK.paper);
@@ -460,7 +473,10 @@ function advanceChapter() {
 
 const ramps = ['left', 'right'].map((name) => {
   const ramp = new Ramp(world, { name, path: L.ramps[name], halfWidth: L.rampHalfWidth, onMade: rampMade });
-  on(ramp.mouth, (ball) => ramp.atMouth(ball));
+  // A dormant ramp doesn't take the ball: it rolls on underneath.
+  on(ramp.mouth, (ball) => {
+    if (awake('ramp')) ramp.atMouth(ball);
+  });
   return ramp;
 });
 
@@ -580,7 +596,8 @@ function makeFlipper(cfg, side, texture) {
     pivotX: cfg.x,
     pivotY: cfg.y,
     length: cfg.len,
-    height: L.flippers.height,
+    pivotR: cfg.pivotR,
+    tipR: cfg.tipR,
     restAngle: deg(cfg.rest),
     activeAngle: deg(cfg.active),
     texture,
@@ -703,9 +720,21 @@ function inkInWoken() {
 }
 inkInWoken();
 
+// Dormant elements don't respond at all: the ball passes straight through
+// a sleeping UFO, spinner, drop target or standup (they're drawn faded).
+// Walls, guides, pops and slings are always solid.
+const ALL_MASK = 0xffffffff;
+function applyDormancy() {
+  ufo.body.collisionFilter.mask = awake('ufo') ? ALL_MASK : 0;
+  spinner.body.collisionFilter.mask = awake('spinnerTurn') ? CAT.BALL : 0;
+  for (const t of standups.targets) t.body.collisionFilter.mask = awake('standup') ? ALL_MASK : 0;
+  drops.setEnabled(awake('dropTarget'));
+}
+
 // Pushes the current Upgrade Tree levels onto the table. Runs at start-up
 // and after every purchase, so upgrades apply immediately.
 function applyUpgrades() {
+  applyDormancy();
   for (const f of flippers) {
     f.upSpeed = FLIPPER_UP_SPEED * stat('flipStrength');
     f.body.restitution = stat('springy');
@@ -917,7 +946,8 @@ function railShooterBall(ball, angleDeg, r) {
 
 const MAX_SPEED = 16;
 
-Events.on(engine, 'beforeUpdate', () => {
+// Game logic, once per 1/60 s tick (before that tick's physics sub-steps).
+function tickGame() {
   const now = performance.now();
 
   for (const f of flippers) f.update();
@@ -983,7 +1013,8 @@ Events.on(engine, 'beforeUpdate', () => {
     const escaped = !Number.isFinite(x) || y > 740 || y < -40 || x < -40 || x > 440;
     if (drained || escaped) removeBall(ball);
   }
-});
+}
+
 
 // --- lamps ---------------------------------------------------------------------
 
@@ -1196,6 +1227,12 @@ Object.assign(window, {
   __world: world,
   __createBall: createBall,
   __startTurn: startTurn,
+  // Physics tests: pause the frame loop, then step the engine by hand.
+  __engine: engine,
+  __flippers: flippers,
+  __slings: slings,
+  __pause: (on) => { paused = on; },
+  __step: (n = 1) => { for (let i = 0; i < n; i++) physicsTick(); },
   // Debug: __addTickets(1e6) to try later parts of the tree.
   __addTickets: (n) => {
     scoring.tickets += n;

@@ -79,17 +79,37 @@ const Art = (() => {
 
   const standup = (lit) => `<rect x="-3.5" y="-9" width="7" height="18" rx="1.5" fill="${lit ? M : P}" stroke="${K}" stroke-width="2"/><circle r="1.6" fill="${K}"/>`;
 
-  // Rubber-banded slingshot; `lit` flashes the rubber when it kicks.
+  // Slingshot. The drawn triangle ends exactly on the physics triangle, and
+  // only the kicking face (first vertex to last, see slingshot.js) carries
+  // the rubber band, inside the edge, so the line the ball bounces off is
+  // the line you see. `lit` flashes the rubber when it kicks.
+  let slingClips = 0;
   const sling = (verts, lit) => {
-    const [A, B, C] = verts;
-    const cx = (A[0] + B[0] + C[0]) / 3;
-    const cy = (A[1] + B[1] + C[1]) / 3;
-    const inner = verts.map(([x, y]) => `${(cx + (x - cx) * 0.52).toFixed(1)},${(cy + (y - cy) * 0.52).toFixed(1)}`).join(' ');
-    return `<polygon points="${pts(verts)}" fill="${R}" stroke="${K}" stroke-width="11" stroke-linejoin="round"/>
-      <polygon points="${pts(verts)}" fill="${R}" stroke="${lit ? M : P}" stroke-width="6" stroke-linejoin="round"/>
-      <polygon points="${inner}" fill="${lit ? P : M}" stroke="${K}" stroke-width="1.6"/>
-      <path d="${star(cx, cy + 2, 4.5, 1.8, 5)}" fill="${K}"/>
-      ${verts.map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3" fill="${K}"/>`).join('')}`;
+    const [A, , C] = verts;
+    const cx = (verts[0][0] + verts[1][0] + verts[2][0]) / 3;
+    const cy = (verts[0][1] + verts[1][1] + verts[2][1]) / 3;
+    // Inward unit normal of the kicking face.
+    const fx = C[0] - A[0];
+    const fy = C[1] - A[1];
+    const len = Math.hypot(fx, fy);
+    let nx = -fy / len;
+    let ny = fx / len;
+    if ((cx - A[0]) * nx + (cy - A[1]) * ny < 0) {
+      nx = -nx;
+      ny = -ny;
+    }
+    const band = (d) => `${(A[0] + nx * d).toFixed(1)},${(A[1] + ny * d).toFixed(1)} ${(C[0] + nx * d).toFixed(1)},${(C[1] + ny * d).toFixed(1)}`;
+    const id = `sling-clip-${slingClips++}`;
+    const inner = verts.map(([x, y]) => `${(cx + (x - cx) * 0.4).toFixed(1)},${(cy + (y - cy) * 0.4).toFixed(1)}`).join(' ');
+    return `<defs><clipPath id="${id}"><polygon points="${pts(verts)}"/></clipPath></defs>
+      <polygon points="${pts(verts)}" fill="${R}"/>
+      <g clip-path="url(#${id})">
+        <polyline points="${band(3.5)}" fill="none" stroke="${lit ? M : P}" stroke-width="7"/>
+        <polyline points="${band(7.5)}" fill="none" stroke="${K}" stroke-width="1.4"/>
+      </g>
+      <polygon points="${inner}" fill="${lit ? P : M}" stroke="${K}" stroke-width="1.4"/>
+      <polygon points="${pts(verts)}" fill="none" stroke="${K}" stroke-width="1.6" stroke-linejoin="round"/>
+      <polyline points="${pts([A, C])}" fill="none" stroke="${K}" stroke-width="2.4" stroke-linecap="round"/>`;
   };
 
   // --- shared lamp-insert shapes (unlit here, lit versions in lamps.js) ---
@@ -235,13 +255,17 @@ const Art = (() => {
     const cx = (verts[0][0] + verts[1][0] + verts[2][0]) / 3;
     const cy = (verts[0][1] + verts[1][1] + verts[2][1]) / 3;
     const local = verts.map(([x, y]) => [x - cx, y - cy]);
-    const halfW = Math.max(...local.map(([x]) => Math.abs(x))) + 7;
-    const halfH = Math.max(...local.map(([, y]) => Math.abs(y))) + 7;
+    const halfW = Math.max(...local.map(([x]) => Math.abs(x))) + 3;
+    const halfH = Math.max(...local.map(([, y]) => Math.abs(y))) + 3;
     return sprite(sling(local, lit), halfW, halfH);
   }
 
+  // Centred on the outline's centroid, which is where Matter puts the
+  // flipper body's position (flipper.js builds the body from the same outline).
   function flipperSprite(len, rp, rt) {
-    return sprite(`<g transform="translate(${-len / 2} 0)">${flipper(len, rp, rt)}</g>`, len / 2 + rp + 2, rp + 2);
+    const c = Matter.Vertices.centre(flipperOutline(len, rp, rt));
+    const halfW = Math.max(rp + c.x, len - c.x) + 2;
+    return sprite(`<g transform="translate(${-c.x} ${-c.y})">${flipper(len, rp, rt)}</g>`, halfW, rp + 2);
   }
 
   const L = LAYOUT;
@@ -251,8 +275,8 @@ const Art = (() => {
     ufo: sprite(ufo(32), 46),
     spinner: sprite(spinner(L.spinner.len, L.spinner.h), L.spinner.len / 2 + 1, L.spinner.h / 2 + 3),
     drop: sprite(drop(L.drops.w, L.drops.h), L.drops.w / 2 + 2, L.drops.h / 2 + 5),
-    flipper: flipperSprite(L.flippers.left.len, 9, 5),
-    miniFlipper: flipperSprite(L.flippers.mini.len, 7, 4),
+    flipper: flipperSprite(L.flippers.left.len, L.flippers.left.pivotR, L.flippers.left.tipR),
+    miniFlipper: flipperSprite(L.flippers.mini.len, L.flippers.mini.pivotR, L.flippers.mini.tipR),
     standup: { off: sprite(standup(false), 5.5, 10.5), on: sprite(standup(true), 5.5, 10.5) },
     slingLeft: { off: slingSprite(L.slings.left, false), on: slingSprite(L.slings.left, true) },
     slingRight: { off: slingSprite(L.slings.right, false), on: slingSprite(L.slings.right, true) },
