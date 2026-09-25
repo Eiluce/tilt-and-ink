@@ -676,6 +676,25 @@ kbd {
   stroke-dasharray: none;
 }
 
+/* Second Reel's links (to the plinth, and up to each branch's first
+   upgrade) stay dashed whatever their state. */
+.tower .link.root .line {
+  stroke-dasharray: 7 5;
+}
+
+.tower .link.root:not(.ready):not(.live) .line,
+.tower .link.root.ready .line {
+  stroke: var(--gold);
+  stroke-opacity: 0.55;
+  stroke-width: 1.8;
+}
+
+.tower .link.root.live .line {
+  stroke: var(--c);
+  stroke-opacity: 1;
+  stroke-width: 2.4;
+}
+
 .tower .diamond {
   cursor: pointer;
 }

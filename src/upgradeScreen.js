@@ -261,14 +261,19 @@ class UpgradeScreen {
       out.push(`<text x="${mid}" y="${PLINTH_Y + 30}" text-anchor="middle" class="branch-name" fill="${BRANCH_COLOR[b]}">${BRANCHES.find((x) => x.id === b).name.toUpperCase()}</text>`);
     }
 
-    // Links: one straight segment each, drawn under the diamonds.
+    // Links: one straight segment each, drawn under the diamonds. Second
+    // Reel's links are dashed: up from it to the plinth, then up from the
+    // plinth to each branch's first upgrade.
+    const [hubX, hubY] = this.nodeXY(TOWER_HUB);
+    const hubState = lit(TOWER_HUB) ? 'live' : 'ready';
+    out.push(`<g class="link root ${hubState}" style="--c:${BRANCH_COLOR.tables}"><path d="M${hubX} ${hubY - 28}L${hubX} ${PLINTH_Y}" class="glow"/><path d="M${hubX} ${hubY - 28}L${hubX} ${PLINTH_Y}" class="line"/></g>`);
     for (const { from, to } of L.links) {
       const [x2, y2] = this.cellXY(L.place[to]);
       const [x1, y1] = from ? this.cellXY(L.place[from]) : [x2, PLINTH_Y];
       const parentLit = from ? lit(from) : lit(TOWER_HUB);
       const state = parentLit && lit(to) ? 'live' : parentLit ? 'ready' : '';
       const d = `M${x1} ${y1}L${x2} ${y2}`;
-      out.push(`<g class="link ${state}" style="--c:${BRANCH_COLOR[up.def(to).branch]}"><path d="${d}" class="glow"/><path d="${d}" class="line"/></g>`);
+      out.push(`<g class="link ${from ? '' : 'root'} ${state}" style="--c:${BRANCH_COLOR[up.def(to).branch]}"><path d="${d}" class="glow"/><path d="${d}" class="line"/></g>`);
     }
 
     for (const u of NODES) {
