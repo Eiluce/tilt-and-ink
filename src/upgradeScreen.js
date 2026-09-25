@@ -25,6 +25,8 @@ const LANE_PX = 100; // lane pitch = row height, so a one-lane step is 45 degree
 const PLINTH_Y = 96; // the gold line the tower stands on (row 0 is at y 0)
 const SETBACK_PX = 26; // how much narrower each table's step is
 const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+const READABLE_ZOOM = 0.72; // Fit never goes smaller: plaque names stay about 9 px or more
+const FAR_ZOOM = 0.5; // below this, plaques and levels hide
 
 // 16 x 16 angular glyphs centred on 0,0; C is replaced by the ink colour.
 const GLYPHS = {
@@ -82,12 +84,12 @@ function glyphFor(u) {
 
 const glyphSvg = (name, color, scale = 1) => `<g transform="scale(${scale})">${GLYPHS[name].replace(/C/g, color)}</g>`;
 
-// Up to two lines of about 11 characters, for a name plaque.
+// Up to two lines of about 10 characters, for a name plaque.
 function plaqueLines(name) {
   const lines = [];
   let cur = '';
   for (const w of name.toUpperCase().split(' ')) {
-    if (cur && cur.length + 1 + w.length > 11) {
+    if (cur && cur.length + 1 + w.length > 10) {
       lines.push(cur);
       cur = w;
     } else {
@@ -313,10 +315,10 @@ class UpgradeScreen {
     });
     if (!u.pass) {
       const lines = plaqueLines(u.name);
-      const pw = Math.max(...lines.map((t) => t.length)) * 6.9 + 14;
-      const ph = lines.length * 12.5 + 7;
+      const pw = Math.min(LANE_PX - 4, Math.max(...lines.map((t) => t.length)) * 8.2 + 14);
+      const ph = lines.length * 13.5 + 7;
       g.push(`<rect x="${(-pw / 2).toFixed(1)}" y="${r + 8}" width="${pw.toFixed(1)}" height="${ph}" class="plaque"/>`);
-      lines.forEach((t, i) => g.push(`<text y="${r + 20 + i * 12.5}" text-anchor="middle" class="name">${t}</text>`));
+      lines.forEach((t, i) => g.push(`<text y="${r + 21 + i * 13.5}" text-anchor="middle" class="name">${t}</text>`));
     }
     if (gated) g.push(`<g transform="translate(${r + 2} ${-r - 2})">${PADLOCK}</g>`);
     return `<g class="${cls}" data-node="${u.id}" transform="translate(${x} ${y})" tabindex="0" role="button" aria-label="${u.name}, level ${lvl} of ${max}">${g.join('')}</g>`;
@@ -393,6 +395,7 @@ class UpgradeScreen {
     if (!w || !this.view) return;
     const { x, y, k } = this.view;
     w.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${k.toFixed(4)})`);
+    this.svg.classList.toggle('far', k < FAR_ZOOM);
     // Each tag sits just under the top edge of its step.
     [...this.tierTags.children].forEach((tag, i) => {
       const top = y + -(this.layout.passRow[i + 1] + 0.5) * LANE_PX * k;
@@ -400,16 +403,16 @@ class UpgradeScreen {
     });
   }
 
-  // Fits the steps reached so far, plus the next one, from the plinth up:
-  // as tall as the board allows (the tower is wider than the screen, so it
-  // pans sideways), centred on the spine.
+  // Fits the steps reached so far, plus the first row of the next one,
+  // from the plinth up, but never so small that the names can't be read
+  // (the tower pans both ways), centred on the spine.
   fit() {
     const { width, height } = this.svg.getBoundingClientRect();
     if (!width) return;
-    const next = Math.min(TABLES.length, this.upgrades.tablesReached() + 1);
-    const top = -(this.layout.passRow[next] + 0.9) * LANE_PX;
+    const reached = this.upgrades.tablesReached();
+    const top = -(this.layout.passRow[reached] + 1.9) * LANE_PX;
     const bottom = PLINTH_Y + 120;
-    const k = Math.min(1, Math.max(0.3, height / (bottom - top)));
+    const k = Math.min(1, Math.max(READABLE_ZOOM, height / (bottom - top)));
     const spineX = this.layout.firstLane.tables * LANE_PX;
     this.view = { k, x: width / 2 - spineX * k, y: height - bottom * k };
     this.applyView();

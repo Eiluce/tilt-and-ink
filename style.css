@@ -421,7 +421,8 @@ kbd {
   --black: #0b0b0b;
   --cream: #f1e4c6;
   --deco: 'Limelight', 'Rye', Georgia, serif;
-  --thin: 'Poiret One', 'Fredoka', sans-serif;
+  /* small labels: a geometric deco-era face that stays legible when small */
+  --thin: 'Josefin Sans', 'Fredoka', sans-serif;
   position: fixed;
   inset: 0;
   z-index: 10;
@@ -517,7 +518,7 @@ kbd {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  font: 600 12px var(--thin);
+  font: 700 12px var(--thin);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--gold);
@@ -636,7 +637,7 @@ kbd {
 }
 
 .tower .branch-name {
-  font: 600 13px var(--thin);
+  font: 700 13px var(--thin);
   letter-spacing: 2px;
 }
 
@@ -731,7 +732,7 @@ kbd {
 }
 
 .tower .diamond .level {
-  font: 600 13px var(--thin);
+  font: 700 14px var(--thin);
   fill: var(--gold);
 }
 
@@ -746,10 +747,19 @@ kbd {
 }
 
 .tower .diamond .name {
-  font: 600 11px var(--thin);
-  letter-spacing: 1px;
+  font: 700 12px var(--thin);
+  letter-spacing: 0.5px;
   fill: var(--cream);
-  fill-opacity: 0.55;
+  fill-opacity: 0.7;
+}
+
+/* Zoomed far out, names and levels would be specks: show diamonds only
+   (the detail card still names whatever is hovered). */
+.tower.far .diamond .plaque,
+.tower.far .diamond .name,
+.tower.far .diamond .level,
+.tower.far .branch-name {
+  display: none;
 }
 
 .tower .diamond.lit .name,
@@ -810,7 +820,7 @@ kbd {
   bottom: 8px;
   transform: translateX(-50%);
   margin: 0;
-  font: 600 11px var(--thin);
+  font: 700 11px var(--thin);
   letter-spacing: 0.08em;
   color: rgba(241, 228, 198, 0.5);
   pointer-events: none;
@@ -860,14 +870,14 @@ kbd {
 }
 
 .node-card .card-branch {
-  font: 600 12px var(--thin);
+  font: 700 12px var(--thin);
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
 
 .node-card .badge {
   display: inline-block;
-  font: 600 11px var(--thin);
+  font: 700 11px var(--thin);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   padding: 2px 8px;
@@ -877,7 +887,7 @@ kbd {
 
 .node-card .per,
 .node-card .level {
-  font: 600 13px var(--thin);
+  font: 700 13px var(--thin);
   letter-spacing: 0.06em;
   opacity: 0.8;
 }
@@ -924,7 +934,7 @@ kbd {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  font: 600 13px var(--thin);
+  font: 700 13px var(--thin);
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -1085,7 +1095,7 @@ kbd {
 /* skill loadout */
 .loadout-intro {
   margin: 0 0 16px;
-  font: 600 14px var(--thin);
+  font: 700 14px var(--thin);
   letter-spacing: 0.04em;
   color: rgba(241, 228, 198, 0.8);
 }
@@ -1130,7 +1140,7 @@ kbd {
 }
 
 .slot small {
-  font: 600 12px var(--thin);
+  font: 700 12px var(--thin);
   letter-spacing: 0.04em;
   opacity: 0.8;
 }
@@ -1179,7 +1189,7 @@ kbd {
 }
 
 .skill-card small {
-  font: 600 12px var(--thin);
+  font: 700 12px var(--thin);
   letter-spacing: 0.04em;
   opacity: 0.8;
 }
@@ -1215,7 +1225,7 @@ kbd {
   gap: 10px;
   padding: 10px 72px 14px;
   border-top: 2px solid var(--gold);
-  font: 600 13px var(--thin);
+  font: 700 13px var(--thin);
   letter-spacing: 0.06em;
   color: rgba(241, 228, 198, 0.8);
 }
