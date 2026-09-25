@@ -767,27 +767,6 @@ kbd {
   fill-opacity: 0.95;
 }
 
-.tower .hub .hub-face {
-  stroke: var(--gold);
-  stroke-width: 3;
-}
-
-.tower .hub .hub-inner {
-  fill: none;
-  stroke: var(--gold);
-  stroke-width: 1.5;
-}
-
-.tower .hub.lit .hub-inner {
-  stroke: var(--black);
-}
-
-.tower .hub .start {
-  font: 14px var(--deco);
-  letter-spacing: 3px;
-  fill: var(--gold);
-}
-
 .padlock path {
   fill: none;
   stroke: var(--cream);

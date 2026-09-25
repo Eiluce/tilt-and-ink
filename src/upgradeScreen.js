@@ -297,7 +297,7 @@ class UpgradeScreen {
     const gated = (u.table || 1) > reached;
     const afford = st.state === 'available' && this.scoring.tickets >= st.cost;
     const col = BRANCH_COLOR[u.branch];
-    const r = u.pass ? 24 : 19;
+    const r = u.pass || u.id === TOWER_HUB ? 24 : 19;
     const cls = ['diamond', lvl ? 'lit' : '', st.state, gated ? 'gated' : '', afford ? 'can-buy' : '', this.selected === u.id ? 'selected' : ''].join(' ');
     const g = [];
     if (lvl) g.push(`<polygon points="${diamondPts(0, 0, r + 14)}" class="halo" fill="${col}"/>`);
@@ -324,29 +324,17 @@ class UpgradeScreen {
     return `<g class="${cls}" data-node="${u.id}" transform="translate(${x} ${y})" tabindex="0" role="button" aria-label="${u.name}, level ${lvl} of ${max}">${g.join('')}</g>`;
   }
 
-  // START: the keystone on the plinth, which is also the Second Reel node.
+  // Second Reel, the first upgrade: an ordinary diamond standing on the
+  // plinth, below the roots of every branch.
   hubSvg() {
-    const u = this.upgrades.def(TOWER_HUB);
-    const lvl = this.upgrades.level(TOWER_HUB);
-    const st = this.upgrades.status(TOWER_HUB);
-    const afford = st.state === 'available' && this.scoring.tickets >= st.cost;
-    const x = this.layout.firstLane.tables * LANE_PX;
-    const y = PLINTH_Y + 26;
-    const cls = ['diamond', 'hub', lvl ? 'lit' : '', afford ? 'can-buy' : '', this.selected === TOWER_HUB ? 'selected' : ''].join(' ');
-    return `<g class="${cls}" data-node="${TOWER_HUB}" transform="translate(${x} ${y})" tabindex="0" role="button" aria-label="${u.name}, level ${lvl} of 1">
-      <polygon points="${diamondPts(0, 0, 53)}" class="ready-ring" stroke="${DECO_GOLD}"/>
-      <polygon points="${diamondPts(0, 0, 44)}" class="hub-face" fill="${lvl ? DECO_GOLD : DECO_BLACK}"/>
-      <polygon points="${diamondPts(0, 0, 31)}" class="hub-inner"/>
-      ${glyphSvg('ball', lvl ? DECO_BLACK : DECO_GOLD, 1.5)}
-      <text y="64" text-anchor="middle" class="start">START</text>
-    </g>`;
+    return this.diamondSvg(this.upgrades.def(TOWER_HUB), this.nodeXY(TOWER_HUB), this.upgrades.tablesReached());
   }
 
   renderCard() {
     const id = this.selected || this.hovered;
     this.card.classList.toggle('intro', !id);
     if (!id) {
-      this.card.innerHTML = `<h3>The tower</h3><p>Every diamond is an upgrade. A line leads up from each one to the upgrades it unlocks. Bought diamonds fill with their branch colour, and ones you can afford now pulse.</p><p>Each step of the tower is a table. Buy its pass on the centre line to open the next step.</p><p>A small diamond beside an upgrade is a requirement from another branch.</p>`;
+      this.card.innerHTML = `<h3>The tower</h3><p>Every diamond is an upgrade. A line leads up from each one to the upgrades it unlocks. Bought diamonds fill with their branch colour, and ones you can afford now pulse.</p><p>Start with Second Reel on the plinth: every branch grows from it. Each step of the tower is a table. Buy its pass on the centre line to open the next step.</p><p>A small diamond beside an upgrade is a requirement from another branch.</p>`;
       return;
     }
     const up = this.upgrades;
@@ -374,7 +362,7 @@ class UpgradeScreen {
 
   // Plane position of a node (the hub sits on the plinth).
   nodeXY(id) {
-    if (id === TOWER_HUB) return [this.layout.firstLane.tables * LANE_PX, PLINTH_Y + 26];
+    if (id === TOWER_HUB) return [this.layout.firstLane.tables * LANE_PX, PLINTH_Y + 34];
     return this.cellXY(this.layout.place[id]);
   }
 
@@ -411,7 +399,7 @@ class UpgradeScreen {
     if (!width) return;
     const reached = this.upgrades.tablesReached();
     const top = -(this.layout.passRow[reached] + 1.9) * LANE_PX;
-    const bottom = PLINTH_Y + 120;
+    const bottom = PLINTH_Y + 130;
     const k = Math.min(1, Math.max(READABLE_ZOOM, height / (bottom - top)));
     const spineX = this.layout.firstLane.tables * LANE_PX;
     this.view = { k, x: width / 2 - spineX * k, y: height - bottom * k };
