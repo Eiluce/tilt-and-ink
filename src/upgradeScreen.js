@@ -27,6 +27,7 @@ const SETBACK_PX = 26; // how much narrower each table's step is
 const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
 const READABLE_ZOOM = 0.72; // Fit never goes smaller: plaque names stay about 9 px or more
 const FAR_ZOOM = 0.5; // below this, plaques and levels hide
+const HUB_DROP = 64; // Second Reel sits this far below the plinth, clear of its gold lines
 
 // 16 x 16 angular glyphs centred on 0,0; C is replaced by the ink colour.
 const GLYPHS = {
@@ -362,7 +363,7 @@ class UpgradeScreen {
 
   // Plane position of a node (the hub sits on the plinth).
   nodeXY(id) {
-    if (id === TOWER_HUB) return [this.layout.firstLane.tables * LANE_PX, PLINTH_Y + 34];
+    if (id === TOWER_HUB) return [this.layout.firstLane.tables * LANE_PX, PLINTH_Y + HUB_DROP];
     return this.cellXY(this.layout.place[id]);
   }
 
@@ -399,7 +400,7 @@ class UpgradeScreen {
     if (!width) return;
     const reached = this.upgrades.tablesReached();
     const top = -(this.layout.passRow[reached] + 1.9) * LANE_PX;
-    const bottom = PLINTH_Y + 130;
+    const bottom = PLINTH_Y + HUB_DROP + 130; // room for its plaque and the hint line
     const k = Math.min(1, Math.max(READABLE_ZOOM, height / (bottom - top)));
     const spineX = this.layout.firstLane.tables * LANE_PX;
     this.view = { k, x: width / 2 - spineX * k, y: height - bottom * k };
