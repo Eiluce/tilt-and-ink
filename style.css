@@ -413,17 +413,19 @@ kbd {
   display: none !important;
 }
 
-/* --- Upgrade Tree screen: the backbox wiring board ------------------------ */
+/* --- Upgrade Tree screen: an art deco stepped tower, black and gold ------ */
 
 #upgrade-screen {
-  --walnut: #2b1d13;
-  --walnut-dark: #1a110b;
-  --brass: #d6aa4c;
+  --gold: #d4a646;
+  --gold-dim: rgba(212, 166, 70, 0.45);
+  --black: #0b0b0b;
   --cream: #f1e4c6;
+  --deco: 'Limelight', 'Rye', Georgia, serif;
+  --thin: 'Poiret One', 'Fredoka', sans-serif;
   position: fixed;
   inset: 0;
   z-index: 10;
-  background: rgba(10, 7, 5, 0.9);
+  background: rgba(0, 0, 0, 0.88);
   padding: 12px;
   display: flex;
 }
@@ -439,51 +441,50 @@ kbd {
   display: flex;
   flex-direction: column;
   color: var(--cream);
-  border-radius: 10px;
-  border: 3px solid #0d0905;
-  box-shadow: inset 0 0 0 2px #5a3e22, inset 0 0 80px rgba(0, 0, 0, 0.75), 0 20px 50px rgba(0, 0, 0, 0.7);
-  /* walnut grain */
-  background:
-    radial-gradient(ellipse at 50% 55%, rgba(255, 190, 110, 0.07), transparent 60%),
-    repeating-linear-gradient(97deg, rgba(0, 0, 0, 0.18) 0 2px, transparent 2px 9px, rgba(255, 220, 170, 0.04) 9px 11px, transparent 11px 23px),
-    linear-gradient(180deg, var(--walnut), var(--walnut-dark));
+  background: var(--black);
+  border: 2px solid var(--gold);
+  box-shadow: inset 0 0 0 6px var(--black), inset 0 0 0 7px var(--gold-dim), 0 20px 50px rgba(0, 0, 0, 0.7);
   overflow: hidden;
 }
 
-/* screw heads in the corners */
+/* stepped deco brackets in the corners */
 #upgrade-screen .board::before,
 #upgrade-screen .board::after {
   content: '';
   position: absolute;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #f3d68a, #7a5818 70%);
-  box-shadow: 0 0 0 1px #0d0905, 0 1px 2px #000;
-  top: 10px;
-  left: 10px;
+  width: 46px;
+  height: 46px;
+  top: 14px;
+  left: 14px;
+  border-top: 2px solid var(--gold);
+  border-left: 2px solid var(--gold);
+  box-shadow: inset 7px 7px 0 -5px var(--gold-dim);
   pointer-events: none;
+  z-index: 2;
 }
 
 #upgrade-screen .board::after {
   left: auto;
-  right: 10px;
+  right: 14px;
+  border-left: none;
+  border-right: 2px solid var(--gold);
+  box-shadow: inset -7px 7px 0 -5px var(--gold-dim);
 }
 
 .board-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px 22px;
-  padding: 12px 34px;
-  border-bottom: 2px solid rgba(214, 170, 76, 0.35);
+  gap: 10px 24px;
+  padding: 14px 72px;
+  border-bottom: 2px solid var(--gold);
 }
 
 #upgrade-screen h2 {
   margin: 0;
-  font: 400 26px 'Rye', Georgia, serif;
-  color: var(--brass);
-  text-shadow: 0 1px 0 #000;
+  font: 400 28px var(--deco);
+  letter-spacing: 0.06em;
+  color: var(--gold);
 }
 
 .tabs {
@@ -497,44 +498,43 @@ kbd {
 #upgrade-screen button {
   font: 600 13px 'Fredoka', sans-serif;
   cursor: pointer;
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 .tabs button {
   background: transparent;
   color: var(--cream);
-  border: 1px solid rgba(214, 170, 76, 0.4);
-  padding: 6px 12px;
+  border: 1px solid var(--gold);
+  padding: 7px 14px;
 }
 
 .tabs button[aria-selected='true'] {
-  background: var(--brass);
-  color: #1a110b;
-  border-color: var(--brass);
+  background: var(--gold);
+  color: var(--black);
 }
 
 #upgrade-screen .balance {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  font-family: 'Special Elite', monospace;
-  font-size: 11px;
+  font: 600 12px var(--thin);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--brass);
+  color: var(--gold);
 }
 
+/* the deco face draws 0 as a half moon, so numbers use the body face */
 #upgrade-screen .balance b {
-  font: 400 26px 'Rye', Georgia, serif;
+  font: 600 24px 'Fredoka', sans-serif;
   font-variant-numeric: tabular-nums;
   color: var(--cream);
 }
 
 #upgrade-screen [data-close] {
   background: var(--cream);
-  color: #1a110b;
+  color: var(--black);
   border: none;
-  padding: 8px 12px;
+  padding: 9px 14px;
 }
 
 .panel {
@@ -547,8 +547,19 @@ kbd {
   display: none;
 }
 
-/* the wiring itself */
-.tree-view .wiring {
+/* the tower on the left, the detail card and counts in their own column */
+.tree-view {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+}
+
+.tower-wrap {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.tree-view .tower {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -558,173 +569,213 @@ kbd {
   user-select: none;
 }
 
-.tree-view .wiring.dragging {
+.tree-view .tower.dragging {
   cursor: grabbing;
 }
 
-.wiring .ring {
+.tower .setback {
   fill: none;
-  stroke: var(--ink);
-  stroke-opacity: 0.25;
+  stroke: var(--gold);
   stroke-width: 2;
-  stroke-dasharray: 2 7;
+  stroke-opacity: 0.35;
 }
 
-.wiring .ring.open {
-  stroke-opacity: 0.6;
+.tower .setback.open {
+  stroke-opacity: 0.85;
 }
 
-.wiring .ring-label {
-  font: 12px 'Special Elite', monospace;
-  letter-spacing: 0.12em;
-  fill: rgba(241, 228, 198, 0.35);
+.tower .setback.inner {
+  stroke-width: 1.2;
+  stroke-opacity: 0.12;
 }
 
-.wiring .ring-label.open {
-  fill: rgba(241, 228, 198, 0.8);
+.tower .setback.inner.open {
+  stroke-opacity: 0.35;
 }
 
-.wire path {
-  fill: none;
-  stroke-linecap: round;
+.tier-tags {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
 }
 
-.wire .sheath {
-  stroke: #0e0906;
-  stroke-width: 7;
+/* pinned to the left edge, level with the top of their step */
+.tier-tags span {
+  position: absolute;
+  left: 22px;
+  top: 0;
+  white-space: nowrap;
+  padding: 2px 8px;
+  background: var(--black);
+  font: 14px var(--deco);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--gold);
+  opacity: 0.45;
 }
 
-/* cloth braid on an unpowered wire */
-.wire .core {
-  stroke: #5b4a3a;
+.tier-tags span.open {
+  opacity: 1;
+}
+
+.tower .lane-guide {
+  stroke: var(--gold);
+  stroke-opacity: 0.05;
+}
+
+.tower .plinth {
+  stroke: var(--gold);
   stroke-width: 3;
-  stroke-dasharray: 3 3;
+  stroke-opacity: 0.9;
 }
 
-.wire.ready .core {
+.tower .plinth.inner {
+  stroke-width: 1.2;
+  stroke-opacity: 0.3;
+}
+
+.tower .branch-name {
+  font: 600 13px var(--thin);
+  letter-spacing: 2px;
+}
+
+.tower .link path {
+  fill: none;
+}
+
+.tower .link .glow {
+  stroke: none;
+}
+
+.tower .link .line {
+  stroke: var(--gold);
+  stroke-opacity: 0.3;
+  stroke-width: 1.5;
+  stroke-dasharray: 2 5;
+}
+
+.tower .link.ready .line {
   stroke: var(--c);
-  stroke-opacity: 0.45;
+  stroke-opacity: 0.65;
+  stroke-width: 1.8;
+  stroke-dasharray: none;
 }
 
-.wire.live .sheath {
+.tower .link.live .glow {
   stroke: var(--c);
   stroke-opacity: 0.22;
-  stroke-width: 11;
+  stroke-width: 10;
 }
 
-.wire.live .core {
+.tower .link.live .line {
   stroke: var(--c);
+  stroke-opacity: 1;
+  stroke-width: 2.8;
   stroke-dasharray: none;
-  stroke-width: 3.5;
 }
 
-.socket {
+.tower .diamond {
   cursor: pointer;
 }
 
-.socket .brass {
-  stroke: #2a1c08;
-  stroke-width: 2;
+.tower .diamond .halo {
+  fill-opacity: 0.12;
 }
 
-.socket .bulb {
-  stroke: rgba(0, 0, 0, 0.6);
-  stroke-width: 1.2;
+.tower .diamond .frame {
+  fill: var(--black);
+  stroke: var(--gold);
+  stroke-width: 1.8;
 }
 
+.tower .diamond .face {
+  stroke-width: 2.2;
+}
 
-.glyph .st {
+.tower .diamond.locked:not(.lit) .face {
+  stroke-width: 1;
+  stroke-opacity: 0.45;
+}
+
+.tower .diamond .ready-ring {
   fill: none;
-  stroke: currentColor;
-  stroke-width: 2.4;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.glyph .st.thin {
-  stroke-width: 1.7;
-}
-
-.glyph .st.fat {
-  stroke-width: 3.6;
-}
-
-.socket .glyph {
-  color: rgba(241, 228, 198, 0.55);
-  fill: currentColor;
-}
-
-.socket.lit .glyph {
-  color: #1a110b;
-}
-
-.glyph .hi {
-  fill: rgba(255, 255, 255, 0.5);
-}
-
-.glyph .cut {
-  stroke: #2c2520;
-}
-
-.socket.lit .glyph .cut {
-  stroke: #fff6da;
-}
-
-.socket .ready-ring {
-  fill: none;
-  stroke: var(--c);
-  stroke-width: 2.5;
+  stroke-width: 1.6;
   opacity: 0;
 }
 
-.socket.can-buy .ready-ring {
-  animation: socket-ready 1.4s ease-in-out infinite;
+.tower .diamond.can-buy .ready-ring {
+  animation: diamond-ready 1.4s ease-in-out infinite;
 }
 
-@keyframes socket-ready {
-  50% { opacity: 0.9; }
+@keyframes diamond-ready {
+  50% { opacity: 1; }
 }
 
-.socket.locked:not(.gated) {
-  opacity: 0.8;
+.tower .diamond.gated {
+  opacity: 0.3;
 }
 
-.socket.gated {
-  opacity: 0.38;
-}
-
-.socket.selected .brass {
+.tower .diamond.selected .frame {
   stroke: var(--cream);
   stroke-width: 3;
 }
 
-.socket:focus {
+.tower .diamond:focus {
   outline: none;
 }
 
-.socket:focus-visible .brass {
+.tower .diamond:focus-visible .frame {
   stroke: #fff;
   stroke-width: 4;
 }
 
-.socket .pips rect {
-  fill: #0e0906;
-  stroke: rgba(214, 170, 76, 0.6);
+.tower .diamond .level {
+  font: 600 13px var(--thin);
+  fill: var(--gold);
 }
 
-.socket.lit .pips text {
+.tower .diamond .cross {
+  stroke-width: 1.4;
+}
+
+.tower .diamond .plaque {
+  fill: var(--black);
+  stroke: var(--gold);
+  stroke-opacity: 0.35;
+}
+
+.tower .diamond .name {
+  font: 600 11px var(--thin);
+  letter-spacing: 1px;
   fill: var(--cream);
+  fill-opacity: 0.55;
 }
 
-.socket .pips text {
-  font: 600 9px 'Fredoka', sans-serif;
-  fill: rgba(241, 228, 198, 0.6);
+.tower .diamond.lit .name,
+.tower .diamond.can-buy .name {
+  fill-opacity: 0.95;
 }
 
-.socket .pass-label {
-  font: 11px 'Special Elite', monospace;
-  letter-spacing: 0.1em;
-  fill: var(--brass);
+.tower .hub .hub-face {
+  stroke: var(--gold);
+  stroke-width: 3;
+}
+
+.tower .hub .hub-inner {
+  fill: none;
+  stroke: var(--gold);
+  stroke-width: 1.5;
+}
+
+.tower .hub.lit .hub-inner {
+  stroke: var(--black);
+}
+
+.tower .hub .start {
+  font: 14px var(--deco);
+  letter-spacing: 3px;
+  fill: var(--gold);
 }
 
 .padlock path {
@@ -737,45 +788,20 @@ kbd {
   fill: var(--cream);
 }
 
-.legend {
-  position: absolute;
-  left: 16px;
-  bottom: 12px;
-  display: grid;
-  grid-template-columns: repeat(2, auto);
-  gap: 2px 18px;
-  pointer-events: none;
-}
-
-.legend div {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  font: 12px 'Special Elite', monospace;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--c);
-}
-
-.legend b {
-  font: 400 14px 'Rye', Georgia, serif;
-  font-variant-numeric: tabular-nums;
-}
-
 .zoom {
   position: absolute;
-  left: 16px;
-  top: 12px;
+  right: 16px;
+  top: 14px;
   display: flex;
   gap: 4px;
 }
 
 .zoom button {
-  min-width: 32px;
-  background: rgba(14, 9, 6, 0.8);
+  min-width: 34px;
+  background: var(--black);
   color: var(--cream);
-  border: 1px solid rgba(214, 170, 76, 0.5);
-  padding: 4px 8px;
+  border: 1px solid var(--gold);
+  padding: 5px 9px;
 }
 
 .tree-view .hint {
@@ -784,93 +810,107 @@ kbd {
   bottom: 8px;
   transform: translateX(-50%);
   margin: 0;
-  font: 11px 'Special Elite', monospace;
-  color: rgba(241, 228, 198, 0.45);
+  font: 600 11px var(--thin);
+  letter-spacing: 0.08em;
+  color: rgba(241, 228, 198, 0.5);
   pointer-events: none;
   white-space: nowrap;
 }
 
-/* detail card, printed on poster stock */
+.tree-view .side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 20px 16px 4px;
+  overflow-y: auto;
+}
+
+/* detail card: a gold frame with chamfered corners */
 .node-card {
-  position: absolute;
-  right: 16px;
-  top: 12px;
-  width: min(290px, calc(100% - 32px));
-  background: var(--paper);
-  color: var(--ink);
-  border: 3px solid var(--ink);
-  border-radius: 6px;
-  box-shadow: inset 0 0 0 2px var(--paper), inset 0 0 0 4px var(--red), 0 10px 24px rgba(0, 0, 0, 0.6);
-  padding: 14px 16px;
+  --cut: polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px);
+  position: relative;
+  background: var(--gold);
+  clip-path: var(--cut);
+  padding: 20px 22px;
   font-size: 14px;
+  color: var(--cream);
+}
+
+.node-card::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  background: var(--black);
+  clip-path: var(--cut);
+}
+
+.node-card > * {
+  position: relative;
 }
 
 .node-card h3 {
-  margin: 2px 0 4px;
-  font: 400 20px 'Rye', Georgia, serif;
+  margin: 4px 0 6px;
+  font: 400 23px var(--deco);
+  color: var(--gold);
 }
 
 .node-card p {
   margin: 6px 0 0;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .node-card .card-branch {
-  display: inline-block;
-  font: 11px 'Special Elite', monospace;
+  font: 600 12px var(--thin);
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  padding: 1px 6px;
-  border-radius: 3px;
-  background: var(--ink);
-  color: var(--c);
 }
 
 .node-card .badge {
   display: inline-block;
-  font: 11px 'Special Elite', monospace;
+  font: 600 11px var(--thin);
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  padding: 1px 6px;
-  border-radius: 3px;
-  background: var(--ink);
-  color: var(--paper);
-  border-left: 6px solid var(--ink);
+  padding: 2px 8px;
+  border: 1px solid var(--gold);
+  color: var(--gold);
 }
 
 .node-card .per,
 .node-card .level {
-  font-family: 'Special Elite', monospace;
-  font-size: 12px;
-  opacity: 0.75;
+  font: 600 13px var(--thin);
+  letter-spacing: 0.06em;
+  opacity: 0.8;
 }
 
 .node-card button[data-buy] {
-  margin-top: 10px;
+  margin-top: 12px;
   width: 100%;
-  background: var(--red);
-  color: var(--paper);
-  border: 2px solid var(--ink);
-  padding: 8px;
+  background: var(--gold);
+  color: var(--black);
+  border: none;
+  padding: 10px;
+  font-size: 14px;
 }
 
 .node-card button[data-buy]:disabled {
-  background: var(--aged);
-  color: var(--ink);
-  opacity: 0.7;
+  background: transparent;
+  color: var(--cream);
+  border: 1px solid var(--gold-dim);
+  opacity: 0.8;
   cursor: default;
 }
 
 .node-card .maxed {
-  font-family: 'Special Elite', monospace;
-  text-transform: uppercase;
-  color: var(--teal);
+  font: 400 15px var(--deco);
+  letter-spacing: 0.1em;
+  color: var(--gold);
 }
 
 .node-card .reasons {
-  margin: 8px 0 0;
+  margin: 10px 0 0;
   padding-left: 18px;
   font-size: 13px;
-  color: var(--red);
+  color: #ff8a6b;
 }
 
 .node-card .cost {
@@ -878,31 +918,61 @@ kbd {
   opacity: 0.75;
 }
 
-/* table picker: lobby cards */
+.legend {
+  border: 1px solid var(--gold-dim);
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font: 600 13px var(--thin);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.legend h4 {
+  margin: 0 0 4px;
+  font: 400 15px var(--deco);
+  letter-spacing: 3px;
+  color: var(--gold);
+}
+
+.legend div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.legend b {
+  font: 600 14px 'Fredoka', sans-serif;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold);
+}
+
+/* table picker: lobby cards on the black board */
 .tables-view,
 .loadout-view {
   overflow-y: auto;
-  padding: 18px 34px 24px;
+  padding: 20px 72px 26px;
 }
 
 .lobby-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 18px;
+  gap: 20px;
 }
 
 .lobby {
   background: var(--paper);
   color: var(--ink);
-  border-radius: 4px;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+  outline: 1px solid var(--gold);
+  outline-offset: 4px;
 }
 
 .lobby.locked {
-  filter: grayscale(0.75) brightness(0.8);
+  filter: grayscale(0.75) brightness(0.75);
+  outline-color: var(--gold-dim);
 }
 
 .lobby .poster {
@@ -966,7 +1036,6 @@ kbd {
   background: var(--paper);
   color: var(--ink);
   padding: 2px 6px;
-  border-radius: 2px;
 }
 
 .lobby-body {
@@ -996,7 +1065,7 @@ kbd {
 
 .lobby .state {
   margin: 0;
-  border-top: 2px dashed var(--foxing, #c8b48c);
+  border-top: 2px dashed #c8b48c;
   padding-top: 8px;
 }
 
@@ -1007,134 +1076,135 @@ kbd {
 
 .lobby button[data-find] {
   justify-self: start;
-  background: var(--ink);
-  color: var(--paper);
-  border: none;
+  background: var(--black);
+  color: var(--gold);
+  border: 1px solid var(--gold);
   padding: 6px 10px;
 }
 
 /* skill loadout */
 .loadout-intro {
-  margin: 0 0 14px;
-  color: rgba(241, 228, 198, 0.75);
+  margin: 0 0 16px;
+  font: 600 14px var(--thin);
+  letter-spacing: 0.04em;
+  color: rgba(241, 228, 198, 0.8);
 }
 
 .slots {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 10px;
-  margin-bottom: 22px;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
 }
 
 .slot {
   position: relative;
   display: grid;
   gap: 4px;
-  padding: 10px 12px;
-  border-radius: 6px;
-  background: rgba(14, 9, 6, 0.7);
-  border: 2px solid rgba(214, 170, 76, 0.4);
+  padding: 12px 14px;
+  background: var(--black);
+  border: 1px solid var(--gold-dim);
   cursor: pointer;
 }
 
 .slot.current {
-  border-color: var(--brass);
-  box-shadow: 0 0 0 3px rgba(214, 170, 76, 0.25);
+  border: 2px solid var(--gold);
+  box-shadow: inset 0 0 0 3px var(--black), inset 0 0 0 4px var(--gold-dim);
 }
 
 .slot.locked {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: default;
 }
 
 .slot kbd {
   justify-self: start;
-  background: var(--brass);
-  color: #1a110b;
+  background: var(--gold);
+  color: var(--black);
+  border-radius: 0;
 }
 
 .slot span {
-  font: 400 16px 'Rye', Georgia, serif;
+  font: 400 17px var(--deco);
+  color: var(--gold);
 }
 
 .slot small {
-  font: 11px 'Special Elite', monospace;
-  opacity: 0.7;
+  font: 600 12px var(--thin);
+  letter-spacing: 0.04em;
+  opacity: 0.8;
 }
 
 .slot [data-unequip] {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 8px;
+  right: 8px;
   background: none;
   color: var(--cream);
-  border: 1px solid rgba(241, 228, 198, 0.4);
-  width: 24px;
-  height: 24px;
+  border: 1px solid var(--gold-dim);
+  width: 26px;
+  height: 26px;
   padding: 0;
 }
 
 .skill-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 12px;
+  gap: 14px;
 }
 
 .skill-card {
   display: grid;
-  grid-template-columns: 44px 1fr;
-  gap: 6px 12px;
+  grid-template-columns: 46px 1fr;
+  gap: 8px 14px;
   align-items: start;
-  background: var(--paper);
-  color: var(--ink);
-  border-radius: 6px;
-  padding: 12px;
+  background: var(--black);
+  border: 1px solid var(--gold-dim);
+  padding: 14px;
 }
 
 .skill-card.locked {
-  opacity: 0.55;
+  opacity: 0.5;
 }
 
 .skill-card h4 {
   margin: 0;
-  font: 400 17px 'Rye', Georgia, serif;
+  font: 400 18px var(--deco);
+  color: var(--gold);
 }
 
 .skill-card p {
-  margin: 2px 0;
+  margin: 3px 0;
   font-size: 13px;
 }
 
 .skill-card small {
-  font: 11px 'Special Elite', monospace;
-  opacity: 0.75;
+  font: 600 12px var(--thin);
+  letter-spacing: 0.04em;
+  opacity: 0.8;
 }
 
 .skill-card button {
   grid-column: 1 / -1;
-  background: var(--red);
-  color: var(--paper);
-  border: 2px solid var(--ink);
-  padding: 6px;
+  background: var(--gold);
+  color: var(--black);
+  border: none;
+  padding: 8px;
 }
 
+/* a gold diamond with the skill's glyph */
 .glyph-chip {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #f6dc8a, #8a6420);
+  width: 46px;
+  height: 46px;
+  background: var(--gold);
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
   display: grid;
   place-items: center;
-  color: #1a110b;
 }
 
 .glyph-chip svg {
-  width: 26px;
-  height: 26px;
-}
-
-.glyph-chip .glyph {
-  fill: currentColor;
+  width: 24px;
+  height: 24px;
 }
 
 .board-foot {
@@ -1143,17 +1213,18 @@ kbd {
   justify-content: space-between;
   align-items: center;
   gap: 10px;
-  padding: 10px 34px 12px;
-  border-top: 2px solid rgba(214, 170, 76, 0.35);
-  font: 12px 'Special Elite', monospace;
-  color: rgba(241, 228, 198, 0.75);
+  padding: 10px 72px 14px;
+  border-top: 2px solid var(--gold);
+  font: 600 13px var(--thin);
+  letter-spacing: 0.06em;
+  color: rgba(241, 228, 198, 0.8);
 }
 
 #upgrade-screen [data-reset] {
   background: none;
-  border: 1px solid rgba(241, 228, 198, 0.5);
+  border: 1px solid var(--gold-dim);
   color: var(--cream);
-  padding: 5px 10px;
+  padding: 6px 12px;
 }
 
 #upgrade-screen [data-reset].armed {
@@ -1164,28 +1235,46 @@ kbd {
 #upgrade-screen button:focus-visible,
 #upgrade-screen .slot:focus-visible,
 #skill-list button:focus-visible {
-  outline: 3px solid var(--teal);
+  outline: 3px solid var(--cream);
   outline-offset: 2px;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 760px) {
   .board-bar,
   .board-foot,
   .tables-view,
   .loadout-view {
-    padding-left: 16px;
-    padding-right: 16px;
+    padding-left: 18px;
+    padding-right: 18px;
   }
 
-  .node-card {
-    top: auto;
+  .zoom {
+    right: 12px;
+  }
+
+  #upgrade-screen h2 {
+    font-size: 21px;
+  }
+
+  .tree-view {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tree-view .side {
+    position: absolute;
+    left: 12px;
+    right: 12px;
     bottom: 12px;
+    padding: 0;
+    overflow: visible;
+    pointer-events: none;
   }
 
-  .node-card.intro {
-    display: none;
+  .tree-view .side > * {
+    pointer-events: auto;
   }
 
+  .node-card.intro,
   .legend,
   .tree-view .hint {
     display: none;
@@ -1193,8 +1282,8 @@ kbd {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .socket.can-buy .ready-ring {
+  .tower .diamond.can-buy .ready-ring {
     animation: none;
-    opacity: 0.8;
+    opacity: 0.9;
   }
 }

@@ -5,7 +5,7 @@
   <title>Rocket Row — Tilt &amp; Ink Prototype</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Rye&family=Special+Elite&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Limelight&family=Poiret+One&family=Rye&family=Special+Elite&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -57,23 +57,28 @@
       <header class="board-bar">
         <h2 id="upgrade-title">Upgrade Tree</h2>
         <nav class="tabs" role="tablist" aria-label="Upgrade screens">
-          <button type="button" role="tab" data-tab="tree" aria-selected="true">Wiring</button>
+          <button type="button" role="tab" data-tab="tree" aria-selected="true">Tower</button>
           <button type="button" role="tab" data-tab="tables" aria-selected="false">Tables</button>
           <button type="button" role="tab" data-tab="loadout" aria-selected="false">Skill loadout</button>
         </nav>
         <div class="balance"><span>Tickets</span><b class="tickets">0</b></div>
         <button type="button" data-close>Close <kbd>U</kbd></button>
       </header>
-      <section class="panel tree-view" data-panel="tree" role="tabpanel" aria-label="Upgrade Tree wiring board">
-        <svg class="wiring" aria-hidden="false"></svg>
-        <div class="legend"></div>
-        <div class="zoom">
-          <button type="button" data-zoom="in" aria-label="Zoom in">+</button>
-          <button type="button" data-zoom="out" aria-label="Zoom out">&minus;</button>
-          <button type="button" data-zoom="fit">Fit</button>
+      <section class="panel tree-view" data-panel="tree" role="tabpanel" aria-label="Upgrade Tree tower">
+        <div class="tower-wrap">
+          <svg class="tower"></svg>
+          <div class="tier-tags" aria-hidden="true"></div>
+          <div class="zoom">
+            <button type="button" data-zoom="in" aria-label="Zoom in">+</button>
+            <button type="button" data-zoom="out" aria-label="Zoom out">&minus;</button>
+            <button type="button" data-zoom="fit">Fit</button>
+          </div>
+          <p class="hint">Drag to pan · wheel to zoom · click a diamond for details</p>
         </div>
-        <aside class="node-card" aria-live="polite"></aside>
-        <p class="hint">Drag to pan · wheel to zoom · click a bulb for details</p>
+        <aside class="side">
+          <div class="node-card" aria-live="polite"></div>
+          <div class="legend"></div>
+        </aside>
       </section>
       <section class="panel tables-view" data-panel="tables" role="tabpanel" hidden></section>
       <section class="panel loadout-view" data-panel="loadout" role="tabpanel" hidden></section>
@@ -104,6 +109,7 @@
   <script src="src/skills.js"></script>
   <script src="src/missions.js"></script>
   <script src="src/pickups.js"></script>
+  <script src="src/treeLayout.js"></script>
   <script src="src/upgradeScreen.js"></script>
   <script src="src/main.js"></script>
 </body>

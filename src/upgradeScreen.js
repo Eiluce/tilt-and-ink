@@ -1,60 +1,57 @@
-// The Upgrade Tree screen, drawn as the inside of the machine's backbox: a
-// walnut wiring board where every node is a brass lamp socket, prerequisites
-// are cloth-wrapped wires, and a bought node's bulb lights in its branch
-// colour. Opens with U or the panel buttons; the game pauses while it's open.
-//
-// Layout is radial and computed from the node data: the hub (Second Reel)
-// sits in the middle, each branch owns a wedge, and each table is a ring,
-// so a table's pass opens the next ring out. Tables not reached yet are
-// drawn dim behind a padlock, so the whole shape is visible from the start.
+// The Upgrade Tree screen, drawn as an art deco stepped tower in black and
+// gold. Every upgrade is a diamond with a name plaque; a bought diamond
+// fills with its branch colour. Each branch climbs its own lanes, each table
+// is one setback of the tower, and every link is a single straight segment
+// (straight up, or exactly 45 degrees). The layout is computed from the node
+// data by layoutTower() in treeLayout.js. Opens with U or the panel buttons;
+// the game pauses while it's open.
 //
 // Two more tabs: the table picker (lobby cards for all eight tables) and
 // the skill loadout (which skill sits on which key).
 
-const BOARD_BRANCH = {
-  tables: { color: '#f2d894' },
-  bumpers: { color: '#ff6b4f' },
-  targets: { color: '#3cc7cf' },
-  rules: { color: '#c690ff' },
-  lanes: { color: '#ffc53a' },
-  skills: { color: '#62a8ff' },
-  ball: { color: '#86dc6c' },
+const BRANCH_COLOR = {
+  tables: '#f2d894',
+  bumpers: '#ff6b4f',
+  targets: '#3cc7cf',
+  rules: '#c690ff',
+  lanes: '#ffc53a',
+  skills: '#62a8ff',
+  ball: '#86dc6c',
 };
-// Wedge order round the hub, clockwise from the top. Rules sits between
-// Targets and Ramps & Lanes, the two branches it borrows most wires from.
-const WEDGES = ['tables', 'bumpers', 'targets', 'rules', 'lanes', 'skills', 'ball'];
+const DECO_GOLD = '#d4a646';
+const DECO_BLACK = '#0b0b0b';
 
-const RING_START = 175; // radius of the first ring of Rocket Row nodes
-const DEPTH_STEP = 56; // radial distance between a node and what needs it
-const RING_GAP = 84; // band between two tables' rings, where the pass sits
-const NODE_SPREAD = 50; // arc length between side-by-side nodes
+const LANE_PX = 100; // lane pitch = row height, so a one-lane step is 45 degrees
+const PLINTH_Y = 96; // the gold line the tower stands on (row 0 is at y 0)
+const SETBACK_PX = 26; // how much narrower each table's step is
+const ROMAN_NUMERALS = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
 
-// 16 x 16 glyphs centred on 0,0, drawn on the bulb glass.
+// 16 x 16 angular glyphs centred on 0,0; C is replaced by the ink colour.
 const GLYPHS = {
-  ball: '<circle r="5.5"/><circle cx="-2" cy="-2" r="1.6" class="hi"/>',
-  balls: '<circle cx="-4" cy="3" r="3.4"/><circle cx="4" cy="3" r="3.4"/><circle cx="0" cy="-3.5" r="3.4"/>',
-  plus: '<path d="M-6 0H6M0-6V6" class="st"/>',
-  times: '<path d="M-5-5L5 5M5-5L-5 5" class="st"/>',
-  bolt: '<path d="M2-8L-5 1H0L-2 8L5-1H0Z"/>',
-  echo: '<path d="M-3-6A7 7 0 0 1-3 6M2-8A10 10 0 0 1 2 8" class="st"/><circle cx="-6" r="1.8"/>',
-  chain: '<rect x="-7.5" y="-3" width="8" height="6" rx="3" class="st thin"/><rect x="-0.5" y="-3" width="8" height="6" rx="3" class="st thin"/>',
-  chevrons: '<path d="M-6-1L0-6L6-1M-6 5L0 0L6 5" class="st"/>',
-  clock: '<circle r="6.5" class="st thin"/><path d="M0-4V0L3 2" class="st thin"/>',
-  coin: '<circle r="6" class="st thin"/><path d="M0-3.5V3.5M-2 -1.5H2" class="st thin"/>',
-  star: '<path d="M0-7L2-2.2L7-2.2L3 1L4.5 6.2L0 3.2L-4.5 6.2L-3 1L-7-2.2L-2-2.2Z"/>',
-  shield: '<path d="M0-7L6-4.5V0.5C6 4.5 0 7.5 0 7.5S-6 4.5-6 0.5V-4.5Z"/>',
-  flipper: '<path d="M-5 3L5-3" class="st fat"/><circle cx="-5" cy="3" r="3"/>',
-  battery: '<rect x="-7" y="-4" width="12" height="8" rx="1.5" class="st thin"/><rect x="5" y="-2" width="2" height="4"/><rect x="-5" y="-2" width="5" height="4"/>',
-  ticket: '<path d="M-7-4.5H7V-1.5A1.5 1.5 0 0 0 7 1.5V4.5H-7V1.5A1.5 1.5 0 0 0-7-1.5Z"/><path d="M-2.5-4.5V4.5" class="st thin cut"/>',
-  eye: '<path d="M-7 0C-4-5 4-5 7 0C4 5-4 5-7 0Z" class="st thin"/><circle r="2.3"/>',
-  medal: '<path d="M-3.5-7.5L0-2L3.5-7.5" class="st thin"/><circle cy="2.5" r="4.5"/>',
-  film: '<rect x="-7" y="-5" width="14" height="10" rx="1"/><path d="M-5-3H-3M-1-3H1M3-3H5M-5 3H-3M-1 3H1M3 3H5" class="st thin cut"/>',
-  drop: '<path d="M0-7.5C4-2 5 1 5 2.8A5 5 0 0 1-5 2.8C-5 1-4-2 0-7.5Z"/>',
-  reel: '<circle r="6.5" class="st thin"/><circle cy="-3" r="1.6"/><circle cx="2.6" cy="1.6" r="1.6"/><circle cx="-2.6" cy="1.6" r="1.6"/>',
-  magnet: '<path d="M-4.5-6V0.5A4.5 4.5 0 0 0 4.5 0.5V-6" class="st fat"/>',
-  slot: '<rect x="-7" y="-5" width="14" height="10" rx="2" class="st thin"/><path d="M-3 0H3" class="st"/>',
+  plus: '<path d="M-6 0H6M0-6V6" fill="none" stroke="C" stroke-width="2.4" stroke-linecap="square"/>',
+  times: '<path d="M-5-5L5 5M5-5L-5 5" fill="none" stroke="C" stroke-width="2.4" stroke-linecap="square"/>',
+  eye: '<path d="M-7 0L-3.5-4H3.5L7 0L3.5 4H-3.5Z" fill="none" stroke="C" stroke-width="1.7"/><rect x="-2" y="-2" width="4" height="4" fill="C"/>',
+  bolt: '<path d="M2-8L-5 1H0L-2 8L5-1H0Z" fill="C"/>',
+  ticket: '<path d="M-7-4.5H7V-1.5L5.5 0L7 1.5V4.5H-7V1.5L-5.5 0L-7-1.5Z" fill="C"/>',
+  chevrons: '<path d="M-6-1L0-6L6-1M-6 5L0 0L6 5" fill="none" stroke="C" stroke-width="2.2"/>',
+  coin: '<path d="M0-7L7 0L0 7L-7 0Z" fill="none" stroke="C" stroke-width="1.8"/><path d="M0-3V3" stroke="C" stroke-width="1.8"/>',
+  clock: '<path d="M-6-6H6V6H-6Z" fill="none" stroke="C" stroke-width="1.7"/><path d="M0-3.5V0H3" fill="none" stroke="C" stroke-width="1.7"/>',
+  star: '<path d="M0-7L2-2.2L7-2.2L3 1L4.5 6.2L0 3.2L-4.5 6.2L-3 1L-7-2.2L-2-2.2Z" fill="C"/>',
+  drop: '<path d="M0-7.5L5 1L0 6.5L-5 1Z" fill="C"/>',
+  battery: '<path d="M-7-4H5V4H-7Z" fill="none" stroke="C" stroke-width="1.7"/><path d="M5-2H7V2H5Z M-5-2H0V2H-5Z" fill="C"/>',
+  reel: '<path d="M-6-6H6V6H-6Z" fill="none" stroke="C" stroke-width="1.7"/><rect x="-1.5" y="-4" width="3" height="3" fill="C"/><rect x="-4" y="1" width="3" height="3" fill="C"/><rect x="1" y="1" width="3" height="3" fill="C"/>',
+  magnet: '<path d="M-4.5-6V1L0 5L4.5 1V-6" fill="none" stroke="C" stroke-width="3.2"/>',
+  flipper: '<path d="M-5 3L5-3" stroke="C" stroke-width="3.6"/><rect x="-7.5" y="0.5" width="5" height="5" fill="C"/>',
+  ball: '<path d="M0-6L6 0L0 6L-6 0Z" fill="C"/>',
+  balls: '<path d="M-4 0L-1 3L-4 6L-7 3Z M4 0L7 3L4 6L1 3Z M0-7L3-4L0-1L-3-4Z" fill="C"/>',
+  echo: '<path d="M-3-6L1 0L-3 6M2-8L7 0L2 8" fill="none" stroke="C" stroke-width="2"/><rect x="-7.5" y="-1.5" width="3" height="3" fill="C"/>',
+  chain: '<path d="M-7-3H0V3H-7Z M0-3H7V3H0Z" fill="none" stroke="C" stroke-width="1.8"/>',
+  shield: '<path d="M0-7L6-4.5V1L0 7.5L-6 1V-4.5Z" fill="C"/>',
+  medal: '<path d="M-3.5-7.5L0-2L3.5-7.5" fill="none" stroke="C" stroke-width="1.7"/><path d="M0-2L4.5 2.5L0 7L-4.5 2.5Z" fill="C"/>',
+  film: '<path d="M-7-5H7V5H-7Z" fill="C"/><path d="M-5-3H-3M-1-3H1M3-3H5M-5 3H-3M-1 3H1M3 3H5" stroke="#0b0b0b" stroke-width="1.6"/>',
+  slot: '<path d="M-7-5H7V5H-7Z" fill="none" stroke="C" stroke-width="1.7"/><path d="M-3 0H3" stroke="C" stroke-width="2.4"/>',
 };
-const PADLOCK = '<g class="padlock"><path d="M-3.5-2V-4.5A3.5 3.5 0 0 1 3.5-4.5V-2" /><rect x="-5" y="-2" width="10" height="8" rx="1.5"/></g>';
+const PADLOCK = '<g class="padlock"><path d="M-3-1V-4H3V-1"/><rect x="-5" y="-1" width="10" height="7"/></g>';
 
 const SKILL_GLYPH = { inkSurge: 'drop', slowReels: 'reel', bounceHouse: 'balls', magnetMitt: 'magnet' };
 
@@ -83,63 +80,26 @@ function glyphFor(u) {
   return 'plus';
 }
 
-// Positions every node: { id: { x, y, r (socket radius) } }, plus the rings.
-function layoutTree() {
-  const byId = Object.fromEntries(NODES.map((u) => [u.id, u]));
-  const hub = 'secondReel';
-  // A pass sits in the band before the ring it opens.
-  const tierOf = (u) => (u.pass ? u.pass - 0.5 : u.table || 1);
+const glyphSvg = (name, color, scale = 1) => `<g transform="scale(${scale})">${GLYPHS[name].replace(/C/g, color)}</g>`;
 
-  // Depth: steps from the nearest prerequisite in the same ring.
-  const depth = {};
-  const depthOf = (u) => {
-    if (u.id in depth) return depth[u.id];
-    let d = 0;
-    for (const req of Object.keys(u.requires || {})) {
-      const r = byId[req];
-      if (req !== hub && tierOf(r) === tierOf(u)) d = Math.max(d, depthOf(r) + 1);
+// Up to two lines of about 11 characters, for a name plaque.
+function plaqueLines(name) {
+  const lines = [];
+  let cur = '';
+  for (const w of name.toUpperCase().split(' ')) {
+    if (cur && cur.length + 1 + w.length > 11) {
+      lines.push(cur);
+      cur = w;
+    } else {
+      cur = cur ? `${cur} ${w}` : w;
     }
-    depth[u.id] = d;
-    return d;
-  };
-  NODES.forEach(depthOf);
-
-  // Ring radii: each ring is as deep as its deepest branch.
-  const ringStart = [];
-  const ringEnd = [];
-  let r = RING_START;
-  for (let t = 1; t <= TABLES.length; t++) {
-    const deepest = Math.max(0, ...NODES.filter((u) => !u.pass && (u.table || 1) === t && u.id !== hub).map((u) => depth[u.id]));
-    ringStart[t] = r;
-    ringEnd[t] = r + deepest * DEPTH_STEP;
-    r = ringEnd[t] + RING_GAP;
   }
-
-  const wedge = 360 / WEDGES.length;
-  const groups = {};
-  for (const u of NODES) {
-    if (u.id === hub) continue;
-    const key = `${u.branch}|${tierOf(u)}|${depth[u.id]}`;
-    (groups[key] = groups[key] || []).push(u);
-  }
-  const pos = { [hub]: { x: 0, y: 0, r: 30 } };
-  for (const list of Object.values(groups)) {
-    list.forEach((u, i) => {
-      const tier = tierOf(u);
-      const radius = u.pass ? ringEnd[u.pass - 1] + RING_GAP / 2 : ringStart[tier] + depth[u.id] * DEPTH_STEP;
-      const centre = -90 + WEDGES.indexOf(u.branch) * wedge;
-      // Spread side by side, but never wider than the wedge.
-      const step = Math.min(NODE_SPREAD / radius, ((wedge * 0.8) / Math.max(1, list.length)) * (Math.PI / 180));
-      // Stagger crowded groups in and out a little so bulbs don't touch.
-      const stagger = list.length > 2 && i % 2 ? DEPTH_STEP * 0.28 : 0;
-      const a = (centre * Math.PI) / 180 + (i - (list.length - 1) / 2) * step;
-      const rr = radius + stagger;
-      pos[u.id] = { x: Math.cos(a) * rr, y: Math.sin(a) * rr, r: u.pass ? 23 : 17 };
-    });
-  }
-  const rings = TABLES.slice(1).map((t) => ({ table: t, r: ringEnd[t.n - 1] + RING_GAP / 2 }));
-  return { pos, rings, ringEnd, outer: r };
+  lines.push(cur);
+  if (lines.length > 2) lines.splice(1, lines.length, lines.slice(1).join(' '));
+  return lines;
 }
+
+const diamondPts = (x, y, r) => `${x},${y - r} ${x + r},${y} ${x},${y + r} ${x - r},${y}`;
 
 class UpgradeScreen {
   constructor({ root, upgrades, scoring, skills, onToggle }) {
@@ -153,12 +113,12 @@ class UpgradeScreen {
     this.selected = null;
     this.hovered = null;
     this.slot = 0; // loadout slot being filled
-    this.layout = layoutTree();
-    this.svg = root.querySelector('.wiring');
+    this.layout = layoutTower(NODES, TABLES.length);
+    this.svg = root.querySelector('.tower');
+    this.tierTags = root.querySelector('.tier-tags');
     this.card = root.querySelector('.node-card');
     this.view = null; // { x, y, k }: pan and zoom
 
-    this.buildDefs();
     this.bindTree();
 
     // Loadout slots are divs acting as buttons.
@@ -251,7 +211,7 @@ class UpgradeScreen {
     const spent = BRANCHES.reduce((s, b) => s + up.spentIn(b.id), 0);
     this.root.querySelector('.tickets').textContent = formatPoints(this.scoring.tickets);
     this.root.querySelector('.tree-total').textContent =
-      `${formatPoints(spent)} of ${formatPoints(up.totalCost())} Tickets spent · ${NODES.filter((u) => up.level(u.id)).length} of ${NODES.length} sockets lit · Tables reached: ${up.tablesReached()} of ${TABLES.length}`;
+      `${formatPoints(spent)} of ${formatPoints(up.totalCost())} Tickets spent · ${NODES.filter((u) => up.level(u.id)).length} of ${NODES.length} upgrades lit · Tables reached: ${up.tablesReached()} of ${TABLES.length}`;
     const reset = this.root.querySelector('[data-reset]');
     reset.textContent = this.confirmingReset ? 'Click again to erase all progress' : 'Reset all progress';
     reset.classList.toggle('armed', this.confirmingReset);
@@ -260,92 +220,123 @@ class UpgradeScreen {
     if (this.tab === 'loadout') this.renderLoadout();
   }
 
-  // --- wiring board ---
+  // --- the tower ---
 
-  buildDefs() {
-    const grads = Object.entries(BOARD_BRANCH).map(([id, { color }]) => `
-      <radialGradient id="bulb-${id}" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#fffbe8"/><stop offset="0.35" stop-color="${color}"/><stop offset="1" stop-color="${color}" stop-opacity="0.75"/></radialGradient>
-      <radialGradient id="halo-${id}"><stop offset="0.3" stop-color="${color}" stop-opacity="0.55"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></radialGradient>`).join('');
-    this.defs = `<defs>
-      <radialGradient id="brass" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#f6dc8a"/><stop offset="0.5" stop-color="#b98a2e"/><stop offset="1" stop-color="#5e4212"/></radialGradient>
-      <radialGradient id="glass" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="#6d6358"/><stop offset="0.55" stop-color="#2c2520"/><stop offset="1" stop-color="#15110d"/></radialGradient>
-      ${grads}
-    </defs>`;
+  // Plane coordinates of a lane and row; rows climb, so y goes negative.
+  cellXY([lane, row]) {
+    return [lane * LANE_PX, -row * LANE_PX];
   }
 
   renderTree() {
     const up = this.upgrades;
-    const { pos, rings } = this.layout;
+    const L = this.layout;
     const reached = up.tablesReached();
     const lit = (id) => up.level(id) > 0;
+    const out = [];
 
-    const ringSvg = rings.map(({ table, r }) => {
-      const open = table.n <= reached;
-      return `<circle r="${r}" class="ring ${open ? 'open' : ''}" style="--ink:${table.inks[0]}"/>
-        <text x="-34" y="${-r + 5}" class="ring-label ${open ? 'open' : ''}" text-anchor="end">${table.n}. ${table.name.toUpperCase()}</text>`;
-    }).join('');
-
-    const wires = [];
-    for (const u of NODES) {
-      for (const req of Object.keys(u.requires || {})) {
-        const a = pos[req];
-        const b = pos[u.id];
-        const sameBranch = up.def(req).branch === u.branch || req === 'secondReel';
-        // Cross-branch wires bow in toward the hub, like a loom of cables.
-        const mx = (a.x + b.x) / 2;
-        const my = (a.y + b.y) / 2;
-        const pull = sameBranch ? 0.9 : 0.6;
-        const d = `M${a.x.toFixed(1)} ${a.y.toFixed(1)}Q${(mx * pull).toFixed(1)} ${(my * pull).toFixed(1)} ${b.x.toFixed(1)} ${b.y.toFixed(1)}`;
-        const color = BOARD_BRANCH[u.branch].color;
-        let state = '';
-        if (lit(req) && lit(u.id)) state = 'live';
-        else if (lit(req) || req === 'secondReel') state = 'ready';
-        wires.push(`<g class="wire ${state}" style="--c:${color}"><path d="${d}" class="sheath"/><path d="${d}" class="core"/></g>`);
-      }
+    // One setback per table: each is narrower than the one below it.
+    const lastX = (L.laneCount - 1) * LANE_PX;
+    for (let t = 1; t <= TABLES.length; t++) {
+      const inset = 70 + SETBACK_PX * (TABLES.length - t);
+      const xl = -inset;
+      const xr = lastX + inset;
+      const yb = t === 1 ? PLINTH_Y : -(L.tierBase[t] - 0.5) * LANE_PX;
+      const yt = -(L.passRow[t] + 0.5) * LANE_PX;
+      const open = t <= reached;
+      out.push(`<path d="M${xl} ${yb}V${yt}H${xr}V${yb}" class="setback ${open ? 'open' : ''}"/>`);
+      out.push(`<path d="M${xl + 8} ${yb}V${yt + 8}H${xr - 8}V${yb}" class="setback inner ${open ? 'open' : ''}"/>`);
+    }
+    // Faint lane guides and the plinth with each branch's name under it.
+    const topY = -(L.passRow[TABLES.length] + 0.5) * LANE_PX;
+    for (let l = 0; l < L.laneCount; l++) out.push(`<path d="M${l * LANE_PX} ${PLINTH_Y}V${topY}" class="lane-guide"/>`);
+    const plinthL = -70 - SETBACK_PX * (TABLES.length - 1);
+    const plinthR = lastX - plinthL;
+    out.push(`<path d="M${plinthL} ${PLINTH_Y}H${plinthR}" class="plinth"/><path d="M${plinthL} ${PLINTH_Y + 7}H${plinthR}" class="plinth inner"/>`);
+    for (const b of TOWER_ORDER) {
+      if (b === 'tables') continue;
+      const mid = (L.firstLane[b] + (L.lanes[b] - 1) / 2) * LANE_PX;
+      out.push(`<text x="${mid}" y="${PLINTH_Y + 30}" text-anchor="middle" class="branch-name" fill="${BRANCH_COLOR[b]}">${BRANCHES.find((x) => x.id === b).name.toUpperCase()}</text>`);
     }
 
-    const nodes = NODES.map((u) => this.socketSvg(u, pos[u.id], reached)).join('');
-    this.svg.innerHTML = `${this.defs}<g class="world">${ringSvg}<g class="wires">${wires.join('')}</g><g class="nodes">${nodes}</g></g>`;
+    // Links: one straight segment each, drawn under the diamonds.
+    for (const { from, to } of L.links) {
+      const [x2, y2] = this.cellXY(L.place[to]);
+      const [x1, y1] = from ? this.cellXY(L.place[from]) : [x2, PLINTH_Y];
+      const parentLit = from ? lit(from) : lit(TOWER_HUB);
+      const state = parentLit && lit(to) ? 'live' : parentLit ? 'ready' : '';
+      const d = `M${x1} ${y1}L${x2} ${y2}`;
+      out.push(`<g class="link ${state}" style="--c:${BRANCH_COLOR[up.def(to).branch]}"><path d="${d}" class="glow"/><path d="${d}" class="line"/></g>`);
+    }
+
+    for (const u of NODES) {
+      if (u.id === TOWER_HUB) continue;
+      out.push(this.diamondSvg(u, this.cellXY(L.place[u.id]), reached));
+    }
+    out.push(this.hubSvg());
+
+    this.svg.innerHTML = `<g class="world">${out.join('')}</g>`;
+    // Table names are HTML tags pinned to the left of the view (the tower
+    // is wider than the screen); applyView() keeps them level with their step.
+    this.tierTags.innerHTML = TABLES.map((t) => `<span class="${t.n <= reached ? 'open' : ''}">${ROMAN_NUMERALS[t.n - 1]} · ${t.name}</span>`).join('');
     this.applyView();
 
-    this.root.querySelector('.legend').innerHTML = BRANCHES.map((b) => {
+    this.root.querySelector('.legend').innerHTML = `<h4>Lit by branch</h4>${BRANCHES.map((b) => {
       const count = NODES.filter((u) => u.branch === b.id).reduce((s, u) => s + up.level(u.id), 0);
-      return `<div style="--c:${BOARD_BRANCH[b.id].color}"><span>${b.name}</span><b>${count}</b></div>`;
-    }).join('');
+      return `<div><span style="color:${BRANCH_COLOR[b.id]}">${b.name}</span><b>${count}</b></div>`;
+    }).join('')}`;
     this.renderCard();
   }
 
-  socketSvg(u, p, reached) {
+  diamondSvg(u, [x, y], reached) {
     const up = this.upgrades;
     const lvl = up.level(u.id);
     const st = up.status(u.id);
     const max = u.costs.length;
     const gated = (u.table || 1) > reached;
     const afford = st.state === 'available' && this.scoring.tickets >= st.cost;
-    const cls = [
-      'socket',
-      lvl ? 'lit' : '',
-      st.state,
-      gated ? 'gated' : '',
-      afford ? 'can-buy' : '',
-      u.pass ? 'pass' : '',
-      u.id === 'secondReel' ? 'hub' : '',
-      this.selected === u.id ? 'selected' : '',
-    ].join(' ');
-    const r = p.r;
-    const bulb = r * 0.72;
-    const scale = (bulb / 9).toFixed(2);
-    const pips = max > 1 ? `<g class="pips" transform="translate(0 ${r + 10})"><rect x="-13" y="-7" width="26" height="13" rx="6.5"/><text y="3.5" text-anchor="middle">${lvl}/${max}</text></g>` : '';
-    const lock = gated ? `<g transform="translate(${r * 0.75} ${-r * 0.75})">${PADLOCK}</g>` : '';
-    // Passes are named by their ring's label; only the hub gets its own.
-    const label = u.id === 'secondReel' ? `<text class="pass-label" y="${-r - 9}" text-anchor="middle">START</text>` : '';
-    return `<g class="${cls}" data-node="${u.id}" transform="translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})" tabindex="0" role="button" aria-label="${u.name}, level ${lvl} of ${max}">
-      ${lvl ? `<circle r="${r * 1.9}" fill="url(#halo-${u.branch})" class="halo"/>` : ''}
-      <circle r="${r + 4}" class="ready-ring" style="--c:${BOARD_BRANCH[u.branch].color}"/>
-      <circle r="${r}" fill="url(#brass)" class="brass"/>
-      <circle r="${bulb}" fill="${lvl ? `url(#bulb-${u.branch})` : 'url(#glass)'}" class="bulb"/>
-      <g class="glyph" transform="scale(${scale})">${GLYPHS[glyphFor(u)]}</g>
-      ${pips}${lock}${label}
+    const col = BRANCH_COLOR[u.branch];
+    const r = u.pass ? 24 : 19;
+    const cls = ['diamond', lvl ? 'lit' : '', st.state, gated ? 'gated' : '', afford ? 'can-buy' : '', this.selected === u.id ? 'selected' : ''].join(' ');
+    const g = [];
+    if (lvl) g.push(`<polygon points="${diamondPts(0, 0, r + 14)}" class="halo" fill="${col}"/>`);
+    g.push(`<polygon points="${diamondPts(0, 0, r + 9)}" class="ready-ring" stroke="${col}"/>`);
+    g.push(`<polygon points="${diamondPts(0, 0, r + 4)}" class="frame"/>`);
+    g.push(`<polygon points="${diamondPts(0, 0, r - 2)}" class="face" fill="${lvl ? col : DECO_BLACK}" stroke="${col}"/>`);
+    g.push(glyphSvg(glyphFor(u), lvl ? DECO_BLACK : col, u.pass ? 1.25 : 1.05));
+    if (max > 1) g.push(`<text x="${r + 9}" y="4" class="level">${lvl}/${max}</text>`);
+    // Prerequisites from other branches: a small diamond in their colour,
+    // filled once met.
+    (this.layout.crossReqs[u.id] || []).forEach((req, i) => {
+      const other = up.def(req);
+      const met = up.level(req) >= u.requires[req];
+      g.push(`<polygon points="${diamondPts(-r - 8 - i * 12, -r + 2, 5)}" class="cross" fill="${met ? BRANCH_COLOR[other.branch] : DECO_BLACK}" stroke="${BRANCH_COLOR[other.branch]}"/>`);
+    });
+    if (!u.pass) {
+      const lines = plaqueLines(u.name);
+      const pw = Math.max(...lines.map((t) => t.length)) * 6.9 + 14;
+      const ph = lines.length * 12.5 + 7;
+      g.push(`<rect x="${(-pw / 2).toFixed(1)}" y="${r + 8}" width="${pw.toFixed(1)}" height="${ph}" class="plaque"/>`);
+      lines.forEach((t, i) => g.push(`<text y="${r + 20 + i * 12.5}" text-anchor="middle" class="name">${t}</text>`));
+    }
+    if (gated) g.push(`<g transform="translate(${r + 2} ${-r - 2})">${PADLOCK}</g>`);
+    return `<g class="${cls}" data-node="${u.id}" transform="translate(${x} ${y})" tabindex="0" role="button" aria-label="${u.name}, level ${lvl} of ${max}">${g.join('')}</g>`;
+  }
+
+  // START: the keystone on the plinth, which is also the Second Reel node.
+  hubSvg() {
+    const u = this.upgrades.def(TOWER_HUB);
+    const lvl = this.upgrades.level(TOWER_HUB);
+    const st = this.upgrades.status(TOWER_HUB);
+    const afford = st.state === 'available' && this.scoring.tickets >= st.cost;
+    const x = this.layout.firstLane.tables * LANE_PX;
+    const y = PLINTH_Y + 26;
+    const cls = ['diamond', 'hub', lvl ? 'lit' : '', afford ? 'can-buy' : '', this.selected === TOWER_HUB ? 'selected' : ''].join(' ');
+    return `<g class="${cls}" data-node="${TOWER_HUB}" transform="translate(${x} ${y})" tabindex="0" role="button" aria-label="${u.name}, level ${lvl} of 1">
+      <polygon points="${diamondPts(0, 0, 53)}" class="ready-ring" stroke="${DECO_GOLD}"/>
+      <polygon points="${diamondPts(0, 0, 44)}" class="hub-face" fill="${lvl ? DECO_GOLD : DECO_BLACK}"/>
+      <polygon points="${diamondPts(0, 0, 31)}" class="hub-inner"/>
+      ${glyphSvg('ball', lvl ? DECO_BLACK : DECO_GOLD, 1.5)}
+      <text y="64" text-anchor="middle" class="start">START</text>
     </g>`;
   }
 
@@ -353,7 +344,7 @@ class UpgradeScreen {
     const id = this.selected || this.hovered;
     this.card.classList.toggle('intro', !id);
     if (!id) {
-      this.card.innerHTML = `<h3>The wiring board</h3><p>Every bulb is an upgrade. A wire leads from each one to the upgrades it unlocks. Bought bulbs light up, and bulbs you can afford now pulse.</p><p>Each ring is a table. Buy a table's pass on the centre line to open its ring.</p>`;
+      this.card.innerHTML = `<h3>The tower</h3><p>Every diamond is an upgrade. A line leads up from each one to the upgrades it unlocks. Bought diamonds fill with their branch colour, and ones you can afford now pulse.</p><p>Each step of the tower is a table. Buy its pass on the centre line to open the next step.</p><p>A small diamond beside an upgrade is a requirement from another branch.</p>`;
       return;
     }
     const up = this.upgrades;
@@ -362,30 +353,36 @@ class UpgradeScreen {
     const st = up.status(id);
     const branch = BRANCHES.find((b) => b.id === u.branch);
     const desc = u.pass
-      ? `Reach ${TABLES[u.pass - 1].name}: opens its ring of upgrades. ${TABLES[u.pass - 1].built ? '' : 'The table itself is still in production.'}`
+      ? `Reach ${TABLES[u.pass - 1].name}: opens its step of the tower. ${TABLES[u.pass - 1].built ? '' : 'The table itself is still in production.'}`
       : u.desc;
     let action;
-    if (st.state === 'maxed') action = '<p class="maxed">Fully wired</p>';
+    if (st.state === 'maxed') action = '<p class="maxed">Fully bought</p>';
     else if (st.state === 'locked') action = `<ul class="reasons">${st.reasons.map((r) => `<li>${r}</li>`).join('')}</ul><p class="cost">Costs ${formatPoints(st.cost)} Tickets</p>`;
     else {
       const afford = this.scoring.tickets >= st.cost;
       action = `<button type="button" data-buy="${id}" ${afford ? '' : 'disabled'}>Buy · ${formatPoints(st.cost)} Tickets</button>${afford ? '' : `<p class="cost">${formatPoints(st.cost - this.scoring.tickets)} more Tickets needed</p>`}`;
     }
-    const table = u.table > 1 ? `<span class="badge" style="--ink:${TABLES[u.table - 1].inks[0]}">${TABLES[u.table - 1].name}</span>` : '';
-    this.card.innerHTML = `<div class="card-branch" style="--c:${BOARD_BRANCH[u.branch].color}">${branch.name}</div>
+    const table = u.table > 1 ? `<span class="badge">${ROMAN_NUMERALS[u.table - 1]} · ${TABLES[u.table - 1].name}</span>` : '';
+    this.card.innerHTML = `<div class="card-branch" style="color:${BRANCH_COLOR[u.branch]}">${branch.name}</div>
       <h3>${u.name}</h3>${table}
       <p>${desc}${u.costs.length > 1 ? ' <span class="per">per level</span>' : ''}</p>
       <p class="level">Level ${lvl} of ${u.costs.length}</p>
       ${action}`;
   }
 
+  // Plane position of a node (the hub sits on the plinth).
+  nodeXY(id) {
+    if (id === TOWER_HUB) return [this.layout.firstLane.tables * LANE_PX, PLINTH_Y + 26];
+    return this.cellXY(this.layout.place[id]);
+  }
+
   // Select a node and pan it into view.
   focusNode(id) {
     this.selected = id;
-    const p = this.layout.pos[id];
+    const [x, y] = this.nodeXY(id);
     const { width, height } = this.svg.getBoundingClientRect();
     const k = Math.max(this.view?.k || 0, 0.7);
-    this.view = { k, x: width / 2 - p.x * k, y: height / 2 - p.y * k };
+    this.view = { k, x: width / 2 - x * k, y: height / 2 - y * k };
     this.render();
   }
 
@@ -393,17 +390,28 @@ class UpgradeScreen {
 
   applyView() {
     const w = this.svg.querySelector('.world');
-    if (w && this.view) w.setAttribute('transform', `translate(${this.view.x.toFixed(1)} ${this.view.y.toFixed(1)}) scale(${this.view.k.toFixed(4)})`);
+    if (!w || !this.view) return;
+    const { x, y, k } = this.view;
+    w.setAttribute('transform', `translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${k.toFixed(4)})`);
+    // Each tag sits just under the top edge of its step.
+    [...this.tierTags.children].forEach((tag, i) => {
+      const top = y + -(this.layout.passRow[i + 1] + 0.5) * LANE_PX * k;
+      tag.style.transform = `translateY(${(top + 8).toFixed(1)}px)`;
+    });
   }
 
-  // Fits the rings reached so far, plus the next one, into the board.
+  // Fits the steps reached so far, plus the next one, from the plinth up:
+  // as tall as the board allows (the tower is wider than the screen, so it
+  // pans sideways), centred on the spine.
   fit() {
     const { width, height } = this.svg.getBoundingClientRect();
     if (!width) return;
     const next = Math.min(TABLES.length, this.upgrades.tablesReached() + 1);
-    const R = this.layout.ringEnd[next] + 70;
-    const k = Math.min(width, height) / (2 * R);
-    this.view = { k, x: width / 2, y: height / 2 };
+    const top = -(this.layout.passRow[next] + 0.9) * LANE_PX;
+    const bottom = PLINTH_Y + 120;
+    const k = Math.min(1, Math.max(0.3, height / (bottom - top)));
+    const spineX = this.layout.firstLane.tables * LANE_PX;
+    this.view = { k, x: width / 2 - spineX * k, y: height - bottom * k };
     this.applyView();
   }
 
@@ -542,7 +550,7 @@ class UpgradeScreen {
       const node = this.upgrades.def(s.id);
       const at = sk.loadout.indexOf(s.id);
       return `<article class="skill-card ${unlocked ? '' : 'locked'}">
-        <div class="glyph-chip"><svg viewBox="-10 -10 20 20" aria-hidden="true"><g class="glyph">${GLYPHS[SKILL_GLYPH[s.id]]}</g></svg></div>
+        <div class="glyph-chip"><svg viewBox="-10 -10 20 20" aria-hidden="true">${glyphSvg(SKILL_GLYPH[s.id], DECO_BLACK)}</svg></div>
         <div><h4>${s.name}</h4><p>${s.desc}</p><small>${unlocked ? `${sk.cost(s.id)} charge${at >= 0 && at < slots ? ` · on key ${at + 1}` : ''}` : `Unlock with ${node.name} in Charge & Skills`}</small></div>
         ${unlocked && at !== this.slot ? `<button type="button" data-equip="${s.id}">Put on key ${this.slot + 1}</button>` : ''}
       </article>`;

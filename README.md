@@ -63,7 +63,7 @@ Once the **Chapters** node is bought, Rocket Row is a movie serial in five chapt
 
 Tickets you bank at the end of each turn buy permanent upgrades. Press <kbd>U</kbd> (or click **Upgrade Tree** in the side panel) to open the tree. The game pauses while it's open, and upgrades apply straight away.
 
-The tree is drawn as the wiring board inside the machine's backbox. Every brass socket is an upgrade, wires lead to the upgrades it unlocks, and bought bulbs light up in their branch's colour. Bulbs you can afford now pulse. Drag to pan, use the mouse wheel to zoom, and click a bulb to see what it does and buy it. The screen has two more tabs: **Tables** shows a lobby card for each of the eight tables, and **Skill loadout** chooses which skill sits on which key.
+The tree is drawn as an art deco tower in black and gold. Every diamond is an upgrade, and a straight line leads up from it to the upgrades it unlocks. Bought diamonds fill with their branch's colour, and diamonds you can afford now pulse. Each branch climbs its own lanes, and each table is one step of the tower: buy a table's pass on the centre line to open the next step. A small coloured diamond beside an upgrade means it also needs something from another branch. Drag to pan, use the mouse wheel to zoom, and click a diamond to see what it does and buy it. The screen has two more tabs: **Tables** shows a lobby card for each of the eight tables, and **Skill loadout** chooses which skill sits on which key.
 
 The tree has seven branches: the **Tables** spine, **Bumpers & Contact**, **Targets**, **Ramps & Lanes**, **Rules & Features**, **Ball Control** and **Charge & Skills**. Rocket Row's nodes wake the table up and add percentage boosts. Each **table pass** (★) opens that table's ring of stronger nodes across every branch. The eight tables are Rocket Row, Timber Hollow, Davy Jones' Deep, Mount Cinder, Frostbite Peak, Tomb of Sekhmet, Ghost Train and The Devil's Lounge. Only Rocket Row is built so far, but buying a later table's pass still opens its nodes. Buying the whole tree takes roughly 14 hours of play.
 
@@ -88,7 +88,7 @@ Tickets, upgrades, rank and your loadout are saved in the browser. **Reset all p
 | `src/main.js` | Table setup, rules, turns and input |
 | `src/scoring.js` | Point values, combo, end-of-ball bonus and Tickets |
 | `src/missions.js` | Missions and ranks |
-| `src/upgrades.js`, `src/upgradeScreen.js` | Upgrade Tree data and purchases; the wiring-board screen, table picker and skill loadout |
+| `src/upgrades.js`, `src/upgradeScreen.js`, `src/treeLayout.js` | Upgrade Tree data and purchases; the tower screen, table picker and skill loadout; the tower's layout |
 | `src/tables.js` | The eight tables: names, spot inks, emblems |
 | `src/skills.js` | Charge meter and active skills |
 | `src/pickups.js` | Star pickups that appear on the playfield |
