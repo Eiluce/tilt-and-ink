@@ -7,19 +7,26 @@
 //  - Rows climb the tower. Each table is one setback: its nodes take the
 //    rows above the previous table's pass, and its own pass sits on the row
 //    above them.
-//  - Every link is one straight segment: straight up the same lane, or
-//    exactly 45 degrees (k lanes over for k rows up). A node's link is drawn
-//    from its first prerequisite in the same branch; prerequisites from
-//    other branches are shown as pips on the node instead of wires.
-//  - Nodes with no same-branch prerequisite are roots: they rise straight
-//    up from the plinth under START.
+//  - Links inside a branch are one straight segment: straight up the same
+//    lane, or exactly 45 degrees (k lanes over for k rows up), from the
+//    node's first prerequisite in its branch.
+//  - Links from another branch are stepped, with 90 degree bends: up out
+//    of the prerequisite into the gap above its row, across that gap, up
+//    the gutter between lanes beside the upgrade, and into its side. The
+//    gaps and gutters are clear of diamonds and name plaques.
+//  - A node always sits above every prerequisite, so links only climb.
+//  - Nodes that need Second Reel and nothing else in their branch rise from
+//    the plinth; nodes that only need other branches have no riser.
 //  - A node with a child on a later table keeps its lane above it for that
 //    child, so the later child climbs straight up and nothing placed
 //    earlier blocks it; its same-table siblings step aside at 45 degrees.
 //  - If a branch still has a link that can't be made straight, it gets
 //    another lane and the layout runs again.
 
-const TOWER_ORDER = ['skills', 'ball', 'bumpers', 'tables', 'targets', 'rules', 'lanes'];
+// Left to right. Rules sits between Targets and Charge & Skills, the
+// branches its cross-branch links come from or go to, with Ramps & Lanes
+// one over.
+const TOWER_ORDER = ['ball', 'bumpers', 'tables', 'targets', 'rules', 'skills', 'lanes'];
 const TOWER_HUB = 'secondReel';
 
 function layoutTower(nodes, tableCount) {
@@ -30,6 +37,14 @@ function layoutTower(nodes, tableCount) {
   for (const u of nodes) {
     const same = Object.keys(u.requires || {}).find((r) => r !== TOWER_HUB && byId[r].branch === u.branch);
     primary[u.id] = same || null;
+  }
+  // Prerequisites from other branches, and whether a node rises from the
+  // plinth (it needs Second Reel and has no prerequisite in its branch).
+  const cross = {};
+  const riser = {};
+  for (const u of nodes) {
+    cross[u.id] = Object.keys(u.requires || {}).filter((r) => r !== TOWER_HUB && byId[r].branch !== u.branch);
+    riser[u.id] = !primary[u.id] && TOWER_HUB in (u.requires || {});
   }
   const kids = {};
   for (const u of nodes) if (primary[u.id]) (kids[primary[u.id]] = kids[primary[u.id]] || []).push(u.id);
@@ -111,24 +126,27 @@ function layoutTower(nodes, tableCount) {
     const mid = Math.floor((lo + hi) / 2);
     const inBranch = (l) => l >= lo && l <= hi;
     const p = primary[u.id];
+    // Above every prerequisite from another branch.
+    const above = Math.max(0, ...cross[u.id].map((r) => place[r][1] + 1));
     if (!p) {
-      // Root: the first lane (from the middle out) whose cells down to the
-      // plinth are all clear, so its riser is straight.
+      // Root: the first lane (from the middle out) that's free. One that
+      // rises from the plinth needs its cells down to the plinth clear, so
+      // its riser is straight; one that will climb also wants its lane
+      // empty above it.
       const order = [mid];
       for (let d = 1; d <= lanes[b]; d++) order.push(mid - d, mid + d);
-      // A root that will climb also wants its lane empty above it.
       for (const strict of [true, false]) {
-        for (let row = tierBase[t]; row < tierBase[t] + 40; row++) {
+        for (let row = Math.max(tierBase[t], above); row < tierBase[t] + above + 40; row++) {
           for (const l of order.filter(inBranch)) {
             let clear = !(strict && climber[u.id]) || clearAbove(l, row);
-            for (let r = 0; r <= row && clear; r++) clear = free(l, r, u.id);
+            for (let r = riser[u.id] ? 0 : row; r <= row && clear; r++) clear = free(l, r, u.id);
             if (clear) return occupy(u.id, l, row);
           }
         }
       }
     }
     const [pl, pr] = place[p];
-    const want = Math.max(pr + 1, tierBase[t]);
+    const want = Math.max(pr + 1, tierBase[t], above);
     let options = [];
     let firstRow = null;
     for (let row = want; row < want + 12 && (firstRow === null || row <= firstRow + 2); row++) {
@@ -181,7 +199,7 @@ function layoutTower(nodes, tableCount) {
       const before = pending.length;
       pending = pending.filter((u) => {
         const p = primary[u.id];
-        if (p && !place[p]) return true;
+        if ((p && !place[p]) || cross[u.id].some((r) => !place[r])) return true;
         placeNode(u, t);
         return false;
       });
@@ -204,16 +222,36 @@ function layoutTower(nodes, tableCount) {
     if (u.branch === 'tables') {
       const i = spineIds.indexOf(u.id);
       links.push({ from: i ? spineIds[i - 1] : null, to: u.id });
-    } else {
+    } else if (primary[u.id] || riser[u.id]) {
       links.push({ from: primary[u.id], to: u.id });
     }
   }
-  const crossReqs = {};
+
+  // Stepped links from other branches, as [lane, row] points (fractional:
+  // 0.5 of a lane is the gutter between two lanes). Several links into one
+  // node from the same side get their own gutter line and entry height.
+  const GAP_ABOVE = 0.31; // between a diamond's top (0.23) and the plaque of the row above (0.39)
+  const bySide = {};
   for (const u of nodes) {
-    crossReqs[u.id] = Object.keys(u.requires || {}).filter((r) => r !== TOWER_HUB && r !== primary[u.id] && byId[r].branch !== u.branch);
+    for (const req of cross[u.id]) {
+      const [ls, rs] = place[req];
+      const [lt, rt] = place[u.id];
+      const side = ls < lt ? -1 : 1;
+      const k = `${u.id}${side}`;
+      const n = (bySide[k] = (bySide[k] || 0) + 1) - 1;
+      const gutter = lt + side * (0.5 - n * 0.06);
+      const entry = rt + (n % 2 ? -0.07 : 0.07) * Math.ceil(n / 2);
+      const gap = rs + GAP_ABOVE + ((rs * 7 + ls) % 3) * 0.02;
+      links.push({
+        from: req,
+        to: u.id,
+        cross: true,
+        route: [[ls, rs], [ls, gap], [gutter, gap], [gutter, entry], [lt, entry]],
+      });
+    }
   }
   const approximate = Object.values(approximateIn).reduce((a, c) => a + c, 0);
-  return { place, links, crossReqs, firstLane, lanes, laneCount, tierBase, passRow, approximate, approximateIn };
+  return { place, links, firstLane, lanes, laneCount, tierBase, passRow, approximate, approximateIn };
   }
 }
 

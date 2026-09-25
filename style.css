@@ -755,8 +755,35 @@ kbd {
   fill: var(--gold);
 }
 
-.tower .diamond .cross {
-  stroke-width: 1.4;
+/* links from another branch: stepped, square corners */
+.tower .link.cross path {
+  stroke-linejoin: miter;
+}
+
+/* hovering or selecting an upgrade: its incoming links and their sources
+   stand out, everything else steps back */
+.tower.focusing .link:not(.hot) {
+  opacity: 0.25;
+}
+
+.tower.focusing .diamond:not(.hot):not(.selected) {
+  opacity: 0.55;
+}
+
+.tower.focusing .diamond.gated:not(.hot) {
+  opacity: 0.2;
+}
+
+.tower .link.hot .line {
+  stroke: var(--c);
+  stroke-opacity: 1;
+  stroke-width: 3;
+}
+
+.tower .link.hot .glow {
+  stroke: var(--c);
+  stroke-opacity: 0.3;
+  stroke-width: 10;
 }
 
 .tower .diamond .plaque {
@@ -766,8 +793,8 @@ kbd {
 }
 
 .tower .diamond .name {
-  font: 700 12px var(--thin);
-  letter-spacing: 0.5px;
+  font: 700 11px var(--thin);
+  letter-spacing: 0.3px;
   fill: var(--cream);
   fill-opacity: 0.7;
 }

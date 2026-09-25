@@ -261,19 +261,28 @@ class UpgradeScreen {
       out.push(`<text x="${mid}" y="${PLINTH_Y + 30}" text-anchor="middle" class="branch-name" fill="${BRANCH_COLOR[b]}">${BRANCHES.find((x) => x.id === b).name.toUpperCase()}</text>`);
     }
 
-    // Links: one straight segment each, drawn under the diamonds. Second
-    // Reel's links are dashed: up from it to the plinth, then up from the
-    // plinth to each branch's first upgrade.
+    // Links, drawn under the diamonds. Inside a branch: one straight
+    // segment. From another branch: a stepped route with 90 degree bends, in
+    // the colour of the branch it comes from. Second Reel's links are
+    // dashed: up from it to the plinth, then up from the plinth to each
+    // branch's first upgrade. data-from / data-to drive the hover highlight.
     const [hubX, hubY] = this.nodeXY(TOWER_HUB);
     const hubState = lit(TOWER_HUB) ? 'live' : 'ready';
-    out.push(`<g class="link root ${hubState}" style="--c:${BRANCH_COLOR.tables}"><path d="M${hubX} ${hubY - 28}L${hubX} ${PLINTH_Y}" class="glow"/><path d="M${hubX} ${hubY - 28}L${hubX} ${PLINTH_Y}" class="line"/></g>`);
-    for (const { from, to } of L.links) {
-      const [x2, y2] = this.cellXY(L.place[to]);
-      const [x1, y1] = from ? this.cellXY(L.place[from]) : [x2, PLINTH_Y];
+    const hubLine = `M${hubX} ${hubY - 28}L${hubX} ${PLINTH_Y}`;
+    out.push(`<g class="link root ${hubState}" data-from="${TOWER_HUB}" data-to="${TOWER_HUB}" style="--c:${BRANCH_COLOR.tables}"><path d="${hubLine}" class="glow"/><path d="${hubLine}" class="line"/></g>`);
+    for (const { from, to, cross, route } of L.links) {
+      let d;
+      if (cross) {
+        d = route.map(([l, r], i) => `${i ? 'L' : 'M'}${(l * LANE_PX).toFixed(1)} ${(-r * LANE_PX).toFixed(1)}`).join('');
+      } else {
+        const [x2, y2] = this.cellXY(L.place[to]);
+        const [x1, y1] = from ? this.cellXY(L.place[from]) : [x2, PLINTH_Y];
+        d = `M${x1} ${y1}L${x2} ${y2}`;
+      }
       const parentLit = from ? lit(from) : lit(TOWER_HUB);
       const state = parentLit && lit(to) ? 'live' : parentLit ? 'ready' : '';
-      const d = `M${x1} ${y1}L${x2} ${y2}`;
-      out.push(`<g class="link ${from ? '' : 'root'} ${state}" style="--c:${BRANCH_COLOR[up.def(to).branch]}"><path d="${d}" class="glow"/><path d="${d}" class="line"/></g>`);
+      const color = BRANCH_COLOR[up.def(cross ? from : to).branch];
+      out.push(`<g class="link ${from ? '' : 'root'} ${cross ? 'cross' : ''} ${state}" data-from="${from || TOWER_HUB}" data-to="${to}" style="--c:${color}"><path d="${d}" class="glow"/><path d="${d}" class="line"/></g>`);
     }
 
     for (const u of NODES) {
@@ -282,7 +291,9 @@ class UpgradeScreen {
     }
     out.push(this.hubSvg());
 
+    // Diamonds after links, so every line runs under them.
     this.svg.innerHTML = `<g class="world">${out.join('')}</g>`;
+    this.highlight();
     // Table names are HTML tags pinned to the left of the view (the tower
     // is wider than the screen); applyView() keeps them level with their step.
     this.tierTags.innerHTML = TABLES.map((t) => `<span class="${t.n <= reached ? 'open' : ''}">${ROMAN_NUMERALS[t.n - 1]} · ${t.name}</span>`).join('');
@@ -311,23 +322,35 @@ class UpgradeScreen {
     g.push(`<polygon points="${diamondPts(0, 0, r + 4)}" class="frame"/>`);
     g.push(`<polygon points="${diamondPts(0, 0, r - 2)}" class="face" fill="${lvl ? col : DECO_BLACK}" stroke="${col}"/>`);
     g.push(glyphSvg(glyphFor(u), lvl ? DECO_BLACK : col, u.pass ? 1.25 : 1.05));
-    if (max > 1) g.push(`<text x="${r + 9}" y="4" class="level">${lvl}/${max}</text>`);
-    // Prerequisites from other branches: a small diamond in their colour,
-    // filled once met.
-    (this.layout.crossReqs[u.id] || []).forEach((req, i) => {
-      const other = up.def(req);
-      const met = up.level(req) >= u.requires[req];
-      g.push(`<polygon points="${diamondPts(-r - 8 - i * 12, -r + 2, 5)}" class="cross" fill="${met ? BRANCH_COLOR[other.branch] : DECO_BLACK}" stroke="${BRANCH_COLOR[other.branch]}"/>`);
-    });
+    // Level count, kept clear of the gutter between lanes (x 50).
+    if (max > 1) g.push(`<text x="${r + 6}" y="4" class="level">${lvl}/${max}</text>`);
     if (!u.pass) {
+      // At most 88 px wide, so the gutters between lanes stay clear for
+      // links from other branches.
       const lines = plaqueLines(u.name);
-      const pw = Math.min(LANE_PX - 4, Math.max(...lines.map((t) => t.length)) * 8.2 + 14);
+      const pw = Math.min(88, Math.max(...lines.map((t) => t.length)) * 7.4 + 12);
       const ph = lines.length * 13.5 + 7;
       g.push(`<rect x="${(-pw / 2).toFixed(1)}" y="${r + 8}" width="${pw.toFixed(1)}" height="${ph}" class="plaque"/>`);
       lines.forEach((t, i) => g.push(`<text y="${r + 21 + i * 13.5}" text-anchor="middle" class="name">${t}</text>`));
     }
     if (gated) g.push(`<g transform="translate(${r + 2} ${-r - 2})">${PADLOCK}</g>`);
     return `<g class="${cls}" data-node="${u.id}" transform="translate(${x} ${y})" tabindex="0" role="button" aria-label="${u.name}, level ${lvl} of ${max}">${g.join('')}</g>`;
+  }
+
+  // Brightens the links into the hovered or selected upgrade and the
+  // upgrades they come from; everything else dims.
+  highlight() {
+    const id = this.selected || this.hovered;
+    this.svg.classList.toggle('focusing', Boolean(id));
+    for (const el of this.svg.querySelectorAll('.hot')) el.classList.remove('hot');
+    if (!id) return;
+    this.svg.querySelector(`[data-node="${id}"]`)?.classList.add('hot');
+    for (const link of this.svg.querySelectorAll(`.link[data-to="${id}"]`)) {
+      link.classList.add('hot');
+      this.svg.querySelector(`[data-node="${link.dataset.from}"]`)?.classList.add('hot');
+      // A plinth riser comes from Second Reel: light its link to the plinth too.
+      if (link.classList.contains('root')) this.svg.querySelector(`.link[data-to="${TOWER_HUB}"]`)?.classList.add('hot');
+    }
   }
 
   // Second Reel, the first upgrade: an ordinary diamond standing on the
@@ -340,7 +363,7 @@ class UpgradeScreen {
     const id = this.selected || this.hovered;
     this.card.classList.toggle('intro', !id);
     if (!id) {
-      this.card.innerHTML = `<h3>The tower</h3><p>Every diamond is an upgrade. A line leads up from each one to the upgrades it unlocks. Bought diamonds fill with their branch colour, and ones you can afford now pulse.</p><p>Start with Second Reel on the plinth: every branch grows from it. Each step of the tower is a table. Buy its pass on the centre line to open the next step.</p><p>A small diamond beside an upgrade is a requirement from another branch.</p>`;
+      this.card.innerHTML = `<h3>The tower</h3><p>Every diamond is an upgrade. A line leads up from each one to the upgrades it unlocks. Bought diamonds fill with their branch colour, and ones you can afford now pulse.</p><p>Start with Second Reel on the plinth: every branch grows from it. Each step of the tower is a table. Buy its pass on the centre line to open the next step.</p><p>A stepped line in another branch's colour is a requirement from that branch. Hover an upgrade to light up everything it needs.</p>`;
       return;
     }
     const up = this.upgrades;
@@ -451,7 +474,10 @@ class UpgradeScreen {
       const id = node ? node.dataset.node : null;
       if (id !== this.hovered) {
         this.hovered = id;
-        if (!this.selected) this.renderCard();
+        if (!this.selected) {
+          this.renderCard();
+          this.highlight();
+        }
       }
     });
     const end = (e) => {
