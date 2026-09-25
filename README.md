@@ -35,13 +35,15 @@ You need an internet connection the first time, because the page loads [Matter.j
 
 ## How to play Rocket Row
 
-You get 3 balls per turn. A ball that drains in the first 8 seconds after launch is given back ("Shoot Again").
+The table starts **dormant**. Your first turn is a single ball, and only the pop bumpers and slingshots score, 1 point each. Everything else is printed faded and scores nothing until you wake it up in the Upgrade Tree: the inlanes, standups, drop targets, UFO, spinner, orbit, ramps, scoop, and rules like the combo, end-of-ball bonus, chapters, multiball and missions. Early turns are slow on purpose. By the end, points come from everywhere and turns score in the billions.
 
 **Scoring**
 
-- **Combo:** chain aimed shots (ramps, orbit, scoop, kickout, UFO, drop targets) less than 3 seconds apart to raise the combo up to ×5. It multiplies everything you score until play goes quiet. Bumpers and slingshots keep scoring but don't raise it.
-- **End-of-ball bonus:** shots and features also add to a bonus that is paid when the ball drains, times the bonus multiplier. Complete the R·O·W lanes to raise that multiplier, up to 5×.
-- **Tickets:** when a turn ends, its score is banked as Tickets (100 points = 1 Ticket), the currency the upgrade tree will spend. Your Tickets and best turn are saved in the browser.
+- **Tickets:** when a turn ends, its score is banked 1:1 as Tickets, the currency the Upgrade Tree spends. Your Tickets and best turn are saved in the browser.
+- **Combo** (once unlocked): chain aimed shots (ramps, orbit, scoop, kickout, UFO, drop targets) less than 3 seconds apart to raise the combo. It multiplies everything you score until play goes quiet.
+- **End-of-ball bonus** (once unlocked): shots and features add to a bonus paid when the ball drains, times the bonus multiplier. Complete the R·O·W lanes to raise that multiplier.
+- **Stars** (once unlocked): star pickups appear on the table for a few seconds. Roll through one to collect it. Golden stars pay 10×.
+- **Everything else:** flipper and rail hits, SUPER pop hits, chain reactions between pops and echoes (a hit that scores twice) all come from the tree.
 
 - **Chapters and saucer multiball:** see below.
 - **R·O·W lanes** at the top: light all three letters to raise the end-of-ball bonus multiplier. Flipper buttons shift the lit letters.
@@ -50,18 +52,18 @@ You get 3 balls per turn. A ball that drains in the first 8 seconds after launch
 
 ### Chapters and saucer multiball
 
-Rocket Row is a movie serial in five chapters, shown by the I–V lights in the middle of the playfield. The next chapter's light blinks.
+Once the **Chapters** node is bought, Rocket Row is a movie serial in five chapters, shown by the I–V lights in the middle of the playfield. The next chapter's light blinks.
 
 - **Advancing:** each ramp shot that reaches the top of either ramp advances one chapter. Lighting all six standup targets (three on each side wall) also advances one chapter, and the standups then reset.
-- **Reward:** each new chapter scores 1,000 × its number (Chapter III pays 3,000, multiplied by your combo) and adds 1,000 to the end-of-ball bonus.
-- **Chapter V:** the UFO's tractor beam pulses and the scoop arrow blinks. Clear the 1-2-3 drop targets, then shoot the scoop under the UFO to start a three-ball **saucer multiball** worth a 10,000 jackpot. Until then, more ramps still score but don't add chapter points.
+- **Reward:** each new chapter scores its chapter value times its number (Chapter III pays triple), multiplied by your combo, and adds to the end-of-ball bonus.
+- **Chapter V:** the UFO's tractor beam pulses and the scoop arrow blinks. Clear the 1-2-3 drop targets, then shoot the scoop under the UFO to start a three-ball **saucer multiball** with a jackpot. Until then, more ramps still score but don't add chapter points.
 - **Resetting:** starting multiball sends the chapters back to 0, so the serial starts again. Chapters carry over when you lose a ball, and reset when a new turn starts.
 
 ## Upgrades and skills
 
 Tickets you bank at the end of each turn buy permanent upgrades. Press <kbd>U</kbd> (or click **Upgrade Tree** in the side panel) to open the tree. The game pauses while it's open, and upgrades apply straight away.
 
-The tree has five branches: **Flipper Mastery**, **Bumper Power**, **Combo & Multiplier**, **Ball Control** and **Charge & Skills**. Each ends in a ★ capstone that needs every other upgrade in its branch plus 3,000 Tickets spent in the other branches. Buying the whole tree costs about 40,000 Tickets, roughly 2–3 hours of play.
+The tree has seven branches: the **Tables** spine, **Bumpers & Contact**, **Targets**, **Ramps & Lanes**, **Rules & Features**, **Ball Control** and **Charge & Skills**. Rocket Row's nodes wake the table up and add percentage boosts. Each **table pass** (★) opens that table's ring of stronger nodes across every branch. The eight tables are Rocket Row, Timber Hollow, Davy Jones' Deep, Mount Cinder, Frostbite Peak, Tomb of Sekhmet, Ghost Train and The Devil's Lounge. Only Rocket Row is built so far, but buying a later table's pass still opens its nodes. Buying the whole tree takes roughly 14 hours of play.
 
 The **Charge & Skills** branch unlocks four skills, powered by a charge meter that fills as you hit things (aimed shots and completed features fill it fastest) and empties at the start of each turn:
 
@@ -86,5 +88,7 @@ Tickets, upgrades and rank are saved in the browser. **Reset all progress** at t
 | `src/missions.js` | Missions and ranks |
 | `src/upgrades.js`, `src/upgradeScreen.js` | Upgrade Tree data, purchases and its screen |
 | `src/skills.js` | Charge meter and active skills |
+| `src/pickups.js` | Star pickups that appear on the playfield |
+| `tools/pacing.js` | Pacing simulator for the tree's costs (`node tools/pacing.js`) |
 | `src/lamps.js`, `src/effects.js` | Lit inserts, plunger, hit effects and title cards |
 | `src/physics.js`, `src/ramp.js`, `src/hole.js`, `src/slingshot.js`, `src/standups.js`, `src/flipper.js`, `src/bumper.js`, `src/spinner.js`, `src/dropTargets.js` | Physics helpers and table elements |

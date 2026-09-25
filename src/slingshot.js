@@ -2,11 +2,9 @@
 // (first vertex to last) kicks the ball away along that face's normal; the
 // other two sides are plain walls. The rubber flashes on each kick.
 class Slingshot {
-  constructor(world, { vertices, textures, kickSpeed = 6.5, points = 10, onScore }) {
+  constructor(world, { vertices, textures, kickSpeed = 6.5 }) {
     this.textures = textures;
     this.kickSpeed = kickSpeed;
-    this.points = points;
-    this.onScore = onScore;
     this.flashUntil = 0;
     this.cooldownUntil = 0;
 
@@ -62,7 +60,6 @@ class Slingshot {
     });
     this.flashUntil = now + 110;
     this.body.render.sprite.texture = this.textures.on;
-    this.onScore?.(this.points, 'slingshot');
     return true;
   }
 

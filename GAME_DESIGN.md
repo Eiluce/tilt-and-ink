@@ -63,12 +63,15 @@ Two currencies, deliberately simple:
 - Tickets are a **single shared pool** across every unlocked table — a bumper hit on Table 3 and a bumper hit on Table 1 both pay into the same bank. This keeps balancing simple and every upgrade universally useful, per the "shared currency, unified tree" decision.
 - In-turn scoring uses a **combo multiplier** that rises with consecutive successful shots (bumpers/targets/ramps in quick succession) and decays if the ball goes quiet — rewards active, connected play without needing a tilt-risk mechanic.
 
-**Implemented scoring (`src/scoring.js`, all values in one place so upgrades can scale them):**
+**Implemented scoring (`src/scoring.js`), reworked for the incremental loop:**
 
-- **Base values in 10× tiers:** contact 10–50 (slings, spinner turn, pops, standups, lanes) · target 100–250 (drop target, UFO, kickout) · shot 500–750 (ramp, orbit, scoop) · feature 1,000–5,000 (drop bank, R·O·W, standup set, chapter × its number) · jackpot 10,000–50,000 (saucer jackpot, missions by tier, promotion × rank).
-- **Combo ×1–×5:** each aimed shot (drop target, UFO, kickout, ramp, orbit, scoop) within 3 s of the previous one raises it; it falls back to ×1 after 3 quiet seconds. It multiplies everything scored live except mission and rank rewards. Bumpers and slings never raise it.
-- **End-of-ball bonus:** shots and features also add to a bonus pool, paid when the ball drains times the bonus multiplier (×1–×5, raised by completing R·O·W, reset each ball), as on a real machine.
-- **Tickets:** at the end of a turn its score banks as Tickets at 100 points = 1 Ticket, saved in localStorage with the best turn score.
+- **Dormant start:** every scoring source (`SOURCES`) scores nothing until an Upgrade Tree node wakes it up. The first turn is one ball on which only the pops and slings score, 1 point each. Dormant elements are drawn faded (sprites at 30% opacity, printed features washed over with paper on the lamp layer) and give no points, popups, lamps or charge; the physics is unchanged. A newly woken element inks back in when the tree closes.
+- **Base values in rough tiers:** contact 1–3 (pops, slings, flippers, walls, spinner turn, standups, lanes) · target 8–15 (drop target, UFO, kickout) · shot 40–60 (ramp, orbit, scoop) · feature 100–150 (drop bank, R·O·W, standup set, chapter × its number) · jackpot 500–2,500 (saucer jackpot, missions by tier, promotion × rank) · pickup 5.
+- **Multipliers:** per-source +%, per-branch +% and global +% (including per table reached and per mission rank) each add up inside their group; the groups and every ×N multiplier from later tables multiply together. Over the full tree a turn goes from ~25 points to hundreds of billions; numbers display as K / M / B / T.
+- **New point sources:** flipper hits, hard wall/rail hits, echo procs (a hit scores twice), chain reactions between pops, SUPER pop hits, and star **pickups** that appear at six open spots for 6 s and pay when the ball rolls through (golden ones pay 10×).
+- **Combo:** unlocked by a node (×3), raised to ×5 on Rocket Row and further on later tables. Each aimed shot within the window raises it; it multiplies everything scored live except mission and rank rewards.
+- **End-of-ball bonus:** unlocked by a node. Shots and features add a share of their value to a pool paid when the ball drains, times the bonus multiplier (raised by R·O·W once Bonus Multiplier is bought).
+- **Tickets:** a turn's score banks 1:1 as Tickets. Saves use `.v2` localStorage keys; the pre-rework saves are wiped once.
 
 ---
 
@@ -89,16 +92,22 @@ Two currencies, deliberately simple:
 | **Ramp / Orbit Lane** | Skill-shot lane; successful shot grants bonus + feeds the combo multiplier | High-skill, high-reward shot |
 | **Centerpiece Target** ("boss target") | One signature, high-value target unique to each table's theme | Table identity, jackpot-style spike scoring |
 
-### 4.3 Proposed v1 Tables (4 total, themed like Cuphead "worlds" without borrowing IP)
+### 4.3 Tables (8, an elemental climb ending in a boss table)
 
-Unlocked in order via **lifetime cumulative Ticket** milestones:
+Each table is unlocked by buying its **pass** node in the Upgrade Tree, which needs a lifetime-Tickets threshold and then costs Tickets. Buying a pass counts as reaching the table: its ring of nodes opens even before the table itself is built. Every table keeps the same serial-poster print style (poster stock, black press ink, halftone) and swaps only its two spot inks, uses the same element vocabulary (pops, slings, spinner, drop bank, ramps, orbit, scoop, centerpiece), and adds **one physics twist** on top of gravity.
 
-1. **Rocket Row** *(starting table, revised from the original "Carnival Row" carnival concept)* — 1930s pulp-serial space voyage theme (Buck Rogers/Flash Gordon era, which pairs naturally with Cuphead's own period), starfield/nebula backdrop, planet-with-rings bumpers, a UFO centerpiece with a glassy cockpit dome and tractor beam, thruster-nozzle flippers, a satellite spinner, mini-rocket-pennant drop targets.
-2. **The Devil's Lounge** — smoky nightclub/casino theme, roulette-wheel spinner, devil-mask centerpiece.
-3. **Sugar Rush Bakery** — candy/pastry theme, gumball bumpers, giant-cake centerpiece.
-4. **Boiler Room Big Band** — industrial jazz-band theme, brass-instrument ramps, steam-whistle centerpiece.
+| # | Table | World | Spot inks | Centerpiece | Physics twist |
+|---|---|---|---|---|---|
+| 1 | **Rocket Row** *(built)* | Space | tomato red · serial teal | UFO with tractor-beam scoop | Gentle gravity, the tutorial |
+| 2 | **Timber Hollow** — "The Woodsman's Curse" | Forest | moss green · rust orange | The Old Oak, owl-eye targets, mouth scoop | Gravity ×1.1, dense toadstool pops, moss inlanes briefly slow the ball |
+| 3 | **Davy Jones' Deep** — "Terror of Twenty Fathoms" | Ocean | deep-sea blue · coral | The Kraken: tentacle ramps, blinking eye target | Water drag (weak flips don't make ramps), an upward current lane |
+| 4 | **Mount Cinder** — "Fury of the Fire God" | Volcano | lava red · sulphur yellow | Tiki-faced volcano with a magma gauge | Gravity ×1.35, steam vents randomly kick the ball |
+| 5 | **Frostbite Peak** — "The Abominable Expedition" | Arctic | glacier blue · berry | Yeti in an ice-cave scoop | Near-frictionless ice |
+| 6 | **Tomb of Sekhmet** — "Curse of the Sand Pharaoh" | Desert | sandstone · scarab turquoise | Sarcophagus scoop | Sand traps, shifting orbit walls |
+| 7 | **Ghost Train** — "Last Stop: Hollow Manor" | Haunted | midnight purple · ectoplasm green | Phantom organist | Ghost walls that fade in and out |
+| 8 | **The Devil's Lounge** *(finale)* | Casino | devil red · gold | Devil mask, roulette spinner | The final boss table |
 
-Each new table is a genuine new layout (not a reskin) so element placement/difficulty can escalate, but all four use the same 4–6 element vocabulary above for consistency.
+Sugar Rush Bakery and Boiler Room Big Band from the original list are dropped for now. Each new table is a genuine new layout (not a reskin).
 
 ### 4.4 Difficulty Scaling Across Tables
 
@@ -125,15 +134,10 @@ Branches are mostly independent (build variety: a "combo rusher" vs. a "tanky ba
 
 ---
 
-**Implemented (`src/upgrades.js`, applied by `applyUpgrades()` in `src/main.js`):** 21 upgrades, 1–3 levels each, opened with U or the panel button (the game pauses; purchases apply immediately). Capstones need every other upgrade in their branch at level 1+ and 3,000 Tickets spent in other branches. Total cost ~40,000 Tickets, tuned for 2–3 hours on one table (first pass, needs playtesting).
+**Implemented, incremental rework (`src/upgrades.js`):** 109 nodes of 1–5 levels in seven branches: the **Tables** spine (table passes and global multipliers), **Bumpers & Contact**, **Targets**, **Ramps & Lanes**, **Rules & Features** (combo, bonus, chapters, multiball, missions, pickups), **Ball Control** and **Charge & Skills**. Nodes are data: each grants stats (`awake.<source>`, `value.<source>` +%, `branch.<branch>` +%, `global` +%, `x.*` ×N, and mechanics like `balls`, `comboMax`, `echo`), and the game reads the summed stats. Rocket Row's nodes wake elements up and add +%; each later table's ring (gated by its pass) is mostly ×N multipliers, so each table reached lifts scoring about 10×.
 
-| Branch | Upgrades | Capstone |
-|---|---|---|
-| Flipper Mastery | Stronger Flippers (+10%/level swing speed), Springy Rubbers (bouncier resting flippers) | Perfect Flip: flip as the ball lands for a 25% faster shot |
-| Bumper Power | Loud Bumpers (+50%/level on pops, slings, standups), Super Pulse (10–20% SUPER hits worth 5×) | Chain Reaction: 30% chance a pop also fires another |
-| Combo & Multiplier | Longer Fuse (+0.75 s window/level), Higher Cap (×6, ×7), Bonus Head Start (bonus starts 2×/3×) | Hot Streak: combo never below ×2 |
-| Ball Control | Ball Saver (+4 s/level), Extra Balls (4, 5 per turn), Saved by the Bell (10–20% drain save) | Guardian Angel: first drain each turn always saved |
-| Charge & Skills | Ink Surge, Fast Charge (+25%/level), Slow Reels, Cheap Tricks (−15%/level cost), Bounce House, Magnet Mitt | Double Charge: meter holds two charges |
+- **Pacing** (`tools/pacing.js` simulates an average player buying the cheapest node each turn): Timber Hollow pass ≈ 1 h, Davy Jones' ≈ 2.5 h, Mount Cinder ≈ 4.4 h, Devil's Lounge ≈ 11.8 h, whole tree ≈ 14 h. Each table's prices come from one `TIER` scale, tuned with the simulator. The play model is a guess; retune after playtesting.
+- The tree screen is a column-per-branch list for now (later tables fold into one line); the backbox wiring-board constellation, a table picker with "in production" cards for unbuilt tables, and a 4-slot skill loadout come next, then effect nodes and one new skill per table pass.
 
 Wider flippers were considered for Flipper Mastery and dropped: any extra length closes the centre drain gap entirely.
 
@@ -150,7 +154,7 @@ Powered by a **charge meter** that fills from active play (bumper hits, drop-tar
 
 Each skill has its own charge cost (not a shared cooldown), so a fully-built player can eventually stack multiple skill uses within a single hot streak.
 
-**Implemented (`src/skills.js`):** keys 1–4 or the panel buttons. Charge costs 35 / 45 / 75 / 60 out of a 100-point meter that empties each turn. Charge comes from play: slings and spinner 0.5, pops/standups/lanes 1, aimed shots 4, completed features 8, missions 20. Ink Surge doubles live scoring for 8 s; Slow Reels runs the table at 45% speed for 5 s; Bounce House feeds two balls from the scoop; Magnet Mitt steers balls for 3 s toward the lit scoop, else the active mission's target, else the UFO. The Charge & Skills capstone was changed from "two skills chargeable simultaneously" to "the meter holds two charges", which gives the same stacking.
+**Implemented (`src/skills.js`):** keys 1–4 or the panel buttons. Skills and their upgrades are stats granted by Charge & Skills nodes (later tables add Double and Triple Charge, a ×3 then ×5 Ink Surge, and longer skills). Charge costs 35 / 45 / 75 / 60 out of a 100-point meter that empties each turn. Charge comes from play: slings and spinner 0.5, pops/standups/lanes 1, aimed shots 4, completed features 8, missions 20. Ink Surge doubles live scoring for 8 s; Slow Reels runs the table at 45% speed for 5 s; Bounce House feeds two balls from the scoop; Magnet Mitt steers balls for 3 s toward the lit scoop, else the active mission's target, else the UFO. The Charge & Skills capstone was changed from "two skills chargeable simultaneously" to "the meter holds two charges", which gives the same stacking.
 
 ---
 
@@ -161,7 +165,8 @@ In-turn objectives in the style of *3D Pinball Space Cadet*, implemented in `src
 - A mission is always **offered** in the HUD panel; hitting any standup target cycles to the next one, and landing in the **kickout saucer** accepts it.
 - Each mission is one objective counted from table events (ramp shots, pop hits, drop-bank clears, orbits, R·O·W lanes, spinner turns, UFO hits, scoop shots), some with a time limit. The clock only runs while a ball is in play. The targets involved pulse with a dashed halo on the playfield.
 - Completing missions pays a reward and promotes the player through **ranks** (Cadet → Ensign → Lieutenant → Captain → Commander → Admiral); each rank unlocks a harder tier of missions.
-- Rank and completed missions persist across turns and reloads (localStorage key `tilt-and-ink.missions`); a mission in progress ends with the turn. Open question: whether rank should feed the Upgrade Tree or reset on Prestige.
+- Missions are locked until the **Mission Control** node; rewards now scale with the tree like any other source. Each rank earns +10% to all points (+10% more per level of Brass Buttons).
+- Rank and completed missions persist across turns and reloads (localStorage key `tilt-and-ink.missions.v2`); a mission in progress ends with the turn. Open question: whether rank should reset on Prestige.
 
 ## 7. Prestige
 

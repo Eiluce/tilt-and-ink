@@ -1,81 +1,111 @@
-// Scoring: every point value in the game, and the three layers on top of them.
+// Scoring: every scoring source on the table, and the layers on top of it.
 //
-//  1. Base values, in rough 10x tiers: contact (bumpers, slings, lanes) <
-//     target (drop targets, UFO) < shot (ramps, orbit, scoop) < feature
-//     (completing a bank or a set) < jackpot (multiball, missions, ranks).
-//     Upgrades will scale these later, so they live in one place.
-//  2. Combo x1-x5: each aimed shot within COMBO.windowMs of the previous one
-//     raises it; it drops back to x1 once play goes quiet. It multiplies
-//     points as they're scored. Bumpers and slings never raise it, so it
-//     rewards aiming rather than luck.
-//  3. End-of-ball bonus: shots and features also add to a bonus pool. When
-//     the ball drains the pool is paid out times the bonus multiplier, which
-//     the R·O·W lanes raise (x1-x5), as on a real machine.
+//  1. Sources, in rough tiers: contact (bumpers, slings, flippers, walls,
+//     lanes) < target (drop targets, UFO) < shot (ramps, orbit, scoop) <
+//     feature (completing a bank or set) < jackpot (multiball, missions).
+//     A source scores nothing until the Upgrade Tree wakes it up (only the
+//     pops and slings start awake), and starts tiny: a pop is worth 1.
+//  2. Upgrade multipliers (upgrades.js): per-source +%, per-branch +% and
+//     global +% each add up inside their own group; the three groups and
+//     every ×N multiplier then multiply together. That's what takes a turn
+//     from tens of points to billions over the whole tree.
+//  3. Combo: each aimed shot within the combo window raises it, up to the
+//     cap the tree allows; it multiplies points as they're scored.
+//  4. End-of-ball bonus: once unlocked, shots and features add a share of
+//     their value to a pool paid when the ball drains, times the bonus
+//     multiplier that completing R·O·W raises.
 //
-// When a turn ends its score is banked as Tickets, the game's currency, at
-// POINTS_PER_TICKET and saved in localStorage along with the best turn.
+// When a turn ends its score is banked 1:1 as Tickets, the game's currency,
+// and saved in localStorage along with the best turn.
 
-const POINTS = {
-  // contact
-  sling: 10,
-  spinnerTurn: 20,
-  pop: 30,
-  standup: 50,
-  lane: 50,
-  inlane: 50,
-  // target
-  dropTarget: 100,
-  ufo: 250,
-  kickout: 250,
-  // shot
-  ramp: 500,
-  orbit: 500,
-  scoop: 750,
-  // feature
-  dropBank: 1000,
-  rowComplete: 1000,
-  standupsComplete: 1500,
-  chapter: 1000, // times the chapter number: 1,000 for I ... 5,000 for V
-  // jackpot
-  saucerJackpot: 10000,
-  promotion: 25000, // times the new rank number
+// base: points before multipliers. branch: which Upgrade Tree branch scales
+// it. shot: an aimed shot, builds the combo. bonus: share of its value added
+// to the end-of-ball bonus pool. charge: CHARGE_GAIN kind (skills.js).
+// flat: not multiplied by the combo or Ink Surge.
+const SOURCES = {
+  pop: { base: 1, branch: 'bumpers', charge: 'pop' },
+  sling: { base: 1, branch: 'bumpers', charge: 'sling' },
+  flipper: { base: 1, branch: 'bumpers' },
+  wall: { base: 1, branch: 'bumpers' },
+  standup: { base: 3, branch: 'targets', charge: 'standup' },
+  dropTarget: { base: 8, branch: 'targets', shot: true, bonus: 0.25 },
+  ufo: { base: 15, branch: 'targets', shot: true, bonus: 0.25 },
+  kickout: { base: 15, branch: 'targets', shot: true, bonus: 0.25 },
+  dropBank: { base: 100, branch: 'targets', bonus: 0.5, charge: 'feature' },
+  standupsComplete: { base: 150, branch: 'targets', bonus: 0.5, charge: 'feature' },
+  inlane: { base: 3, branch: 'lanes', charge: 'lane' },
+  lane: { base: 3, branch: 'lanes', charge: 'lane' },
+  spinnerTurn: { base: 2, branch: 'lanes', charge: 'sling' },
+  orbit: { base: 40, branch: 'lanes', shot: true, bonus: 0.5 },
+  ramp: { base: 40, branch: 'lanes', shot: true, bonus: 0.5 },
+  scoop: { base: 60, branch: 'lanes', shot: true, bonus: 0.5 },
+  rowComplete: { base: 100, branch: 'lanes', bonus: 0.5, charge: 'feature' },
+  chapter: { base: 100, branch: 'rules', bonus: 0.5, charge: 'feature' }, // times the chapter number
+  saucerJackpot: { base: 1000, branch: 'rules', shot: true, bonus: 0.5, charge: 'feature' },
+  mission: { base: 500, branch: 'rules', flat: true, bonus: 0.25, charge: 'mission' }, // times MISSION_TIER_X
+  promotion: { base: 2500, branch: 'rules', flat: true }, // times the new rank number
+  pickup: { base: 5, branch: 'rules', charge: 'lane' },
 };
 
-// Mission reward by tier (see MISSIONS in missions.js).
-const MISSION_REWARDS = [10000, 15000, 25000, 35000, 50000];
+// Mission reward multiplier by tier (see MISSIONS in missions.js).
+const MISSION_TIER_X = [1, 1.5, 2.5, 3.5, 5];
 
-// What each achievement adds to the end-of-ball bonus pool.
-const BONUS = {
-  kickout: 100,
-  ramp: 250,
-  orbit: 250,
-  scoop: 500,
-  dropBank: 500,
-  rowComplete: 500,
-  standupsComplete: 500,
-  chapter: 1000,
-  saucerJackpot: 2500,
-  mission: 2500,
-};
+const POINTS_PER_TICKET = 1;
+const BANK_SAVE_KEY = 'tilt-and-ink.bank.v2';
 
-const COMBO = { max: 5, windowMs: 3000 };
-const BONUS_X_MAX = 5;
-const POINTS_PER_TICKET = 100;
-const BANK_SAVE_KEY = 'tilt-and-ink.bank';
+// Pre-rework saves: wiped once, since the economy changed completely.
+for (const key of ['tilt-and-ink.bank', 'tilt-and-ink.upgrades', 'tilt-and-ink.missions']) {
+  try {
+    localStorage.removeItem(key);
+  } catch (e) {
+    // No storage.
+  }
+}
+
+const SUFFIXES = ['', 'K', 'M', 'B', 'T', 'Qa', 'Qi'];
+
+// 12,345 below 100,000, then 3 significant figures: 123K, 4.56M, 7.89B.
+function formatPoints(n) {
+  n = Math.floor(n);
+  if (n < 100000) return n.toLocaleString('en-US');
+  const tier = Math.min(SUFFIXES.length - 1, Math.floor(Math.log10(n) / 3));
+  const v = n / 1000 ** tier;
+  return `${v.toFixed(v < 10 ? 2 : v < 100 ? 1 : 0)}${SUFFIXES[tier]}`;
+}
 
 class Scoring {
   constructor() {
     this.tickets = 0;
-    this.lifetimeTickets = 0; // for table unlock milestones later
+    this.lifetimeTickets = 0; // gates the table passes
     this.bestTurn = 0;
-    // Tuned by the Upgrade Tree (see applyUpgrades in main.js).
-    this.comboWindowMs = COMBO.windowMs;
-    this.comboMax = COMBO.max;
-    this.comboFloor = 1;
-    this.bonusXStart = 1;
-    this.surge = 1; // Ink Surge skill: 2 while active
+    this.upgrades = null; // set by main.js once the tree exists
+    this.rank = 0; // mission rank, for the Mission Control rank bonus
+    this.surge = 1; // Ink Surge skill: surgeX while active
     this.load();
-    this.newTurn();
+  }
+
+  stat(name) {
+    return this.upgrades.stat(name);
+  }
+
+  isAwake(source) {
+    return this.stat(`awake.${source}`) > 0;
+  }
+
+  // Global group: +% from global nodes, per table reached, and per rank.
+  globalMult() {
+    const u = this.upgrades;
+    return 1 + (u.stat('global') + u.stat('perTable') * u.tablesReached() + u.stat('rankBonus') * this.rank) / 100;
+  }
+
+  // Points one hit of `source` is worth right now, before combo and surge.
+  value(source) {
+    const s = SOURCES[source];
+    if (!this.isAwake(source)) return 0;
+    return s.base
+      * (1 + this.stat(`value.${source}`) / 100) * this.stat(`x.${source}`)
+      * (1 + this.stat(`branch.${s.branch}`) / 100) * this.stat(`x.branch.${s.branch}`)
+      * this.globalMult() * this.stat('x.global');
   }
 
   newTurn() {
@@ -85,43 +115,45 @@ class Scoring {
 
   newBall() {
     this.bonus = 0;
-    this.bonusX = this.bonusXStart;
-    this.combo = this.comboFloor;
+    this.bonusX = this.stat('bonusXStart');
+    this.combo = this.stat('comboFloor');
     this.lastShotAt = -Infinity;
   }
 
-  // Adds points and returns what was actually scored.
-  //  shot:  an aimed shot; builds the combo
-  //  flat:  not multiplied by the combo or Ink Surge (mission and rank rewards)
-  //  bonus: amount added to the end-of-ball bonus pool
-  award(points, { shot = false, flat = false, bonus = 0 } = {}) {
-    if (shot) {
+  // Scores one hit of `source` (times `mult`, e.g. a chapter's number) and
+  // returns the points actually scored, 0 if the source is still dormant.
+  award(source, { mult = 1 } = {}) {
+    const s = SOURCES[source];
+    const base = this.value(source) * mult;
+    if (!base) return 0;
+    if (s.shot) {
       const now = performance.now();
-      this.combo = now - this.lastShotAt <= this.comboWindowMs
-        ? Math.min(this.comboMax, this.combo + 1)
-        : this.comboFloor;
+      this.combo = now - this.lastShotAt <= this.stat('comboWindowMs')
+        ? Math.min(this.stat('comboMax'), this.combo + 1)
+        : this.stat('comboFloor');
       this.lastShotAt = now;
     }
-    const total = flat ? points : points * this.combo * this.surge;
+    const total = Math.max(1, Math.round(s.flat ? base : base * this.combo * this.surge));
     this.score += total;
-    this.bonus += bonus;
+    if (s.bonus && this.stat('bonus')) this.bonus += Math.round(base * s.bonus);
     return total;
   }
 
   // Called every tick: the combo lapses once the window has passed.
   tick(now) {
-    if (this.combo > this.comboFloor && now - this.lastShotAt > this.comboWindowMs) this.combo = this.comboFloor;
-    if (this.combo < this.comboFloor) this.combo = this.comboFloor;
+    const floor = this.stat('comboFloor');
+    if (this.combo > floor && now - this.lastShotAt > this.stat('comboWindowMs')) this.combo = floor;
+    if (this.combo < floor) this.combo = floor;
   }
 
   // 1 when a shot just landed, falling to 0 as the combo window runs out.
   comboTimeLeft(now) {
-    if (this.combo <= this.comboFloor) return 0;
-    return Math.max(0, 1 - (now - this.lastShotAt) / this.comboWindowMs);
+    if (this.combo <= this.stat('comboFloor')) return 0;
+    return Math.max(0, 1 - (now - this.lastShotAt) / this.stat('comboWindowMs'));
   }
 
   raiseBonusX() {
-    this.bonusX = Math.min(BONUS_X_MAX, this.bonusX + 1);
+    this.bonusX = Math.min(this.stat('bonusXMax'), this.bonusX + 1);
     return this.bonusX;
   }
 

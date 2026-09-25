@@ -1,10 +1,8 @@
 // Standup targets: fixed targets that light up when hit and stay lit until
 // the whole set is complete, which fires onComplete and resets them.
 class StandupBank {
-  constructor(world, { positions, width = 7, height = 18, textures, points = 30, onScore, onComplete }) {
+  constructor(world, { positions, width = 7, height = 18, textures, onComplete }) {
     this.textures = textures;
-    this.points = points;
-    this.onScore = onScore;
     this.onComplete = onComplete;
 
     this.targets = positions.map(([x, y]) => {
@@ -21,9 +19,7 @@ class StandupBank {
 
   hit(body) {
     const target = this.targets.find((t) => t.body === body);
-    if (!target) return;
-    this.onScore?.(this.points, 'standup');
-    if (target.lit) return;
+    if (!target || target.lit) return;
     target.lit = true;
     target.body.render.sprite.texture = this.textures.on;
     if (this.targets.every((t) => t.lit)) {

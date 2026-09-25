@@ -8,19 +8,15 @@ class Bumper {
     x,
     y,
     radius = 22,
-    points = 25,
     kickSpeed = 7,
     label = 'bumper',
     texture,
     // Sprite assets are drawn at 4x physics scale (radius*2*4 = image
     // width), so 0.25 is the default for every element built this way.
     spriteScale = 0.25,
-    onScore,
   }) {
-    this.points = points;
     this.label = label;
     this.kickSpeed = kickSpeed;
-    this.onScore = onScore;
     this.spriteScale = spriteScale;
     this.pulse = 0;
 
@@ -55,7 +51,6 @@ class Bumper {
       y: ballBody.velocity.y + ny * boost,
     });
 
-    this.onScore?.(this.points, this.label);
     this.pulse = 1;
   }
 

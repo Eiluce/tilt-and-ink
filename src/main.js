@@ -70,7 +70,7 @@ requestAnimationFrame(stepPhysics);
 
 const { cx: ARCH_X, cy: ARCH_Y } = L.arch;
 
-World.add(world, [
+const walls = [
   // Outer wall: thick and pushed outward (inner face at r 188 / x 12 / x 388)
   // so a fast ball can't tunnel through it.
   ...Walls.chain([[0, 720], ...Walls.arc(L.outerR + 8, 180, 360), [400, 720]], 24),
@@ -83,7 +83,8 @@ World.add(world, [
   ...Walls.chain(L.inlaneGuides.right, 5),
   ...L.laneGuides.xs.flatMap((x) => Walls.chain([[x, L.laneGuides.top], [x, L.laneGuides.bottom]], L.laneGuides.width)),
   ...Walls.chain(L.gate, 4, { category: CAT.GATE, mask: CAT.BALL }),
-]);
+];
+World.add(world, walls);
 
 // The plunger's top face: the served ball rests on it, and it drops as the
 // plunger is pulled back.
@@ -97,8 +98,10 @@ World.add(world, plungerStop);
 // --- game state ------------------------------------------------------------
 
 // Both set by the Ball Control branch of the Upgrade Tree.
-const ballsPerTurn = () => upgrades.effect('extraBalls');
-const ballSaveMs = () => upgrades.effect('ballSaver');
+const ballsPerTurn = () => upgrades.stat('balls');
+const ballSaveMs = () => upgrades.stat('ballSaveMs');
+const stat = (name) => upgrades.stat(name);
+const awake = (source) => scoring.isAwake(source);
 const RAMP_CHAIN_MS = 4000; // left-then-right ramp window, for the Ramp Relay mission
 const ROMAN = ['I', 'II', 'III', 'IV', 'V'];
 
@@ -124,6 +127,8 @@ const balls = [];
 
 const scoring = new Scoring();
 const upgrades = new Upgrades(scoring);
+scoring.upgrades = upgrades;
+scoring.newTurn();
 const skills = new Skills(upgrades);
 
 const scoreEl = document.getElementById('score');
@@ -133,22 +138,30 @@ const messageEl = document.getElementById('message');
 let lastEventTimer;
 let messageTimer;
 
-// Scores points through the combo and bonus rules in scoring.js. Options:
-// shot / flat / bonus (see Scoring.award), `at` ({x, y}) to float the points
-// up from that spot on the table, and `charge` (a CHARGE_GAIN kind in
-// skills.js; shots and features charge the meter by default). Returns the
-// points scored.
-function addScore(points, label, { at, charge, ...opts } = {}) {
+// Scores one hit of a SOURCES entry (scoring.js) through the upgrade
+// multipliers, combo and bonus. Options: `mult` (e.g. a chapter's number),
+// `at` ({x, y}) to float the points up from that spot on the table. The
+// charge meter fills by the source's kind. Returns the points scored: 0 when
+// the source is still dormant, so callers can skip their effects.
+function addScore(source, label, { at, mult = 1, echo = true } = {}) {
   if (!game.turnActive) return 0;
-  const total = scoring.award(points, opts);
-  skills.gain(charge || (opts.shot ? 'shot' : opts.bonus ? 'feature' : null));
-  lastEventEl.textContent = `+${total.toLocaleString()} ${label}${scoring.combo > 1 && !opts.flat ? ` (combo ×${scoring.combo})` : ''}`;
+  const total = scoring.award(source, { mult });
+  if (!total) return 0;
+  const src = SOURCES[source];
+  skills.gain(src.charge || (src.shot ? 'shot' : null));
+  lastEventEl.textContent = `+${formatPoints(total)} ${label}${scoring.combo > 1 && !src.flat ? ` (combo ×${scoring.combo})` : ''}`;
   clearTimeout(lastEventTimer);
   lastEventTimer = setTimeout(() => {
     lastEventEl.textContent = '';
   }, 900);
-  if (at) fx.popup(at.x, at.y, `+${total.toLocaleString()}`);
-  if (opts.shot && scoring.combo > 1 && at) fx.burst(at.x + 22, at.y - 26, `×${scoring.combo}`, INK.red);
+  if (at) fx.popup(at.x, at.y, `+${formatPoints(total)}`);
+  if (src.shot && scoring.combo > 1 && at) fx.burst(at.x + 22, at.y - 26, `×${scoring.combo}`, INK.red);
+  // Echo Chamber: some hits score a second time.
+  if (echo && !src.flat && Math.random() < stat('echo')) {
+    const again = addScore(source, `${label} echo`, { mult, echo: false });
+    if (at) fx.burst(at.x - 18, at.y - 20, 'ECHO!', INK.teal);
+    return total + again;
+  }
   return total;
 }
 
@@ -182,9 +195,21 @@ const missionEls = Object.fromEntries(
 );
 let lastMissionView = '';
 function updateMissionPanel(now) {
-  const v = game.turnActive
-    ? missions.view(now)
-    : {
+  const locked = {
+    rank: '—',
+    toNext: '',
+    label: 'Missions',
+    name: 'Locked',
+    goal: 'Buy Mission Control in the Upgrade Tree (Rules & Features).',
+    progress: 0,
+    count: '',
+    status: '',
+    urgent: false,
+  };
+  let v;
+  if (!awake('mission')) v = locked;
+  else if (game.turnActive) v = missions.view(now);
+  else v = {
       ...missions.view(now),
       label: 'Missions',
       name: 'Start a turn',
@@ -208,14 +233,16 @@ function updateMissionPanel(now) {
 
 // Score, combo meter, bonus and Tickets; only touches the DOM on change.
 const scoreEls = Object.fromEntries(
-  ['combo', 'combo-bar', 'bonus', 'bonus-x', 'tickets', 'best-turn'].map((id) => [id, document.getElementById(id)]),
+  ['combo', 'combo-meter', 'combo-bar', 'bonus-line', 'bonus', 'bonus-x', 'tickets', 'best-turn'].map((id) => [id, document.getElementById(id)]),
 );
 let lastScoreView = '';
 function updateScorePanel(now) {
   const v = {
     score: scoring.score,
     combo: scoring.combo,
+    comboOn: stat('comboMax') > 1,
     left: Math.round(scoring.comboTimeLeft(now) * 40),
+    bonusOn: stat('bonus') > 0,
     bonus: scoring.bonus,
     bonusX: scoring.bonusX,
     tickets: scoring.tickets,
@@ -224,14 +251,17 @@ function updateScorePanel(now) {
   const key = JSON.stringify(v);
   if (key === lastScoreView) return;
   lastScoreView = key;
-  scoreEl.textContent = v.score.toLocaleString();
+  scoreEl.textContent = formatPoints(v.score);
+  scoreEls.combo.hidden = !v.comboOn;
   scoreEls.combo.textContent = `Combo ×${v.combo}`;
   scoreEls.combo.classList.toggle('hot', v.combo > 1);
+  scoreEls['combo-meter'].hidden = !v.comboOn;
   scoreEls['combo-bar'].style.width = `${(v.left / 40) * 100}%`;
-  scoreEls.bonus.textContent = v.bonus.toLocaleString();
+  scoreEls['bonus-line'].hidden = !v.bonusOn;
+  scoreEls.bonus.textContent = formatPoints(v.bonus);
   scoreEls['bonus-x'].textContent = `${v.bonusX}×`;
-  scoreEls.tickets.textContent = v.tickets.toLocaleString();
-  scoreEls['best-turn'].textContent = v.best.toLocaleString();
+  scoreEls.tickets.textContent = formatPoints(v.tickets);
+  scoreEls['best-turn'].textContent = formatPoints(v.best);
 }
 
 function updateHud() {
@@ -277,26 +307,25 @@ const pops = L.pops.map(([x, y]) => {
     x,
     y,
     radius: L.popR,
-    points: POINTS.pop,
     label: 'pop bumper',
     texture: S.pop,
-    onScore: (points, label) => addScore(points, label, { charge: 'pop' }),
   });
   on(pop.body, (ball) => {
     pop.hit(ball);
     missions.event('pop');
     const c = contactPoint(ball, pop.body);
     fx.ring(x, y, INK.red, L.popR, L.popR + 16);
-    // Super Pulse upgrade: some hits are worth 5x and kick harder.
-    if (Math.random() < upgrades.effect('superPulse')) {
-      addScore(pop.points * 4, 'SUPER pop', { at: { x, y: y - 24 }, charge: 'pop' });
+    // Super Pulse: some hits are SUPER hits, worth superX and kicking harder.
+    if (Math.random() < stat('superChance')) {
+      addScore('pop', 'SUPER pop', { at: { x, y: y - 24 }, mult: stat('superX') });
       fx.burst(c.x, c.y - 6, 'SUPER!', INK.red);
       Body.setVelocity(ball, { x: ball.velocity.x * 1.3, y: ball.velocity.y * 1.3 });
     } else {
+      addScore('pop', 'pop bumper', { at: { x, y: y - 24 } });
       fx.burst(c.x, c.y - 6, pick(BUMPER_WORDS));
     }
-    // Chain Reaction capstone: sometimes another pop fires as well.
-    if (Math.random() < upgrades.effect('chainReaction')) chainPop(pop);
+    // Chain Reaction: sometimes another pop fires as well.
+    if (Math.random() < stat('chain')) chainPop(pop);
   });
   return pop;
 });
@@ -305,7 +334,7 @@ function chainPop(from) {
   const other = pick(pops.filter((p) => p !== from));
   const { x, y } = other.body.position;
   other.pulse = 1;
-  addScore(other.points, 'chain reaction', { charge: 'pop' });
+  addScore('pop', 'chain reaction', { at: { x, y: y - 24 } });
   missions.event('pop');
   fx.ring(x, y, INK.mustard, L.popR, L.popR + 20);
   fx.burst(x, y - 26, 'CHAIN!', INK.mustard);
@@ -315,14 +344,13 @@ const ufo = new Bumper(world, {
   x: L.ufo.x,
   y: L.ufo.y,
   radius: L.ufo.r,
-  points: POINTS.ufo,
   kickSpeed: 5,
   label: 'UFO',
   texture: S.ufo,
-  onScore: (points, label) => addScore(points, label, { shot: true, at: { x: L.ufo.x, y: L.ufo.y - 30 } }),
 });
 on(ufo.body, (ball) => {
   ufo.hit(ball);
+  if (!addScore('ufo', 'UFO', { at: { x: L.ufo.x, y: L.ufo.y - 30 } })) return;
   missions.event('ufo');
   fx.ring(L.ufo.x, L.ufo.y, INK.teal, L.ufo.r, L.ufo.r + 24);
   fx.burst(ball.position.x, ball.position.y - 10, 'ZAP!', INK.teal);
@@ -334,11 +362,11 @@ const spinner = new Spinner(world, {
   y: L.spinner.y,
   length: L.spinner.len,
   height: L.spinner.h,
-  pointsPerRotation: POINTS.spinnerTurn,
+  pointsPerRotation: 1,
   texture: S.spinner,
-  onScore: (points, label) => {
-    addScore(points, label, { charge: 'sling' });
-    missions.event('spinner', points / POINTS.spinnerTurn);
+  onScore: (turns) => {
+    if (!addScore('spinnerTurn', 'spinner', { mult: turns, at: { x: L.spinner.x + 16, y: L.spinner.y } })) return;
+    missions.event('spinner', turns);
   },
 });
 
@@ -349,18 +377,16 @@ const drops = new DropTargetBank(world, {
   spacing: L.drops.spacing,
   width: L.drops.w,
   height: L.drops.h,
-  points: POINTS.dropTarget,
-  bonusPoints: POINTS.dropBank,
   texture: S.drop,
   onScore: (points, label) => {
     const at = { x: L.drops.x, y: L.drops.y - 8 };
-    if (label === 'bank cleared') addScore(points, label, { bonus: BONUS.dropBank, at });
-    else addScore(points, label, { shot: true });
+    if (label === 'bank cleared') addScore('dropBank', label, { at });
+    else addScore('dropTarget', label, { at });
   },
   onCleared: () => {
     missions.event('dropBank');
     game.bankClears += 1;
-    if (game.bankClears % 2 === 0 && !game.extraBallLit) {
+    if (stat('extraBall') && game.bankClears % 2 === 0 && !game.extraBallLit) {
       game.extraBallLit = true;
       announce('Extra ball lit at the kickout');
     }
@@ -368,7 +394,8 @@ const drops = new DropTargetBank(world, {
 });
 for (const t of drops.targets) {
   on(t.body, (ball, body) => {
-    if (t.dropped) return;
+    // Dormant drop targets are just posts: they don't drop.
+    if (t.dropped || !awake('dropTarget')) return;
     drops.hit(body);
     fx.burst(body.position.x, body.position.y - 12, 'WHAM!', INK.paper);
     fx.sparks(body.position.x, body.position.y);
@@ -380,29 +407,29 @@ const standups = new StandupBank(world, {
   width: L.standups.w,
   height: L.standups.h,
   textures: S.standup,
-  points: POINTS.standup,
-  onScore: (points, label) => addScore(points, label, { charge: 'standup' }),
   onComplete: () => {
-    addScore(POINTS.standupsComplete, 'standups complete', { bonus: BONUS.standupsComplete });
+    addScore('standupsComplete', 'standups complete');
     advanceChapter();
   },
 });
 for (const t of standups.targets) {
   on(t.body, (ball, body) => {
+    if (!awake('standup')) return;
+    addScore('standup', 'standup', { at: { x: body.position.x < 200 ? 70 : 330, y: body.position.y } });
     standups.hit(body);
-    missions.cycle();
+    if (awake('mission')) missions.cycle();
     fx.sparks(body.position.x, body.position.y, INK.mustard);
   });
 }
 
-const slingScore = (points, label) => addScore(points, label, { charge: 'sling' });
 const slings = [
-  new Slingshot(world, { vertices: L.slings.left, textures: S.slingLeft, points: POINTS.sling, onScore: slingScore }),
-  new Slingshot(world, { vertices: L.slings.right, textures: S.slingRight, points: POINTS.sling, onScore: slingScore }),
+  new Slingshot(world, { vertices: L.slings.left, textures: S.slingLeft }),
+  new Slingshot(world, { vertices: L.slings.right, textures: S.slingRight }),
 ];
 for (const sling of slings) {
   on(sling.body, (ball) => {
     if (!sling.hit(ball)) return;
+    addScore('sling', 'slingshot', { at: ball.position });
     fx.sparks(ball.position.x, ball.position.y, INK.red);
   });
 }
@@ -413,7 +440,7 @@ function rampMade(name) {
   const now = performance.now();
   const relay = game.rampChain.ramp && game.rampChain.ramp !== name && now < game.rampChain.until;
   const end = L.ramps[name][L.ramps[name].length - 1];
-  addScore(POINTS.ramp, 'ramp', { shot: true, bonus: BONUS.ramp, at: { x: end[0], y: end[1] + 20 } });
+  if (!addScore('ramp', 'ramp', { at: { x: end[0], y: end[1] + 20 } })) return;
   fx.burst(end[0], end[1] + 4, 'ZOOM!', INK.mustard);
   game.rampChain = { ramp: name, until: now + RAMP_CHAIN_MS };
   missions.event('ramp');
@@ -422,11 +449,12 @@ function rampMade(name) {
 }
 
 function advanceChapter() {
-  if (game.chapters >= 5) return;
+  if (game.chapters >= 5 || !awake('chapter')) return;
   game.chapters += 1;
-  addScore(POINTS.chapter * game.chapters, `Chapter ${ROMAN[game.chapters - 1]}`, { bonus: BONUS.chapter });
-  announce(game.chapters === 5 ? 'Chapter V! Shoot the UFO scoop for multiball' : `Chapter ${ROMAN[game.chapters - 1]}`);
-  const subs = ['The Saucer Men', 'Peril on Planet X', 'The Ray Gun Rumble', 'Trapped in the Nebula', 'The Tractor Beam! Shoot the scoop'];
+  addScore('chapter', `Chapter ${ROMAN[game.chapters - 1]}`, { mult: game.chapters });
+  const multiballLit = game.chapters === 5 && awake('saucerJackpot') && awake('scoop');
+  announce(multiballLit ? 'Chapter V! Shoot the UFO scoop for multiball' : `Chapter ${ROMAN[game.chapters - 1]}`);
+  const subs = ['The Saucer Men', 'Peril on Planet X', 'The Ray Gun Rumble', 'Trapped in the Nebula', multiballLit ? 'The Tractor Beam! Shoot the scoop' : 'The Tractor Beam'];
   fx.title(`Chapter ${ROMAN[game.chapters - 1]}`, subs[game.chapters - 1]);
 }
 
@@ -446,21 +474,24 @@ const scoop = new Hole(world, {
   eject: () => ({ x: (Math.random() - 0.5) * 2, y: 4.5 }),
   onCapture: () => {
     missions.event('scoop');
-    if (game.chapters < 5) {
-      addScore(POINTS.scoop, 'tractor beam', { shot: true, bonus: BONUS.scoop, at: L.scoop });
+    if (game.chapters < 5 || !awake('saucerJackpot')) {
+      addScore('scoop', 'tractor beam', { at: L.scoop });
       fx.ring(L.scoop.x, L.scoop.y, INK.teal, 6, 28);
       return;
     }
     game.chapters = 0;
-    const jackpot = addScore(POINTS.saucerJackpot, 'saucer jackpot', { shot: true, bonus: BONUS.saucerJackpot, at: L.scoop });
+    const jackpot = addScore('saucerJackpot', 'saucer jackpot', { at: L.scoop });
     announce('Saucer multiball!', 3000);
-    fx.title('Saucer Multiball!', `Jackpot ${jackpot.toLocaleString()}`, 2000);
+    fx.title('Saucer Multiball!', `Jackpot ${formatPoints(jackpot)}`, 2000);
     fx.shake(450, 6);
-    game.ballSaveUntil = performance.now() + ballSaveMs();
+    game.ballSaveUntil = performance.now() + Math.max(ballSaveMs(), 8000);
     feedBallsFromScoop(2);
   },
 });
-on(scoop.sensor, (ball) => scoop.capture(ball));
+// Dormant holes don't catch the ball: it rolls straight over them.
+on(scoop.sensor, (ball) => {
+  if (awake('scoop')) scoop.capture(ball);
+});
 
 const kickout = new Hole(world, {
   name: 'kickout',
@@ -469,9 +500,9 @@ const kickout = new Hole(world, {
   holdMs: 700,
   eject: () => ({ x: 0.6, y: 4 }),
   onCapture: () => {
-    addScore(POINTS.kickout, 'kickout', { shot: true, bonus: BONUS.kickout, at: L.kickout });
+    addScore('kickout', 'kickout', { at: L.kickout });
     fx.ring(L.kickout.x, L.kickout.y, INK.mustard, 8, 26);
-    missions.accept();
+    if (awake('mission')) missions.accept();
     if (game.extraBallLit) {
       game.extraBallLit = false;
       game.extraBalls += 1;
@@ -481,7 +512,9 @@ const kickout = new Hole(world, {
     }
   },
 });
-on(kickout.sensor, (ball) => kickout.capture(ball));
+on(kickout.sensor, (ball) => {
+  if (awake('kickout')) kickout.capture(ball);
+});
 
 // R·O·W rollover lanes: light all three to raise the end-of-ball bonus
 // multiplier.
@@ -489,15 +522,19 @@ L.rolloverLanes.xs.forEach((x, i) => {
   const sensor = makeSensor(x, L.rolloverLanes.y, 6, 'lane');
   World.add(world, sensor);
   on(sensor, () => {
-    addScore(POINTS.lane, 'lane', { charge: 'lane' });
+    if (!addScore('lane', 'lane', { at: { x, y: L.rolloverLanes.y + 20 } })) return;
     missions.event('lane');
     if (game.row[i]) return;
     game.row[i] = true;
     if (game.row.every(Boolean)) {
-      const bonusX = scoring.raiseBonusX();
-      addScore(POINTS.rowComplete, 'R·O·W complete', { bonus: BONUS.rowComplete });
-      announce(`Bonus ${bonusX}×`);
-      fx.title(`Bonus ${bonusX}×`, 'R · O · W complete · end-of-ball bonus', 1200);
+      addScore('rowComplete', 'R·O·W complete', { at: { x: 200, y: 120 } });
+      if (stat('bonusXMax') > 1) {
+        const bonusX = scoring.raiseBonusX();
+        announce(`Bonus ${bonusX}×`);
+        fx.title(`Bonus ${bonusX}×`, 'R · O · W complete · end-of-ball bonus', 1200);
+      } else {
+        fx.title('R · O · W', 'All three lanes lit', 1000);
+      }
       updateHud();
       setTimeout(() => {
         game.row = [false, false, false];
@@ -510,21 +547,30 @@ const orbitSensor = makeSensor(L.orbitSensor.x, L.orbitSensor.y, 8, 'orbit');
 World.add(world, orbitSensor);
 on(orbitSensor, (ball) => {
   if (ball.velocity.y >= 0) return; // only counts on the way up
-  addScore(POINTS.orbit, 'orbit', { shot: true, bonus: BONUS.orbit, at: ball.position });
+  if (!addScore('orbit', 'orbit', { at: ball.position })) return;
   missions.event('orbit');
   fx.burst(ball.position.x + 14, ball.position.y, 'WHOOSH!', INK.paper);
   game.orbitFlashUntil = performance.now() + 1500;
 });
 
-const ROLLOVERS = { inL: [POINTS.inlane, 'inlane'], inR: [POINTS.inlane, 'inlane'] };
-for (const [key, [points, label]] of Object.entries(ROLLOVERS)) {
-  const sensor = makeSensor(L.rollovers[key], L.rollovers.y, 7, label);
+for (const key of ['inL', 'inR']) {
+  const sensor = makeSensor(L.rollovers[key], L.rollovers.y, 7, 'inlane');
   World.add(world, sensor);
   on(sensor, () => {
-    addScore(points, label, { charge: 'lane' });
+    if (!addScore('inlane', 'inlane', { at: { x: L.rollovers[key], y: L.rollovers.y } })) return;
     game.rolloverFlash[key] = performance.now() + 1000;
   });
 }
+
+// Pickups (Prop Department): stars that pay when the ball rolls through.
+const pickups = new Pickups({
+  onCollect: (t) => {
+    const golden = t.golden;
+    addScore('pickup', golden ? 'golden star' : 'star', { at: t, mult: golden ? 10 : 1 });
+    fx.sparks(t.x, t.y, golden ? INK.mustard : INK.ink);
+    if (golden) fx.burst(t.x, t.y - 16, 'GOLD!', INK.mustard);
+  },
+});
 
 // --- flippers ------------------------------------------------------------------
 
@@ -547,9 +593,29 @@ const flippers = [leftFlipper, rightFlipper, miniFlipper];
 
 // Perfect Flip capstone: flipping just as the ball lands on a flipper sends
 // it 25% faster (briefly allowed past the usual speed cap).
-for (const f of flippers) on(f.body, () => { f.lastBallContact = performance.now(); });
+// Inked Flippers: flipper hits score, at most once per 250 ms per flipper.
+for (const f of flippers) {
+  on(f.body, (ball) => {
+    const now = performance.now();
+    const fresh = now - (f.lastBallContact || -Infinity) > 250;
+    f.lastBallContact = now;
+    if (fresh) addScore('flipper', 'flipper', { at: ball.position });
+  });
+}
+
+// Rattle the Rails: a hard hit on a wall or rail scores, once per 200 ms per
+// ball. collisionStart runs before the bounce, so this is the impact speed.
+for (const w of walls) {
+  on(w, (ball) => {
+    const now = performance.now();
+    if (!awake('wall') || Math.hypot(ball.velocity.x, ball.velocity.y) < 4) return;
+    if (now - (ball.plugin.lastWallAt || -Infinity) < 200) return;
+    ball.plugin.lastWallAt = now;
+    addScore('wall', 'rail', { at: ball.position });
+  });
+}
 function perfectFlip(flipper) {
-  if (!upgrades.effect('perfectFlip')) return;
+  if (!stat('perfectFlip')) return;
   if (performance.now() - (flipper.lastBallContact || -Infinity) > 150) return;
   setTimeout(() => {
     for (const ball of balls) {
@@ -567,21 +633,83 @@ function perfectFlip(flipper) {
 
 const FLIPPER_UP_SPEED = 0.55;
 
+// Dormant elements: a sprite drawn faded, or a printed feature washed over
+// with paper on the lamp layer. `awake` says what switches each one on.
+const DORMANT_SPRITES = [
+  { awake: () => awake('ufo'), bodies: () => [ufo.body] },
+  { awake: () => awake('spinnerTurn'), bodies: () => [spinner.body] },
+  { awake: () => awake('dropTarget'), bodies: () => drops.targets.map((t) => t.body) },
+  { awake: () => awake('standup'), bodies: () => standups.targets.map((t) => t.body) },
+];
+const rampPath = (c) => new Path2D(`M${c[0]} C${c[1]} ${c[2]} ${c[3]} C${c[4]} ${c[5]} ${c[6]}`);
+const I = Art.INSERTS;
+const DORMANT_PRINTS = [
+  { id: 'ramps', awake: () => awake('ramp'), stroke: [rampPath(L.ramps.left), rampPath(L.ramps.right)], width: L.rampHalfWidth * 2 + 10 },
+  { id: 'row', awake: () => awake('lane'), rect: [140, 60, 120, 46], circles: L.rolloverLanes.xs.map((x) => [x, I.rowLetters.y, 11]) },
+  { id: 'inlanes', awake: () => awake('inlane'), circles: [[L.rollovers.inL, L.rollovers.y, 11], [L.rollovers.inR, L.rollovers.y, 11]] },
+  { id: 'orbit', awake: () => awake('orbit'), circles: [[L.orbitSensor.x, L.orbitSensor.y, 13], [I.arrows[2].x, I.arrows[2].y, 12]] },
+  { id: 'scoop', awake: () => awake('scoop'), circles: [[L.scoop.x, L.scoop.y, 16], [I.arrows[3].x, I.arrows[3].y, 9]] },
+  { id: 'kickout', awake: () => awake('kickout'), circles: [[L.kickout.x, L.kickout.y, 15]] },
+  { id: 'rampArrows', awake: () => awake('ramp'), circles: [[I.arrows[0].x, I.arrows[0].y, 13], [I.arrows[1].x, I.arrows[1].y, 13]] },
+  { id: 'multipliers', awake: () => stat('bonusXMax') > 1, circles: I.multipliers.map((m) => [m.x, m.y, m.r + 2]) },
+  { id: 'chapters', awake: () => awake('chapter'), rect: [136, 507, 128, 22] },
+  { id: 'extraBall', awake: () => stat('extraBall') > 0, rect: [I.extraBall.x - 2, I.extraBall.y - 2, I.extraBall.w + 4, I.extraBall.h + 4] },
+  { id: 'shootAgain', awake: () => ballSaveMs() > 0, rect: [I.shootAgain.x - 2, I.shootAgain.y - 2, I.shootAgain.w + 4, I.shootAgain.h + 4] },
+];
+const INK_IN_MS = 1400; // how long a newly woken element takes to ink in
+const wokenAt = {}; // print id -> when it woke (fades the wash out)
+const wasAwake = {};
+
+function drawDormant(ctx, now) {
+  ctx.save();
+  ctx.fillStyle = INK.paper;
+  ctx.strokeStyle = INK.paper;
+  ctx.lineCap = 'round';
+  for (const d of DORMANT_PRINTS) {
+    let alpha = 0.72;
+    if (d.awake()) {
+      const p = (now - (wokenAt[d.id] ?? -Infinity)) / INK_IN_MS;
+      if (p >= 1) continue;
+      alpha *= 1 - Math.max(0, p);
+    }
+    ctx.globalAlpha = alpha;
+    if (d.rect) ctx.fillRect(...d.rect);
+    for (const [x, y, r] of d.circles || []) {
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.lineWidth = d.width || 0;
+    for (const path of d.stroke || []) ctx.stroke(path);
+  }
+  ctx.restore();
+  for (const d of DORMANT_SPRITES) {
+    const on = d.awake();
+    for (const b of d.bodies()) {
+      if (b.render.opacity > 0.2) b.render.opacity = on ? 1 : 0.3; // dropped targets stay faint
+    }
+  }
+}
+
+// Called when the tree closes: anything that woke up while it was open inks
+// in on the table now, where the player can see it.
+function inkInWoken() {
+  const now = performance.now();
+  for (const d of DORMANT_PRINTS) {
+    const on = d.awake();
+    if (on && wasAwake[d.id] === false) wokenAt[d.id] = now;
+    wasAwake[d.id] = on;
+  }
+}
+inkInWoken();
+
 // Pushes the current Upgrade Tree levels onto the table. Runs at start-up
 // and after every purchase, so upgrades apply immediately.
 function applyUpgrades() {
   for (const f of flippers) {
-    f.upSpeed = FLIPPER_UP_SPEED * upgrades.effect('flipStrength');
-    f.body.restitution = upgrades.effect('springyRubbers');
+    f.upSpeed = FLIPPER_UP_SPEED * stat('flipStrength');
+    f.body.restitution = stat('springy');
   }
-  const loud = upgrades.effect('bumperPoints');
-  for (const pop of pops) pop.points = Math.round(POINTS.pop * loud);
-  for (const sling of slings) sling.points = Math.round(POINTS.sling * loud);
-  standups.points = Math.round(POINTS.standup * loud);
-  scoring.comboWindowMs = upgrades.effect('comboFuse');
-  scoring.comboMax = upgrades.effect('comboCap');
-  scoring.comboFloor = upgrades.effect('hotStreak');
-  scoring.bonusXStart = upgrades.effect('bonusHeadStart');
   skills.charge = Math.min(skills.charge, skills.max());
   if (!game.turnActive) scoring.newBall();
   updateHud();
@@ -690,6 +818,7 @@ function startTurn() {
   });
   standups.reset();
   drops.reset();
+  pickups.clear();
   missions.newTurn();
   scoring.newTurn();
   skills.newTurn();
@@ -705,14 +834,14 @@ const BONUS_CARD_MS = 1600;
 function endBall() {
   game.row = [false, false, false];
   const b = scoring.collectBonus();
-  fx.title(`Bonus ${b.bonus.toLocaleString()} × ${b.x}`, `= ${b.total.toLocaleString()} points`, BONUS_CARD_MS);
+  if (stat('bonus')) fx.title(`Bonus ${formatPoints(b.bonus)} × ${b.x}`, `= ${formatPoints(b.total)} points`, BONUS_CARD_MS);
   scoring.newBall();
 
   if (game.ballNumber >= ballsPerTurn() + game.extraBalls) {
     game.turnActive = false;
     const earned = scoring.bankTurn();
-    announce(`Turn over: ${scoring.score.toLocaleString()} points, +${earned.toLocaleString()} Tickets`, 0);
-    setTimeout(() => fx.title('To Be Continued…', `${scoring.score.toLocaleString()} points · +${earned.toLocaleString()} Tickets`, 3500), BONUS_CARD_MS);
+    announce(`Turn over: ${formatPoints(scoring.score)} points, +${formatPoints(earned)} Tickets`, 0);
+    setTimeout(() => fx.title('To Be Continued…', `${formatPoints(scoring.score)} points · +${formatPoints(earned)} Tickets`, 3500), BONUS_CARD_MS);
     updateHud();
     return;
   }
@@ -735,14 +864,14 @@ function removeBall(ball) {
     setTimeout(serveBall, 700);
     return;
   }
-  if (upgrades.effect('guardian') && !game.guardianUsed) {
+  if (stat('guardian') && !game.guardianUsed) {
     game.guardianUsed = true;
     announce('Guardian Angel!');
     fx.title('Guardian Angel!', 'Ball returned, once per turn', 1300);
     setTimeout(serveBall, 700);
     return;
   }
-  if (Math.random() < upgrades.effect('luckyDrain')) {
+  if (Math.random() < stat('drainSave')) {
     announce('Saved by the bell!');
     fx.title('Saved by the Bell!', 'Ball returned', 1300);
     setTimeout(serveBall, 700);
@@ -798,9 +927,14 @@ Events.on(engine, 'beforeUpdate', () => {
   scoop.update();
   kickout.update();
 
-  missions.tick(STEP_MS, balls.some((b) => b.plugin.mode !== 'shooter'));
+  const inPlay = balls.some((b) => b.plugin.mode !== 'shooter');
+  missions.tick(STEP_MS, inPlay);
+  scoring.rank = awake('mission') ? missions.rank : 0;
   scoring.tick(now);
-  scoring.surge = skills.isActive('inkSurge', now) ? 2 : 1;
+  scoring.surge = skills.isActive('inkSurge', now) ? stat('surgeX') : 1;
+  if (game.turnActive && inPlay && awake('pickup')) {
+    pickups.update(now, balls, { everyMs: stat('pickupEveryMs'), golden: stat('pickupGolden'), magnet: stat('pickupMagnet') });
+  }
   if (skills.isActive('magnetMitt', now)) steerToMagnet();
 
   if (plunger.charging) plunger.pull = Math.min(1, plunger.pull + 0.025);
@@ -875,23 +1009,24 @@ function lampState(now) {
   const saveLeft = game.ballSaveUntil - now;
   let shootAgain = 'off';
   if (saveLeft > 0) shootAgain = saveLeft < 2000 ? 'blink' : 'on';
-  else if (game.saveArmed && game.turnActive) shootAgain = 'on';
+  else if (game.saveArmed && game.turnActive && ballSaveMs() > 0) shootAgain = 'on';
+  const multiballLit = game.chapters >= 5 && awake('saucerJackpot') && awake('scoop');
   return {
     arrows: {
-      leftRamp: game.turnActive ? comboOn('right') : 'off',
-      rightRamp: game.turnActive ? comboOn('left') : 'off',
+      leftRamp: awake('ramp') ? comboOn('right') : 'off',
+      rightRamp: awake('ramp') ? comboOn('left') : 'off',
       orbit: now < game.orbitFlashUntil ? 'blink' : 'off',
-      scoop: game.chapters >= 5 ? 'blink' : 'off',
+      scoop: multiballLit ? 'blink' : 'off',
     },
     row: game.row,
-    multiplier: scoring.bonusX,
+    multiplier: stat('bonusXMax') > 1 ? scoring.bonusX : 0,
     chapters: game.chapters,
-    nextChapterBlink: game.turnActive,
+    nextChapterBlink: awake('chapter'),
     extraBall: game.extraBallLit ? 'blink' : game.extraBalls > 0 ? 'on' : 'off',
     shootAgain,
     rolloverFlash: game.rolloverFlash,
-    halos: missions.halos(),
-    beam: game.chapters >= 5,
+    halos: awake('mission') ? missions.halos() : [],
+    beam: multiballLit,
     plungerPull: plunger.pull,
   };
 }
@@ -899,6 +1034,8 @@ function lampState(now) {
 Events.on(render, 'afterRender', () => {
   const now = performance.now();
   lampLayer.draw(lampState(now), now);
+  drawDormant(lampLayer.ctx, now);
+  if (game.turnActive) pickups.draw(lampLayer.ctx, now);
   Effects.speedLines(lampLayer.ctx, balls);
   Lamps.letterDropTargets(render.context, drops);
   fx.draw(now);
@@ -977,6 +1114,8 @@ const upgradeScreen = new UpgradeScreen({
     if (open) {
       for (const f of flippers) f.setActive(false);
       plunger.charging = false;
+    } else {
+      inkInWoken();
     }
   },
 });
@@ -1011,7 +1150,7 @@ function updateSkillPanel(now) {
   const key = JSON.stringify(v);
   if (key === lastSkillView) return;
   lastSkillView = key;
-  upgradesTicketsEl.textContent = v.tickets.toLocaleString();
+  upgradesTicketsEl.textContent = formatPoints(v.tickets);
   skillsEl.hidden = !v.show;
   chargeBarEl.style.width = `${(v.charge / v.max) * 100}%`;
   chargeBarEl.parentElement.classList.toggle('double', v.max > 100);
@@ -1037,6 +1176,12 @@ Object.assign(window, {
   __world: world,
   __createBall: createBall,
   __startTurn: startTurn,
+  // Debug: __addTickets(1e6) to try later parts of the tree.
+  __addTickets: (n) => {
+    scoring.tickets += n;
+    scoring.lifetimeTickets += n;
+    scoring.save();
+  },
 });
 
 updateHud();

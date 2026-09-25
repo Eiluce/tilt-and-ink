@@ -8,7 +8,7 @@
 // are saved in localStorage, so they survive a reload. A mission in progress
 // ends with the turn.
 
-const MISSION_SAVE_KEY = 'tilt-and-ink.missions';
+const MISSION_SAVE_KEY = 'tilt-and-ink.missions.v2';
 
 const RANKS = [
   { name: 'Cadet', missions: 0 },
@@ -22,7 +22,7 @@ const RANKS = [
 // event: what counts toward the goal (see MissionControl.event callers in
 // main.js). tier: the rank index needed before it's offered. seconds: time
 // limit, if any. halos: which table features pulse while it's active.
-// The reward is MISSION_REWARDS[tier] (scoring.js).
+// The reward is the 'mission' source times MISSION_TIER_X[tier] (scoring.js).
 const MISSIONS = [
   { id: 'flight', name: 'Flight School', goal: 'Make 3 ramp shots', event: 'ramp', count: 3, tier: 0, halos: ['ramps'] },
   { id: 'asteroids', name: 'Asteroid Field', goal: 'Hit the pop bumpers 15 times', event: 'pop', count: 15, seconds: 35, tier: 0, halos: ['pops'] },
@@ -125,14 +125,14 @@ class MissionControl {
     this.active = null;
     this.completedIds.add(m.id);
     this.completedTotal += 1;
-    this.addScore(MISSION_REWARDS[m.tier], `mission: ${m.name}`, { flat: true, bonus: BONUS.mission, charge: 'mission' });
+    this.addScore('mission', `mission: ${m.name}`, { mult: MISSION_TIER_X[m.tier] });
     this.lastResult = { text: `${m.name} complete!`, until: performance.now() + 4000 };
 
     const newRank = this.rankFor(this.completedTotal);
     this.save();
     if (newRank > this.rank) {
       this.rank = newRank;
-      this.addScore(POINTS.promotion * newRank, 'promotion', { flat: true });
+      this.addScore('promotion', 'promotion', { mult: newRank });
       this.fx.title(`Promoted to ${RANKS[newRank].name}!`, `${m.name} complete`, 2200);
       this.fx.shake(300, 4);
     } else {

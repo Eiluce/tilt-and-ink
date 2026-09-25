@@ -1,8 +1,8 @@
 // Charge meter and active skills (GAME_DESIGN.md section 6). The meter fills
 // from active play; each skill spends its own amount of charge, so a strong
 // build can fire several in one hot streak. Skills are unlocked in the
-// Charge & Skills branch of the Upgrade Tree, whose node ids match the skill
-// ids below. The meter starts empty each turn.
+// Charge & Skills branch of the Upgrade Tree, which grants a stat named
+// after each skill id below. The meter starts empty each turn.
 //
 // This holds the meter and timers; main.js carries out each skill's effect.
 
@@ -19,7 +19,7 @@ const CHARGE_GAIN = {
   pop: 1,
   standup: 1,
   lane: 1,
-  shot: 4, // ramps, orbit, scoop, kickout, UFO, drop targets
+  shot: 4, // aimed shots: ramps, orbit, scoop, kickout, UFO, drop targets
   feature: 8, // completing a bank or set, reaching a chapter
   mission: 20,
 };
@@ -36,7 +36,7 @@ class Skills {
   }
 
   isUnlocked(id) {
-    return Boolean(this.upgrades.effect(id));
+    return this.upgrades.stat(id) > 0;
   }
 
   anyUnlocked() {
@@ -44,17 +44,17 @@ class Skills {
   }
 
   max() {
-    return this.upgrades.effect('doubleCharge');
+    return this.upgrades.stat('chargeMax');
   }
 
   cost(id) {
     const base = SKILLS.find((s) => s.id === id).cost;
-    return Math.round(base * this.upgrades.effect('skillDiscount'));
+    return Math.round(base * this.upgrades.stat('skillCost'));
   }
 
   gain(kind) {
     if (!this.anyUnlocked() || !CHARGE_GAIN[kind]) return;
-    this.charge = Math.min(this.max(), this.charge + CHARGE_GAIN[kind] * this.upgrades.effect('chargeRate'));
+    this.charge = Math.min(this.max(), this.charge + CHARGE_GAIN[kind] * this.upgrades.stat('chargeRate'));
   }
 
   isActive(id, now = performance.now()) {
@@ -70,7 +70,7 @@ class Skills {
     if (!this.canUse(id, now)) return false;
     this.charge -= this.cost(id);
     const skill = SKILLS.find((s) => s.id === id);
-    if (skill.durationMs) this.activeUntil[id] = now + skill.durationMs;
+    if (skill.durationMs) this.activeUntil[id] = now + skill.durationMs * this.upgrades.stat('skillTime');
     return true;
   }
 
