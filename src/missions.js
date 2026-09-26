@@ -38,9 +38,24 @@ const MISSIONS = [
   { id: 'finale', name: 'The Grand Finale', goal: 'Hit the UFO 10 times', event: 'ufo', count: 10, seconds: 45, tier: 4, halos: ['ufo'] },
 ];
 
+// The scoring sources (scoring.js) that must be awake for a mission's
+// events to happen at all.
+const MISSION_NEEDS = {
+  ramp: ['ramp'],
+  rampCombo: ['ramp'],
+  pop: ['pop'],
+  dropBank: ['dropBank'],
+  orbit: ['orbit'],
+  lane: ['lane'],
+  spinner: ['spinnerTurn'],
+  ufo: ['ufo'],
+  scoop: ['scoop'],
+};
+
 class MissionControl {
-  constructor({ addScore, fx, announce }) {
+  constructor({ addScore, fx, announce, isAwake = () => true }) {
     this.addScore = addScore;
+    this.isAwake = isAwake;
     this.fx = fx;
     this.announce = announce;
     this.completedTotal = 0;
@@ -84,27 +99,49 @@ class MissionControl {
     }
   }
 
-  // Missions available at the current rank that haven't been done yet this
-  // turn. Once all are done they come round again.
+  // Missions available at the current rank that haven't been done yet
+  // (completed ones are saved across turns); once all are done they come
+  // round again. Only missions the table can complete are offered: one that
+  // counts ramps isn't, while the ramps are still dormant (it could never be
+  // finished and, untimed, would block every other mission all turn).
   pool() {
-    let list = MISSIONS.filter((m) => m.tier <= this.rank && !this.completedIds.has(m.id));
-    if (list.length === 0) {
-      this.completedIds.clear();
-      list = MISSIONS.filter((m) => m.tier <= this.rank);
+    const doable = MISSIONS.filter((m) => m.tier <= this.rank && this.canPlay(m));
+    let list = doable.filter((m) => !this.completedIds.has(m.id));
+    if (list.length === 0 && doable.length) {
+      for (const m of doable) this.completedIds.delete(m.id);
+      list = doable;
     }
     return list;
+  }
+
+  // Is every table feature this mission counts awake?
+  canPlay(m) {
+    return (MISSION_NEEDS[m.event] || []).every((source) => this.isAwake(source));
   }
 
   // Standup hit: offer the next mission.
   cycle() {
     if (this.active) return;
     const list = this.pool();
+    if (!list.length) return;
     this.offerIndex = (this.offerIndex + 1) % list.length;
     this.offered = list[this.offerIndex];
   }
 
+  // The offer may have gone stale since it was made (a feature woke up, or
+  // the pool changed): make sure it's still one the table can complete.
+  refreshOffer() {
+    if (this.active) return;
+    const list = this.pool();
+    if (!this.offered || !list.includes(this.offered)) {
+      this.offerIndex = 0;
+      this.offered = list[0] || null;
+    }
+  }
+
   // Kickout saucer: accept the offered mission. Returns true if it started.
   accept() {
+    this.refreshOffer();
     if (this.active || !this.offered) return false;
     const m = this.offered;
     this.active = { mission: m, progress: 0, timeLeftMs: m.seconds ? m.seconds * 1000 : null };
@@ -148,7 +185,8 @@ class MissionControl {
     this.active = null;
     this.lastResult = { text: `${m.name} failed: ${reason}`, until: performance.now() + 4000 };
     this.fx.title('Mission Failed', reason, 1400);
-    this.offered = this.pool()[this.offerIndex % this.pool().length];
+    const list = this.pool();
+    this.offered = list.length ? list[this.offerIndex % list.length] : null;
   }
 
   // Called every physics tick. The clock only runs while a ball is in play,

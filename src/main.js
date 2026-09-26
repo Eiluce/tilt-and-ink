@@ -119,6 +119,10 @@ const ballSaveMs = () => upgrades.stat('ballSaveMs');
 const stat = (name) => upgrades.stat(name);
 const awake = (source) => scoring.isAwake(source);
 const RAMP_CHAIN_MS = 4000; // left-then-right ramp window, for the Ramp Relay mission
+// Extra ball: lit by the Nth drop bank clear of the turn, and only this many
+// per turn, so a turn always ends.
+const EXTRA_BALL_AT_CLEAR = 3;
+const EXTRA_BALLS_PER_TURN = 1;
 const ROMAN = ['I', 'II', 'III', 'IV', 'V'];
 
 const game = {
@@ -181,7 +185,7 @@ function addScore(source, label, { at, mult = 1, echo = true } = {}) {
   return total;
 }
 
-const missions = new MissionControl({ addScore, fx, announce });
+const missions = new MissionControl({ addScore, fx, announce, isAwake: (source) => scoring.isAwake(source) });
 
 const BUMPER_WORDS = ['BOP!', 'BONK!', 'POW!', 'BAM!'];
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
@@ -411,7 +415,7 @@ const drops = new DropTargetBank(world, {
   onCleared: () => {
     missions.event('dropBank');
     game.bankClears += 1;
-    if (stat('extraBall') && game.bankClears % 2 === 0 && !game.extraBallLit) {
+    if (stat('extraBall') && game.bankClears === EXTRA_BALL_AT_CLEAR && game.extraBalls < EXTRA_BALLS_PER_TURN && !game.extraBallLit) {
       game.extraBallLit = true;
       announce('Extra ball lit at the kickout');
     }
@@ -841,12 +845,18 @@ function createBall(x, y, mode) {
   return ball;
 }
 
-function serveBall() {
+// A new ball arms the ball saver (its countdown starts when the ball
+// reaches the playfield). A ball given back by a save (Shoot Again, Guardian
+// Angel, Saved by the Bell) doesn't: otherwise a player who drained inside
+// the window every time got a fresh window every time, and the turn never
+// ended.
+function serveBall({ armSave = true } = {}) {
   if (!game.turnActive) return;
   createBall(L.shooter.x, L.shooter.stopY - L.ballR - 1, 'shooter');
-  game.saveArmed = true;
+  game.saveArmed = armSave && ballSaveMs() > 0;
   updateHud();
 }
+const serveSavedBall = () => serveBall({ armSave: false });
 
 function startTurn() {
   Object.assign(game, {
@@ -905,20 +915,20 @@ function removeBall(ball) {
     game.ballSaveUntil = 0;
     announce('Shoot again!');
     fx.title('Shoot Again!', 'Ball saved', 1200);
-    setTimeout(serveBall, 700);
+    setTimeout(serveSavedBall, 700);
     return;
   }
   if (stat('guardian') && !game.guardianUsed) {
     game.guardianUsed = true;
     announce('Guardian Angel!');
     fx.title('Guardian Angel!', 'Ball returned, once per turn', 1300);
-    setTimeout(serveBall, 700);
+    setTimeout(serveSavedBall, 700);
     return;
   }
   if (Math.random() < stat('drainSave')) {
     announce('Saved by the bell!');
     fx.title('Saved by the Bell!', 'Ball returned', 1300);
-    setTimeout(serveBall, 700);
+    setTimeout(serveSavedBall, 700);
     return;
   }
   endBall();
@@ -1237,6 +1247,7 @@ Object.assign(window, {
   __scoring: scoring,
   __upgrades: upgrades,
   __skills: skills,
+  __missions: missions,
   __balls: balls,
   __world: world,
   __createBall: createBall,

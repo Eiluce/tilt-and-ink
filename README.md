@@ -47,8 +47,9 @@ The table starts **dormant**. Your first turn is a single ball, and only the pop
 
 - **Chapters and saucer multiball:** see below.
 - **R·O·W lanes** at the top: light all three letters to raise the end-of-ball bonus multiplier. Flipper buttons shift the lit letters.
-- **Drop targets 1-2-3**: every second time you clear them lights an **extra ball**. Collect it at the yellow kickout hole.
-- **Missions**: the side panel always offers one. Hit a standup target to switch to the next mission, and land in the kickout hole to accept it. Targets for the active mission pulse on the table. Completing missions promotes you from Cadet up to Admiral and unlocks harder missions. Your rank is saved in the browser and carries over between turns.
+- **Drop targets 1-2-3**: once the Extra Ball upgrade is bought, the third time you clear them in a turn lights an **extra ball** (one per turn). Collect it at the yellow kickout hole.
+- **Ball saver**: a ball that drains soon after launch comes back once ("Shoot Again"); the ball it gives back has no saver of its own.
+- **Missions**: the side panel always offers one. Hit a standup target to switch to the next mission, and land in the kickout hole to accept it. Only missions the table can currently complete are offered: ramp missions appear once the ramps are awake, and so on. Targets for the active mission pulse on the table. Completing missions promotes you from Cadet up to Admiral and unlocks harder missions. Your rank is saved in the browser and carries over between turns.
 
 ### Chapters and saucer multiball
 
