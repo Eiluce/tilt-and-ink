@@ -99,7 +99,7 @@ Each table is unlocked by buying its **pass** node in the Upgrade Tree, which ne
 | # | Table | World | Spot inks | Centerpiece | Physics twist |
 |---|---|---|---|---|---|
 | 1 | **Rocket Row** *(built)* | Space | tomato red · serial teal | UFO with tractor-beam scoop | Gentle gravity, the tutorial |
-| 2 | **Timber Hollow** — "The Woodsman's Curse" | Forest | moss green · rust orange | The Old Oak, owl-eye targets, mouth scoop | Gravity ×1.1, dense toadstool pops, moss inlanes briefly slow the ball |
+| 2 | **Timber Hollow** — "The Woodsman's Curse" *(built)* | Forest | moss green · rust orange | The Old Oak, owl eyes, hollow scoop | Gravity ×1.1, a ring of five toadstool pops, moss inlanes slow the ball; own mode *Timber!* |
 | 3 | **Davy Jones' Deep** — "Terror of Twenty Fathoms" | Ocean | deep-sea blue · coral | The Kraken: tentacle ramps, blinking eye target | Water drag (weak flips don't make ramps), an upward current lane |
 | 4 | **Mount Cinder** — "Fury of the Fire God" | Volcano | lava red · sulphur yellow | Tiki-faced volcano with a magma gauge | Gravity ×1.35, steam vents randomly kick the ball |
 | 5 | **Frostbite Peak** — "The Abominable Expedition" | Arctic | glacier blue · berry | Yeti in an ice-cave scoop | Near-frictionless ice |
@@ -108,6 +108,10 @@ Each table is unlocked by buying its **pass** node in the Upgrade Tree, which ne
 | 8 | **The Devil's Lounge** *(finale)* | Casino | devil red · gold | Devil mask, roulette spinner | The final boss table |
 
 Sugar Rush Bakery and Boiler Room Big Band from the original list are dropped for now. Each new table is a genuine new layout (not a reskin).
+
+**Implemented (table system):** `src/layout.js` holds the cabinet every table shares (outer wall and arch, shooter lane, left orbit with its spinner and standups, side slopes, inlanes, slings, the two main flippers, top lanes). Each built table is a definition in `src/tableDefs/`: its playfield (pops, centrepiece and scoop, kickout, drops, ramps, optional mini flipper, lamp inserts, pickup spots), two spot inks, art pieces (pop, centrepiece, spinner, drop target, backdrop, decor, wording on the playfield and apron), texts, missions (same events, own names) and optionally its own rules as hooks (spinner, inlane, pop, scoop, tick, lamps). `src/tableSelect.js` merges the pick into `LAYOUT`; switching tables (Tables tab, between turns) saves the pick and reloads.
+
+**Timber Hollow's rules:** *Timber!* — 20 spinner turns fill the SAW meter; a full meter wakes the oak and lights its hollow; shooting it starts 20 s where each toadstool hit also scores a `chop` (base 40, Rules branch). Chapter V multiball takes priority at the hollow. Moss in each inlane keeps 55% of the ball's speed. Checked: 0 traps in 888 drops, both ramps makeable.
 
 ### 4.4 Difficulty Scaling Across Tables
 

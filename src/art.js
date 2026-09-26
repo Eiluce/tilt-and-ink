@@ -157,7 +157,7 @@ const Art = (() => {
     // unlit inserts & playfield lettering
     s += INSERTS.arrows.map((a) => at(a.x, a.y, `<path d="${arrowPath(a.s)}" fill="${P2}" stroke="${K}" stroke-width="2" stroke-linejoin="round"/>`, a.rot)).join('');
     s += INSERTS.multipliers.map((m) => `<circle cx="${m.x}" cy="${m.y}" r="${m.r}" fill="${P2}" stroke="${K}" stroke-width="1.8"/><text x="${m.x}" y="${m.y + 3.5}" text-anchor="middle" font-family="${SLAB}" font-size="9" fill="${K}">${m.n}×</text>`).join('');
-    const titleSize = Math.min(25, 330 / TABLE.name.length);
+    const titleSize = Math.min(25, 280 / TABLE.name.length); // fits between the slings
     s += `<text x="200" y="${INSERTS.title.y}" text-anchor="middle" font-family="${SLAB}" font-size="${titleSize.toFixed(1)}" fill="${R}" stroke="${K}" stroke-width="1">${TABLE.name.toUpperCase()}</text>`;
     s += INSERTS.chapters.map((c) => `<rect x="${c.x - 10}" y="${c.y - 8}" width="20" height="16" rx="3" fill="${P2}" stroke="${K}" stroke-width="1.6"/><text x="${c.x}" y="${c.y + 4}" text-anchor="middle" font-family="${SLAB}" font-size="9" fill="${K}">${c.t}</text>`).join('');
     const eb = INSERTS.extraBall;

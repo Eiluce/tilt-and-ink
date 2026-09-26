@@ -1101,6 +1101,25 @@ kbd {
   color: var(--red);
 }
 
+.lobby button[data-play] {
+  justify-self: start;
+  background: var(--red);
+  color: var(--paper);
+  border: 2px solid var(--ink);
+  padding: 7px 12px;
+}
+
+.lobby button[data-play]:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.lobby .state-note {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
 .lobby button[data-find] {
   justify-self: start;
   background: var(--black);

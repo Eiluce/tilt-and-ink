@@ -3,7 +3,7 @@
 // straight through; they're drawn on the lamp layer, not physics bodies).
 // Unlocked by the Prop Department node; the tree adds spawn rate, golden
 // stars worth 10×, and a wider pull radius.
-const PICKUP_SPOTS = [[110, 405], [290, 430], [200, 470], [145, 215], [255, 215], [200, 125]];
+const PICKUP_SPOTS = LAYOUT.pickupSpots; // open spots, per table
 const PICKUP_LIFE_MS = 6000;
 const PICKUP_R = 8;
 
@@ -17,6 +17,14 @@ class Pickups {
   clear() {
     this.tokens = [];
     this.nextAt = 0;
+  }
+
+  // Places one token now at a free spot (a table's rules can shower them).
+  spawn(now, golden = 0) {
+    const free = PICKUP_SPOTS.filter(([x, y]) => !this.tokens.some((t) => t.x === x && t.y === y));
+    if (!free.length) return;
+    const [x, y] = free[Math.floor(Math.random() * free.length)];
+    this.tokens.push({ x, y, born: now, golden: Math.random() < golden });
   }
 
   // stats: { everyMs, golden (chance), magnet (extra px) }. Only balls on

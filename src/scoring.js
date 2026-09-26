@@ -45,6 +45,8 @@ const SOURCES = {
   mission: { base: 500, branch: 'rules', flat: true, bonus: 0.25, charge: 'mission' }, // times MISSION_TIER_X
   promotion: { base: 2500, branch: 'rules', flat: true }, // times the new rank number
   pickup: { base: 5, branch: 'rules', charge: 'lane' },
+  // Tables' own modes (tableDefs/): awake from the start, the mode gates it.
+  chop: { base: 40, branch: 'rules', bonus: 0.25, charge: 'pop' }, // Timber Hollow's Timber!
 };
 
 // Mission reward multiplier by tier (see MISSIONS in missions.js).

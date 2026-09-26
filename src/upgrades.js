@@ -38,6 +38,7 @@ const BRANCHES = [
 const STAT_BASE = {
   'awake.pop': 1,
   'awake.sling': 1,
+  'awake.chop': 1, // table modes are gated by their own rules
   balls: 1,
   ballSaveMs: 0,
   drainSave: 0,

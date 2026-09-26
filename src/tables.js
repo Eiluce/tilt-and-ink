@@ -15,7 +15,7 @@ const TABLES = [
     emblem: '<circle cx="44" cy="44" r="41" fill="#efe2c4" stroke="#1e1a16" stroke-width="3"/><path d="M30 42 C30 26 58 26 58 42 Z" fill="#9fd0d4" stroke="#1e1a16" stroke-width="3"/><ellipse cx="44" cy="46" rx="28" ry="9" fill="#2e7f86" stroke="#1e1a16" stroke-width="3"/><circle cx="32" cy="46" r="2.5" fill="#e3a92b"/><circle cx="44" cy="48" r="2.5" fill="#e3a92b"/><circle cx="56" cy="46" r="2.5" fill="#e3a92b"/><path d="M36 56 L30 74 H58 L52 56 Z" fill="#d2452f" opacity="0.35"/>',
   },
   {
-    n: 2, name: 'Timber Hollow', world: 'Forest', serial: "The Woodsman's Curse",
+    n: 2, name: 'Timber Hollow', world: 'Forest', serial: "The Woodsman's Curse", built: true,
     inks: ['#4d7a35', '#d9772e'],
     centerpiece: 'The Old Oak: owl-eye targets and a mouth scoop',
     twist: 'Dense toadstool pops; moss inlanes briefly slow the ball',

@@ -150,6 +150,11 @@ const upgrades = new Upgrades(scoring);
 scoring.upgrades = upgrades;
 scoring.newTurn();
 const skills = new Skills(upgrades);
+// The saved table pick must be a table reached (not after a progress reset).
+if (TABLE.n > upgrades.tablesReached()) {
+  pickTable(1);
+  location.reload();
+}
 
 const scoreEl = document.getElementById('score');
 const ballInfoEl = document.getElementById('ball-info');
@@ -326,6 +331,7 @@ const pops = L.pops.map(([x, y]) => {
       Body.setVelocity(ball, { x: v.x * 1.3, y: v.y * 1.3 });
     } else {
       addScore('pop', 'pop bumper', { at: { x, y: y - 24 } });
+      tableRules.pop?.(x, y);
       fx.burst(c.x, c.y - 6, pick(BUMPER_WORDS));
     }
     // Chain Reaction: sometimes another pop fires as well.
@@ -371,6 +377,7 @@ const spinner = new Spinner(world, {
   onScore: (turns) => {
     if (!addScore('spinnerTurn', 'spinner', { mult: turns, at: { x: L.spinner.x + 16, y: L.spinner.y } })) return;
     missions.event('spinner', turns);
+    tableRules.spinner?.(turns);
   },
 });
 // The ball never touches the spinner bar (see spinner.js): this sensor
@@ -491,6 +498,7 @@ const scoop = new Hole(world, {
     if (game.chapters < 5 || !awake('saucerJackpot')) {
       addScore('scoop', TEXT.scoop, { at: L.scoop });
       fx.ring(L.scoop.x, L.scoop.y, INK.teal, 6, 28);
+      tableRules.scoop?.(); // the table's own mode may start here
       return;
     }
     game.chapters = 0;
@@ -570,7 +578,8 @@ on(orbitSensor, (ball) => {
 for (const key of ['inL', 'inR']) {
   const sensor = makeSensor(L.rollovers[key], L.rollovers.y, 7, 'inlane');
   World.add(world, sensor);
-  on(sensor, () => {
+  on(sensor, (ball) => {
+    tableRules.inlane?.(ball); // e.g. Timber Hollow's moss
     if (!addScore('inlane', 'inlane', { at: { x: L.rollovers[key], y: L.rollovers.y } })) return;
     game.rolloverFlash[key] = performance.now() + 1000;
   });
@@ -585,6 +594,23 @@ const pickups = new Pickups({
     if (golden) fx.burst(t.x, t.y - 16, 'GOLD!', INK.mustard);
   },
 });
+
+// The table's own rules (TABLE.rules in tableDefs/), if it has any. It gets
+// a small API and main.js calls its hooks: newTurn, spinner, inlane, pop,
+// scoop, tick, lamps, scoopLit.
+const tableRules = TABLE.rules ? TABLE.rules({
+  addScore,
+  fx,
+  announce,
+  awake,
+  game,
+  INK,
+  Body,
+  velocityOf,
+  spawnPickup: () => {
+    if (awake('pickup')) pickups.spawn(performance.now());
+  },
+}) : {};
 
 // --- flippers ------------------------------------------------------------------
 
@@ -856,6 +882,7 @@ function startTurn() {
   standups.reset();
   drops.reset();
   pickups.clear();
+  tableRules.newTurn?.();
   missions.newTurn();
   scoring.newTurn();
   skills.newTurn();
@@ -969,6 +996,7 @@ function tickGame() {
   missions.tick(STEP_MS, inPlay);
   scoring.rank = awake('mission') ? missions.rank : 0;
   scoring.tick(now);
+  tableRules.tick?.(now);
   scoring.surge = skills.isActive('inkSurge', now) ? stat('surgeX') : 1;
   if (game.turnActive && inPlay && awake('pickup')) {
     pickups.update(now, balls, { everyMs: stat('pickupEveryMs'), golden: stat('pickupGolden'), magnet: stat('pickupMagnet') });
@@ -1055,7 +1083,7 @@ function lampState(now) {
       leftRamp: awake('ramp') ? comboOn('right') : 'off',
       rightRamp: awake('ramp') ? comboOn('left') : 'off',
       orbit: now < game.orbitFlashUntil ? 'blink' : 'off',
-      scoop: multiballLit ? 'blink' : 'off',
+      scoop: multiballLit || tableRules.scoopLit?.() ? 'blink' : 'off',
     },
     row: game.row,
     multiplier: stat('bonusXMax') > 1 ? scoring.bonusX : 0,
@@ -1074,6 +1102,7 @@ Events.on(render, 'afterRender', () => {
   const now = performance.now();
   lampLayer.draw(lampState(now), now);
   drawDormant(lampLayer.ctx, now);
+  tableRules.lamps?.(lampLayer.ctx, now);
   if (game.turnActive) pickups.draw(lampLayer.ctx, now);
   Effects.speedLines(lampLayer.ctx, balls);
   Lamps.letterDropTargets(render.context, drops);
@@ -1153,6 +1182,7 @@ const upgradeScreen = new UpgradeScreen({
   upgrades,
   scoring,
   skills,
+  canSwitchTable: () => !game.turnActive,
   onToggle: (open) => {
     paused = open;
     if (open) {
@@ -1237,6 +1267,7 @@ Object.assign(window, {
   __upgrades: upgrades,
   __skills: skills,
   __missions: missions,
+  __tableRules: tableRules,
   __balls: balls,
   __world: world,
   __createBall: createBall,

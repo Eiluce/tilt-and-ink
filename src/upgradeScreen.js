@@ -105,7 +105,8 @@ function plaqueLines(name) {
 const diamondPts = (x, y, r) => `${x},${y - r} ${x + r},${y} ${x},${y + r} ${x - r},${y}`;
 
 class UpgradeScreen {
-  constructor({ root, upgrades, scoring, skills, onToggle }) {
+  constructor({ root, upgrades, scoring, skills, onToggle, canSwitchTable = () => true }) {
+    this.canSwitchTable = canSwitchTable;
     this.root = root;
     this.upgrades = upgrades;
     this.scoring = scoring;
@@ -139,6 +140,12 @@ class UpgradeScreen {
       if (buy) {
         this.upgrades.buy(buy.dataset.buy);
         this.render();
+      }
+      const play = e.target.closest('[data-play]');
+      if (play && !play.disabled) {
+        pickTable(Number(play.dataset.play));
+        location.reload();
+        return;
       }
       const find = e.target.closest('[data-find]');
       if (find) {
@@ -522,9 +529,14 @@ class UpgradeScreen {
       const pass = NODES.find((u) => u.pass === t.n);
       let state;
       let tag;
-      if (t.n === 1) {
+      if (t.n === TABLE.n) {
         tag = 'Now playing';
         state = '<p class="state playing">Now playing</p>';
+      } else if (t.built && t.n <= reached) {
+        tag = 'Open';
+        const ok = this.canSwitchTable();
+        state = `<p class="state">Tickets and upgrades are shared across every table.</p>
+          <button type="button" data-play="${t.n}" ${ok ? '' : 'disabled'}>Play this table</button>${ok ? '' : '<p class="state-note">Finish your turn first.</p>'}`;
       } else if (t.n <= reached) {
         tag = 'In production';
         state = `<p class="state">Pass bought: its ring of upgrades is open. The table is still in production and will be playable in a later update.</p>`;

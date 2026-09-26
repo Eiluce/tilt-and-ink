@@ -30,6 +30,7 @@ TABLE_DEFS[1] = (() => {
       // Cubic bezier chains: P0, C1, C2, P1, C3, C4, P2.
       ramps: { right: RIGHT_RAMP, left: mirrorX(RIGHT_RAMP) },
       laneLetters: ['R', 'O', 'W'],
+      pickupSpots: [[110, 405], [290, 430], [200, 470], [145, 215], [255, 215], [200, 125]],
       // Lamp inserts, lit by lamps.js (unlit ones are printed by art.js).
       inserts: {
         arrows: [

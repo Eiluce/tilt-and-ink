@@ -1,6 +1,6 @@
 # Tilt & Ink
 
-A browser pinball game with 1930s pulp-serial art. You score by actually playing pinball, and your score feeds a long-term upgrade tree. The first table is **Rocket Row: The Saucer Men**.
+A browser pinball game with 1930s pulp-serial art. You score by actually playing pinball, and your score feeds a long-term upgrade tree. Two tables are built: **Rocket Row: The Saucer Men** and **Timber Hollow: The Woodsman's Curse**.
 
 The full game design is in [GAME_DESIGN.md](GAME_DESIGN.md).
 
@@ -63,13 +63,22 @@ Once the **Chapters** node is bought, Rocket Row is a movie serial in five chapt
 - **Chapter V:** the UFO's tractor beam pulses and the scoop arrow blinks. Clear the 1-2-3 drop targets, then shoot the scoop under the UFO to start a three-ball **saucer multiball** with a jackpot. Until then, more ramps still score but don't add chapter points.
 - **Resetting:** starting multiball sends the chapters back to 0, so the serial starts again. Chapters carry over when you lose a ball, and reset when a new turn starts.
 
+## Timber Hollow
+
+The second table, reached with the Timber Hollow pass. Same rules as Rocket Row (chapters, multiball at the centrepiece, missions), on its own layout and with its own mode:
+
+- **Layout:** five toadstool pop bumpers in a ring, the **Old Oak** in the middle (its hollow is the scoop), a **log flume** ramp that climbs the left side and crosses over the top, a **rope bridge** ramp on the right, a kickout left of the oak and three axe drop targets. No small upper flipper.
+- **Twist:** gravity is a little stronger, and **moss** on the inlanes slows the ball as it rolls through.
+- **Timber!:** spinning the sawmill spinner fills the **SAW** meter (five teeth on the left). When it's full the oak wakes and its hollow lights: shoot it for 20 seconds where every toadstool hit also **chops** the oak for extra points. Chapter V multiball (Pinecone Multiball) takes priority at the hollow.
+- Its missions are forest-themed (Log Rolling, Toadstool Stomp, Owl Watch, Sawmill Shift, …) on the same kinds of shots.
+
 ## Upgrades and skills
 
 Tickets you bank at the end of each turn buy permanent upgrades. Press <kbd>U</kbd> (or click **Upgrade Tree** in the side panel) to open the tree. The game pauses while it's open, and upgrades apply straight away.
 
 The tree is drawn as an art deco tower in black and gold. Every diamond is an upgrade, and a straight line leads up from it to the upgrades it unlocks. Bought diamonds fill with their branch's colour, and diamonds you can afford now pulse. Each branch climbs its own lanes, and each table is one step of the tower: buy a table's pass on the centre line to open the next step. A stepped line in another branch's colour means an upgrade also needs something from that branch, and hovering an upgrade lights up everything it needs. Drag to pan, use the mouse wheel to zoom, and click a diamond to see what it does and buy it. The screen has two more tabs: **Tables** shows a lobby card for each of the eight tables, and **Skill loadout** chooses which skill sits on which key.
 
-The tree has seven branches: the **Tables** spine, **Bumpers & Contact**, **Targets**, **Ramps & Lanes**, **Rules & Features**, **Ball Control** and **Charge & Skills**. Rocket Row's nodes wake the table up and add percentage boosts. Each **table pass** (★) opens that table's ring of stronger nodes across every branch. The eight tables are Rocket Row, Timber Hollow, Davy Jones' Deep, Mount Cinder, Frostbite Peak, Tomb of Sekhmet, Ghost Train and The Devil's Lounge. Only Rocket Row is built so far, but buying a later table's pass still opens its nodes. Buying the whole tree takes roughly 14 hours of play.
+The tree has seven branches: the **Tables** spine, **Bumpers & Contact**, **Targets**, **Ramps & Lanes**, **Rules & Features**, **Ball Control** and **Charge & Skills**. Rocket Row's nodes wake the table up and add percentage boosts. Each **table pass** (★) opens that table's ring of stronger nodes across every branch. The eight tables are Rocket Row, Timber Hollow, Davy Jones' Deep, Mount Cinder, Frostbite Peak, Tomb of Sekhmet, Ghost Train and The Devil's Lounge. Rocket Row and Timber Hollow are built: once you've bought a built table's pass, pick it with **Play this table** on the Tables tab (between turns). Tickets and upgrades are shared across tables. Buying a later table's pass opens its nodes even before the table is built. Buying the whole tree takes roughly 14 hours of play.
 
 The **Charge & Skills** branch unlocks four skills, powered by a charge meter that fills as you hit things (aimed shots and completed features fill it fastest) and empties at the start of each turn. Each unlocked skill goes into a free loadout slot on keys <kbd>1</kbd>–<kbd>4</kbd>. Later nodes add slots on <kbd>5</kbd> and <kbd>6</kbd>.
 
@@ -87,7 +96,9 @@ Tickets, upgrades, rank and your loadout are saved in the browser. **Reset all p
 | Path | What it holds |
 |---|---|
 | `index.html`, `style.css` | Page and side panel |
-| `src/layout.js` | Table geometry, shared by the art and the physics |
+| `src/layout.js` | The cabinet every table shares (walls, arch, shooter lane, left orbit, inlanes, slings, flippers) |
+| `src/tableDefs/` | One file per built table: its playfield geometry, inks, art pieces, wording, missions and own rules |
+| `src/tableSelect.js` | Picks the table to play and merges its layout with the cabinet |
 | `src/art.js` | Playfield and sprite art, generated as SVG |
 | `src/main.js` | Table setup, rules, turns and input |
 | `src/scoring.js` | Point values, combo, end-of-ball bonus and Tickets |
