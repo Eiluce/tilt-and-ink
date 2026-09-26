@@ -142,7 +142,7 @@ const Art = (() => {
       const a2 = ((i + 1) / 28) * Math.PI * 2;
       rays += `M${L.ufo.x},${L.ufo.y} L${L.ufo.x + Math.cos(a1) * 800},${L.ufo.y + Math.sin(a1) * 800} L${L.ufo.x + Math.cos(a2) * 800},${L.ufo.y + Math.sin(a2) * 800}Z`;
     }
-    const orbitEnd = arcPoint(L.guideR, L.orbitGuide.endDeg);
+    const orbitEnd = arcPoint(L.orbitGuide.r, L.orbitGuide.endDeg);
     const shooterEnd = arcPoint(L.guideR, L.shooterWall.endDeg);
 
     let s = `<defs>
@@ -171,7 +171,7 @@ const Art = (() => {
     <path d="M${L.shooterWall.x},${L.sideSlopes.right[0][1]} L${pts(gr)} L278,652 L${L.shooterWall.x},652Z" fill="url(#hatch)"/>
     <g fill="none" stroke="${K}" stroke-linecap="round" stroke-linejoin="round">
       <path d="M8,700 L8,${cy} A${L.outerR},${L.outerR} 0 0 1 392,${cy} L392,700" stroke-width="8"/>
-      <path d="M${L.orbitGuide.x},${L.orbitGuide.bottom} L${L.orbitGuide.x},${cy} A${L.guideR},${L.guideR} 0 0 1 ${orbitEnd[0].toFixed(1)},${orbitEnd[1].toFixed(1)}" stroke-width="6"/>
+      <path d="M${L.orbitGuide.x},${L.orbitGuide.bottom} L${L.orbitGuide.x},${cy} A${L.orbitGuide.r},${L.orbitGuide.r} 0 0 1 ${orbitEnd[0].toFixed(1)},${orbitEnd[1].toFixed(1)}" stroke-width="6"/>
       <path d="M${L.shooterWall.x},700 L${L.shooterWall.x},${cy} A${L.guideR},${L.guideR} 0 0 0 ${shooterEnd[0].toFixed(1)},${shooterEnd[1].toFixed(1)}" stroke-width="6"/>
       <path d="M${pts(L.sideSlopes.left)}" stroke-width="6"/>
       <path d="M${pts(L.sideSlopes.right)}" stroke-width="6"/>

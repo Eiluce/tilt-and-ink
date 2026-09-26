@@ -26,7 +26,11 @@ const LAYOUT = {
   outerR: 192, // outer wall centreline; its inner edge is at r 188 / x 12 / x 388
   guideR: 162, // left orbit guide and shooter-lane wall centreline
 
-  orbitGuide: { x: 38, bottom: 400, endDeg: -125 },
+  // The left orbit guide has its own radius: a lane 34 px wide (x 12 to 46)
+  // with its mouth at y 360, so a cross shot from the right flipper can get
+  // in (the old 22 px lane ending at y 400 took 0 of 1,755 test flips; this
+  // takes about 4%, near the ramps' 6%). x = arch.cx - r.
+  orbitGuide: { r: 150, x: 50, bottom: 360, endDeg: -125 },
   shooterWall: { x: 362, endDeg: -55 },
   // One-way gate across the top of the shooter lane: a launched ball passes
   // through it, a ball coming round the arch the other way bounces off it.
@@ -58,9 +62,9 @@ const LAYOUT = {
   scoop: { x: 200, y: 356 },
   kickout: { x: 118, y: 255 },
   drops: { x: 200, y: 408, count: 3, spacing: 30, w: 24, h: 13 },
-  spinner: { x: 23, y: 385, len: 20, h: 6 },
-  orbitSensor: { x: 23, y: 300 },
-  standups: { xs: [47, 353], ys: [280, 304, 328], w: 7, h: 18 },
+  spinner: { x: 29, y: 345, len: 20, h: 6 },
+  orbitSensor: { x: 29, y: 290 },
+  standups: { xs: [59, 353], ys: [280, 304, 328], w: 7, h: 18 },
   // Sized to leave a ball-wide inlane between each sling and its guide.
   slings: {
     left: [[92, 470], [92, 540], [114, 558]],

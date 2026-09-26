@@ -91,7 +91,7 @@ const walls = [
   // so a fast ball can't tunnel through it.
   ...Walls.chain([[0, 720], ...Walls.arc(L.outerR + 8, 180, 360), [400, 720]], 24),
   // Left orbit guide and shooter-lane wall.
-  ...Walls.chain([[L.orbitGuide.x, L.orbitGuide.bottom], ...Walls.arc(L.guideR, 180, 360 + L.orbitGuide.endDeg)], 8),
+  ...Walls.chain([[L.orbitGuide.x, L.orbitGuide.bottom], ...Walls.arc(L.orbitGuide.r, 180, 360 + L.orbitGuide.endDeg)], 8),
   ...Walls.chain([[L.shooterWall.x, 720], ...Walls.arc(L.guideR, 0, L.shooterWall.endDeg)], 6),
   ...Walls.chain(L.sideSlopes.left, 6),
   ...Walls.chain(L.sideSlopes.right, 6),
