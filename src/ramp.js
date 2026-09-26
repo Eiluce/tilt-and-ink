@@ -11,6 +11,7 @@ class Ramp {
   constructor(world, { name, path, halfWidth = 13, wallThickness = 4, onMade }) {
     this.name = name;
     this.onMade = onMade;
+    this.halfWidth = halfWidth;
 
     this.points = sampleBezierChain(path, 24);
     this.tangents = this.points.map((p, i) => {
@@ -33,15 +34,26 @@ class Ramp {
     Matter.World.add(world, [...this.walls, this.mouth]);
   }
 
-  // Ball touched the mouth sensor: it's on the ramp if it's heading in.
+  // Ball touched the mouth sensor: it's on the ramp if it's heading in and
+  // lined up with the mouth. (The sensor is wider than the ramp, so a ball
+  // passing beside it at an angle can touch it; switching that one to ramp
+  // mode trapped it against the outside of the ramp's wall.)
   atMouth(ball) {
     if (ball.plugin.mode !== 'playfield') return;
     const [tx, ty] = this.tangents[0];
     const v = velocityOf(ball);
     if (v.x * tx + v.y * ty < 1) return;
+    if (Math.abs(this.offCentre(ball, 3)) > this.halfWidth - 4) return;
     setBallMode(ball, 'ramp');
     ball.plugin.ramp = this.name;
     ball.plugin.rampIndex = 3;
+    ball.plugin.rampStall = 0;
+  }
+
+  // How far the ball is from the centreline, sideways, at sample `i`.
+  offCentre(ball, i) {
+    const [tx, ty] = this.tangents[i];
+    return (ball.position.x - this.points[i][0]) * -ty + (ball.position.y - this.points[i][1]) * tx;
   }
 
   // Called once per engine tick for every ball.
@@ -73,6 +85,13 @@ class Ramp {
       return;
     }
     if (best <= 1 && along < 0) {
+      this.leave(ball);
+      return;
+    }
+    // Safety net: a ball outside the walls, or one that has sat still on
+    // the ramp for half a second, drops back to the playfield.
+    ball.plugin.rampStall = Math.abs(along) < 0.3 ? (ball.plugin.rampStall || 0) + 1 : 0;
+    if (Math.abs(this.offCentre(ball, best)) > this.halfWidth + 2 || ball.plugin.rampStall > 30) {
       this.leave(ball);
       return;
     }
