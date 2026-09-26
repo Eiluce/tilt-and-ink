@@ -7,43 +7,42 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Josefin+Sans:wght@600;700&family=Limelight&family=Rye&family=Special+Elite&display=swap" rel="stylesheet" />
   <!-- ?v= on local files makes browsers fetch fresh copies: bump it on every release. -->
-  <link rel="stylesheet" href="style.css?v=20" />
+  <link rel="stylesheet" href="style.css?v=21" />
 </head>
 <body>
+  <!-- Only what matters mid-ball; the rest folds into the "?" panel. -->
   <aside id="hud">
     <div id="table-name">Rocket Row</div>
-    <div id="chapter-line">Chapter one · The Saucer Men</div>
-    <div id="score-label">Score</div>
-    <div id="score">0</div>
-    <div id="status"><span id="ball-info"></span><span id="combo">Combo ×1</span></div>
+    <div id="score" aria-label="Score">0</div>
+    <div id="status"><span id="ball-info"></span><span id="combo">Combo ×1</span><span id="bonus-line">Bonus <b id="bonus">0</b> <b id="bonus-x">1×</b></span></div>
     <div id="combo-meter" aria-hidden="true"><div id="combo-bar"></div></div>
-    <div id="bonus-line">End-of-ball bonus <b id="bonus">0</b> × <b id="bonus-x">1×</b></div>
     <div id="skills" hidden>
       <div class="charge-row"><span class="tag">Charge</span><div id="charge-meter"><div id="charge-bar"></div></div></div>
       <div id="skill-list"></div>
     </div>
-    <div id="last-event"></div>
-    <div id="message"></div>
-    <section id="mission" aria-live="polite">
-      <div class="rank-row"><span class="tag">Rank</span> <span id="rank"></span></div>
-      <div id="rank-next"></div>
-      <div id="mission-label" class="tag"></div>
-      <div id="mission-name"></div>
+    <section id="mission" aria-live="polite" hidden>
+      <div class="mission-head"><span id="mission-label" class="tag"></span><span id="mission-status"></span></div>
+      <div class="mission-row"><span id="mission-name"></span><span id="mission-count"></span></div>
+      <div class="progress"><div id="mission-bar"></div></div>
       <div id="mission-goal"></div>
-      <div class="progress"><div id="mission-bar"></div><span id="mission-count"></span></div>
-      <div id="mission-status"></div>
     </section>
-    <div id="bank">
-      <span>Tickets <b id="tickets">0</b></span>
-      <span>Best turn <b id="best-turn">0</b></span>
+    <div id="message"></div>
+    <div class="hud-actions">
+      <button type="button" id="open-upgrades">Upgrade Tree <kbd>U</kbd> · <b id="upgrades-tickets">0</b> Tickets</button>
+      <button type="button" id="help-toggle" aria-expanded="false" aria-controls="help" title="Rank, tables and controls">?</button>
     </div>
-    <button type="button" id="open-upgrades">Upgrade Tree <kbd>U</kbd> · <b id="upgrades-tickets">0</b> Tickets</button>
-    <button type="button" id="open-tables">Tables · <b id="tables-reached">1 of 8</b> reached</button>
-    <div id="hint">
-      <p><kbd>Z</kbd> / <kbd>&larr;</kbd> left flipper</p>
-      <p><kbd>/</kbd> / <kbd>&rarr;</kbd> right flippers</p>
-      <p><kbd>Space</kbd> start turn · hold to pull the plunger</p>
-      <p><kbd>1</kbd>–<kbd>6</kbd> skills in your loadout</p>
+    <div id="help" hidden>
+      <div class="help-row"><span>Rank</span><b id="rank">—</b></div>
+      <div id="rank-next"></div>
+      <div class="help-row"><span>Best turn</span><b id="best-turn">0</b></div>
+      <button type="button" id="open-tables">Tables · <b id="tables-reached">1 of 8</b> reached</button>
+      <div id="hint">
+        <p><kbd>Z</kbd> / <kbd>&larr;</kbd> left flipper</p>
+        <p><kbd>/</kbd> / <kbd>&rarr;</kbd> right flippers</p>
+        <p><kbd>Space</kbd> start turn · hold to pull the plunger</p>
+        <p><kbd>1</kbd>–<kbd>6</kbd> skills in your loadout</p>
+        <p><kbd>U</kbd> Upgrade Tree</p>
+      </div>
     </div>
   </aside>
   <div id="table-wrap">
@@ -91,27 +90,27 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
-  <script src="src/layout.js?v=20"></script>
-  <script src="src/physics.js?v=20"></script>
-  <script src="src/art.js?v=20"></script>
-  <script src="src/flipper.js?v=20"></script>
-  <script src="src/bumper.js?v=20"></script>
-  <script src="src/spinner.js?v=20"></script>
-  <script src="src/dropTargets.js?v=20"></script>
-  <script src="src/ramp.js?v=20"></script>
-  <script src="src/hole.js?v=20"></script>
-  <script src="src/slingshot.js?v=20"></script>
-  <script src="src/standups.js?v=20"></script>
-  <script src="src/lamps.js?v=20"></script>
-  <script src="src/effects.js?v=20"></script>
-  <script src="src/tables.js?v=20"></script>
-  <script src="src/scoring.js?v=20"></script>
-  <script src="src/upgrades.js?v=20"></script>
-  <script src="src/skills.js?v=20"></script>
-  <script src="src/missions.js?v=20"></script>
-  <script src="src/pickups.js?v=20"></script>
-  <script src="src/treeLayout.js?v=20"></script>
-  <script src="src/upgradeScreen.js?v=20"></script>
-  <script src="src/main.js?v=20"></script>
+  <script src="src/layout.js?v=21"></script>
+  <script src="src/physics.js?v=21"></script>
+  <script src="src/art.js?v=21"></script>
+  <script src="src/flipper.js?v=21"></script>
+  <script src="src/bumper.js?v=21"></script>
+  <script src="src/spinner.js?v=21"></script>
+  <script src="src/dropTargets.js?v=21"></script>
+  <script src="src/ramp.js?v=21"></script>
+  <script src="src/hole.js?v=21"></script>
+  <script src="src/slingshot.js?v=21"></script>
+  <script src="src/standups.js?v=21"></script>
+  <script src="src/lamps.js?v=21"></script>
+  <script src="src/effects.js?v=21"></script>
+  <script src="src/tables.js?v=21"></script>
+  <script src="src/scoring.js?v=21"></script>
+  <script src="src/upgrades.js?v=21"></script>
+  <script src="src/skills.js?v=21"></script>
+  <script src="src/missions.js?v=21"></script>
+  <script src="src/pickups.js?v=21"></script>
+  <script src="src/treeLayout.js?v=21"></script>
+  <script src="src/upgradeScreen.js?v=21"></script>
+  <script src="src/main.js?v=21"></script>
 </body>
 </html>

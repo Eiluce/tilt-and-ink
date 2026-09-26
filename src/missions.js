@@ -230,10 +230,10 @@ class MissionControl {
       toNext,
       label: 'Mission offered',
       name: m ? m.name : '',
-      goal: m ? m.goal + (m.seconds ? ` in ${m.seconds}s` : '') : '',
+      goal: m ? `${m.goal}${m.seconds ? ` in ${m.seconds}s` : ''}. Standups change it.` : '',
       progress: 0,
       count: '',
-      status: result || 'Kickout hole accepts · standups change mission',
+      status: result || 'Kickout accepts',
       urgent: false,
     };
   }

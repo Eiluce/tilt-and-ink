@@ -153,9 +153,7 @@ const skills = new Skills(upgrades);
 
 const scoreEl = document.getElementById('score');
 const ballInfoEl = document.getElementById('ball-info');
-const lastEventEl = document.getElementById('last-event');
 const messageEl = document.getElementById('message');
-let lastEventTimer;
 let messageTimer;
 
 // Scores one hit of a SOURCES entry (scoring.js) through the upgrade
@@ -169,11 +167,6 @@ function addScore(source, label, { at, mult = 1, echo = true } = {}) {
   if (!total) return 0;
   const src = SOURCES[source];
   skills.gain(src.charge || (src.shot ? 'shot' : null));
-  lastEventEl.textContent = `+${formatPoints(total)} ${label}${scoring.combo > 1 && !src.flat ? ` (combo ×${scoring.combo})` : ''}`;
-  clearTimeout(lastEventTimer);
-  lastEventTimer = setTimeout(() => {
-    lastEventEl.textContent = '';
-  }, 900);
   if (at) fx.popup(at.x, at.y, `+${formatPoints(total)}`);
   if (src.shot && scoring.combo > 1 && at) fx.burst(at.x + 22, at.y - 26, `×${scoring.combo}`, INK.red);
   // Echo Chamber: some hits score a second time.
@@ -213,36 +206,24 @@ const missionEls = Object.fromEntries(
   ['rank', 'rank-next', 'mission-label', 'mission-name', 'mission-goal', 'mission-count', 'mission-bar', 'mission-status', 'mission']
     .map((id) => [id, document.getElementById(id)]),
 );
+// The mission block only shows during a turn once missions are unlocked;
+// rank lives in the "?" panel.
 let lastMissionView = '';
 function updateMissionPanel(now) {
-  const locked = {
-    rank: '—',
-    toNext: '',
-    label: 'Missions',
-    name: 'Locked',
-    goal: 'Buy Mission Control in the Upgrade Tree (Rules & Features).',
-    progress: 0,
-    count: '',
-    status: '',
-    urgent: false,
-  };
-  let v;
-  if (!awake('mission')) v = locked;
-  else if (game.turnActive) v = missions.view(now);
-  else v = {
-      ...missions.view(now),
-      label: 'Missions',
-      name: 'Start a turn',
-      goal: 'Hit a standup to pick a mission, then land in the kickout hole to accept it.',
-      count: '',
-      status: '',
-    };
+  const on = awake('mission');
+  const v = on ? { ...missions.view(now), show: game.turnActive } : { rank: '—', toNext: 'Buy Mission Control to start earning ranks', show: false };
   const key = JSON.stringify(v);
   if (key === lastMissionView) return;
   lastMissionView = key;
+  missionEls.mission.hidden = !v.show;
+  if (!on) {
+    missionEls.rank.textContent = v.rank;
+    missionEls['rank-next'].textContent = v.toNext;
+    return;
+  }
   missionEls.rank.textContent = v.rank;
   missionEls['rank-next'].textContent = v.toNext;
-  missionEls['mission-label'].textContent = v.label;
+  missionEls['mission-label'].textContent = v.label === 'Mission active' ? 'Mission' : 'Next mission';
   missionEls['mission-name'].textContent = v.name;
   missionEls['mission-goal'].textContent = v.goal;
   missionEls['mission-count'].textContent = v.count;
@@ -253,7 +234,7 @@ function updateMissionPanel(now) {
 
 // Score, combo meter, bonus and Tickets; only touches the DOM on change.
 const scoreEls = Object.fromEntries(
-  ['combo', 'combo-meter', 'combo-bar', 'bonus-line', 'bonus', 'bonus-x', 'tickets', 'best-turn'].map((id) => [id, document.getElementById(id)]),
+  ['combo', 'combo-meter', 'combo-bar', 'bonus-line', 'bonus', 'bonus-x', 'best-turn'].map((id) => [id, document.getElementById(id)]),
 );
 let lastScoreView = '';
 function updateScorePanel(now) {
@@ -280,7 +261,6 @@ function updateScorePanel(now) {
   scoreEls['bonus-line'].hidden = !v.bonusOn;
   scoreEls.bonus.textContent = formatPoints(v.bonus);
   scoreEls['bonus-x'].textContent = `${v.bonusX}×`;
-  scoreEls.tickets.textContent = formatPoints(v.tickets);
   scoreEls['best-turn'].textContent = formatPoints(v.best);
 }
 
@@ -1192,6 +1172,12 @@ function hudButton(el, fn) {
 }
 hudButton(document.getElementById('open-upgrades'), () => upgradeScreen.open('tree'));
 hudButton(document.getElementById('open-tables'), () => upgradeScreen.open('tables'));
+const helpEl = document.getElementById('help');
+const helpToggle = document.getElementById('help-toggle');
+hudButton(helpToggle, () => {
+  helpEl.hidden = !helpEl.hidden;
+  helpToggle.setAttribute('aria-expanded', String(!helpEl.hidden));
+});
 const tablesReachedEl = document.getElementById('tables-reached');
 
 const skillsEl = document.getElementById('skills');

@@ -31,6 +31,8 @@ You need an internet connection the first time, because the page loads [Matter.j
 | <kbd>1</kbd>–<kbd>6</kbd> | Fire the skill in that loadout slot (once unlocked in the Upgrade Tree) |
 | <kbd>U</kbd> | Open or close the Upgrade Tree (pauses the game) |
 
+The side panel shows only what matters mid-ball: score, ball, combo and bonus, your skills and the current mission. The **?** button opens your rank, best turn, the Tables screen and these controls.
+
 <kbd>↓</kbd> and <kbd>Enter</kbd> also work as the plunger.
 
 ## How to play Rocket Row
