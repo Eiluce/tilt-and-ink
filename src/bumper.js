@@ -44,11 +44,12 @@ class Bumper {
     // kickSpeed, keeping whatever sideways speed it had.
     const nx = dx / dist;
     const ny = dy / dist;
-    const outward = ballBody.velocity.x * nx + ballBody.velocity.y * ny;
+    const v = velocityOf(ballBody);
+    const outward = v.x * nx + v.y * ny;
     const boost = Math.max(this.kickSpeed, outward) - outward;
     Matter.Body.setVelocity(ballBody, {
-      x: ballBody.velocity.x + nx * boost,
-      y: ballBody.velocity.y + ny * boost,
+      x: v.x + nx * boost,
+      y: v.y + ny * boost,
     });
 
     this.pulse = 1;

@@ -45,15 +45,16 @@ class Slingshot {
     // or one that was kicked a moment ago. (collisionStart runs before the
     // bounce is resolved, so this is the incoming velocity.)
     const now = performance.now();
-    const vn = ball.velocity.x * nx + ball.velocity.y * ny;
+    const v = velocityOf(ball);
+    const vn = v.x * nx + v.y * ny;
     if (-vn < 1 || now < this.cooldownUntil) return false;
     this.cooldownUntil = now + 150;
 
     // Kick sideways only, and keep (plus nudge) the ball's downward speed.
     // The face points slightly upward, so a kick along it would loft the ball
     // back up every time and the two slings could volley it forever.
-    const tx = ball.velocity.x - vn * nx;
-    const ty = ball.velocity.y - vn * ny;
+    const tx = v.x - vn * nx;
+    const ty = v.y - vn * ny;
     Matter.Body.setVelocity(ball, {
       x: tx * 0.5 + Math.sign(nx) * this.kickSpeed,
       y: Math.max(ty, 0) + 1,

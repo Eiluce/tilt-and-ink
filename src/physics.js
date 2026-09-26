@@ -31,6 +31,12 @@ function setBallMode(ball, mode) {
   ball.render.sprite.yScale = s;
 }
 
+// A body's true velocity (px per 1/60 s), wherever it's read from. During a
+// physics sub-step Matter keeps `body.velocity` as that sub-step's
+// displacement (a quarter of the speed with 4 sub-steps), so collision
+// handlers, which run inside a sub-step, must read it through this.
+const velocityOf = (body) => Matter.Body.getVelocity(body);
+
 // Outline of a flipper with its pivot at the origin, pointing along +x: a
 // round pivot end of radius rp, straight sides, and a round tip of radius
 // rt. The art (art.js) and the physics body (flipper.js) are both built from

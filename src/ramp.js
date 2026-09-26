@@ -37,7 +37,8 @@ class Ramp {
   atMouth(ball) {
     if (ball.plugin.mode !== 'playfield') return;
     const [tx, ty] = this.tangents[0];
-    if (ball.velocity.x * tx + ball.velocity.y * ty < 1) return;
+    const v = velocityOf(ball);
+    if (v.x * tx + v.y * ty < 1) return;
     setBallMode(ball, 'ramp');
     ball.plugin.ramp = this.name;
     ball.plugin.rampIndex = 3;

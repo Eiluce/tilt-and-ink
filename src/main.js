@@ -47,6 +47,9 @@ Render.run(render);
 // so on a 120-144 Hz monitor the whole table ran 2-2.4x too fast, and a
 // single slow frame could sap a plunger launch.)
 //
+// Collision handlers run inside a sub-step, where `ball.velocity` is only
+// that sub-step's share: they read speeds through velocityOf() (physics.js).
+//
 // Each tick runs the game logic once (tickGame), then the physics in
 // SUBSTEPS smaller steps. A swinging flipper's tip moves up to ~35 px per
 // tick, more than the flipper and ball can overlap, so in one big step it
@@ -332,7 +335,8 @@ const pops = L.pops.map(([x, y]) => {
     if (Math.random() < stat('superChance')) {
       addScore('pop', 'SUPER pop', { at: { x, y: y - 24 }, mult: stat('superX') });
       fx.burst(c.x, c.y - 6, 'SUPER!', INK.red);
-      Body.setVelocity(ball, { x: ball.velocity.x * 1.3, y: ball.velocity.y * 1.3 });
+      const v = velocityOf(ball);
+      Body.setVelocity(ball, { x: v.x * 1.3, y: v.y * 1.3 });
     } else {
       addScore('pop', 'pop bumper', { at: { x, y: y - 24 } });
       fx.burst(c.x, c.y - 6, pick(BUMPER_WORDS));
@@ -382,6 +386,14 @@ const spinner = new Spinner(world, {
     missions.event('spinner', turns);
   },
 });
+// The ball never touches the spinner bar (see spinner.js): this sensor
+// across the lane spins it as a ball passes through.
+const spinnerSensor = makeSensor(L.spinner.x, L.spinner.y, 6, 'spinner');
+World.add(world, spinnerSensor);
+on(spinnerSensor, (ball) => {
+  if (awake('spinnerTurn')) spinner.kick(ball);
+});
+
 
 const drops = new DropTargetBank(world, {
   x: L.drops.x,
@@ -562,7 +574,7 @@ L.rolloverLanes.xs.forEach((x, i) => {
 const orbitSensor = makeSensor(L.orbitSensor.x, L.orbitSensor.y, 8, 'orbit');
 World.add(world, orbitSensor);
 on(orbitSensor, (ball) => {
-  if (ball.velocity.y >= 0) return; // only counts on the way up
+  if (velocityOf(ball).y >= 0) return; // only counts on the way up
   if (!addScore('orbit', 'orbit', { at: ball.position })) return;
   missions.event('orbit');
   fx.burst(ball.position.x + 14, ball.position.y, 'WHOOSH!', INK.paper);
@@ -625,7 +637,8 @@ for (const f of flippers) {
 for (const w of walls) {
   on(w, (ball) => {
     const now = performance.now();
-    if (!awake('wall') || Math.hypot(ball.velocity.x, ball.velocity.y) < 4) return;
+    const v = velocityOf(ball);
+    if (!awake('wall') || Math.hypot(v.x, v.y) < 4) return;
     if (now - (ball.plugin.lastWallAt || -Infinity) < 200) return;
     ball.plugin.lastWallAt = now;
     addScore('wall', 'rail', { at: ball.position });
@@ -640,7 +653,8 @@ function perfectFlip(flipper) {
       const d = Math.hypot(ball.position.x - flipper.body.position.x, ball.position.y - flipper.body.position.y);
       if (d > 55) continue;
       ball.plugin.boostUntil = performance.now() + 400;
-      Body.setVelocity(ball, { x: ball.velocity.x * 1.25, y: ball.velocity.y * 1.25 });
+      const v = velocityOf(ball);
+      Body.setVelocity(ball, { x: v.x * 1.25, y: v.y * 1.25 });
       fx.burst(ball.position.x, ball.position.y - 20, 'PERFECT!', INK.red);
     }
   }, 50);
@@ -721,12 +735,12 @@ function inkInWoken() {
 inkInWoken();
 
 // Dormant elements don't respond at all: the ball passes straight through
-// a sleeping UFO, spinner, drop target or standup (they're drawn faded).
+// a sleeping UFO, drop target or standup (they're drawn faded), and a
+// sleeping spinner doesn't turn (see spinnerSensor).
 // Walls, guides, pops and slings are always solid.
 const ALL_MASK = 0xffffffff;
 function applyDormancy() {
   ufo.body.collisionFilter.mask = awake('ufo') ? ALL_MASK : 0;
-  spinner.body.collisionFilter.mask = awake('spinnerTurn') ? CAT.BALL : 0;
   for (const t of standups.targets) t.body.collisionFilter.mask = awake('standup') ? ALL_MASK : 0;
   drops.setEnabled(awake('dropTarget'));
 }
