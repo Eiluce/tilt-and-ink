@@ -7,12 +7,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Josefin+Sans:wght@600;700&family=Limelight&family=Rye&family=Special+Elite&display=swap" rel="stylesheet" />
   <!-- ?v= on local files makes browsers fetch fresh copies: bump it on every release. -->
-  <link rel="stylesheet" href="style.css?v=21" />
+  <link rel="stylesheet" href="style.css?v=22" />
 </head>
 <body>
   <!-- Only what matters mid-ball; the rest folds into the "?" panel. -->
   <aside id="hud">
-    <div id="table-name">Rocket Row</div>
+    <div id="table-name"></div>
     <div id="score" aria-label="Score">0</div>
     <div id="status"><span id="ball-info"></span><span id="combo">Combo ×1</span><span id="bonus-line">Bonus <b id="bonus">0</b> <b id="bonus-x">1×</b></span></div>
     <div id="combo-meter" aria-hidden="true"><div id="combo-bar"></div></div>
@@ -90,27 +90,29 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
-  <script src="src/layout.js?v=21"></script>
-  <script src="src/physics.js?v=21"></script>
-  <script src="src/art.js?v=21"></script>
-  <script src="src/flipper.js?v=21"></script>
-  <script src="src/bumper.js?v=21"></script>
-  <script src="src/spinner.js?v=21"></script>
-  <script src="src/dropTargets.js?v=21"></script>
-  <script src="src/ramp.js?v=21"></script>
-  <script src="src/hole.js?v=21"></script>
-  <script src="src/slingshot.js?v=21"></script>
-  <script src="src/standups.js?v=21"></script>
-  <script src="src/lamps.js?v=21"></script>
-  <script src="src/effects.js?v=21"></script>
-  <script src="src/tables.js?v=21"></script>
-  <script src="src/scoring.js?v=21"></script>
-  <script src="src/upgrades.js?v=21"></script>
-  <script src="src/skills.js?v=21"></script>
-  <script src="src/missions.js?v=21"></script>
-  <script src="src/pickups.js?v=21"></script>
-  <script src="src/treeLayout.js?v=21"></script>
-  <script src="src/upgradeScreen.js?v=21"></script>
-  <script src="src/main.js?v=21"></script>
+  <script src="src/layout.js?v=22"></script>
+  <script src="src/tableDefs/rocketRow.js?v=22"></script>
+  <script src="src/tableSelect.js?v=22"></script>
+  <script src="src/physics.js?v=22"></script>
+  <script src="src/art.js?v=22"></script>
+  <script src="src/flipper.js?v=22"></script>
+  <script src="src/bumper.js?v=22"></script>
+  <script src="src/spinner.js?v=22"></script>
+  <script src="src/dropTargets.js?v=22"></script>
+  <script src="src/ramp.js?v=22"></script>
+  <script src="src/hole.js?v=22"></script>
+  <script src="src/slingshot.js?v=22"></script>
+  <script src="src/standups.js?v=22"></script>
+  <script src="src/lamps.js?v=22"></script>
+  <script src="src/effects.js?v=22"></script>
+  <script src="src/tables.js?v=22"></script>
+  <script src="src/scoring.js?v=22"></script>
+  <script src="src/upgrades.js?v=22"></script>
+  <script src="src/skills.js?v=22"></script>
+  <script src="src/missions.js?v=22"></script>
+  <script src="src/pickups.js?v=22"></script>
+  <script src="src/treeLayout.js?v=22"></script>
+  <script src="src/upgradeScreen.js?v=22"></script>
+  <script src="src/main.js?v=22"></script>
 </body>
 </html>

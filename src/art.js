@@ -1,5 +1,8 @@
-// Rocket Row art, "Pulp Serial Poster" direction: cream poster stock, black
-// press ink, two spot inks (tomato red, serial teal) and mustard for rewards.
+// Table art, "Pulp Serial Poster" direction: cream poster stock, black press
+// ink, the table's two spot inks and mustard for rewards. The shared cabinet
+// parts (walls, guides, lanes, flippers, slings, inserts, ramps, apron) are
+// drawn here; each table's own pieces (pop bumpers, centrepiece, spinner,
+// drop targets, backdrop, wording) come from its definition (TABLE.art).
 //
 // Everything is hand-coded SVG built from LAYOUT, in two kinds:
 //  - playfieldSVG(): the static printed playfield (walls, guides, ramps,
@@ -10,6 +13,8 @@
 //    SVG-as-image can't load web fonts, so sprites carry no text; anything
 //    that needs lettering is drawn by lamps.js instead.
 
+// `red` and `teal` are the table's two spot-ink roles (Rocket Row's are
+// literally red and teal); every table shares the rest.
 const INK = {
   paper: '#efe2c4',
   aged: '#e6d4ae',
@@ -19,6 +24,7 @@ const INK = {
   mustard: '#e3a92b',
   foxing: '#c8b48c',
   steel: '#55504a',
+  ...TABLE.inks,
 };
 
 const Art = (() => {
@@ -43,29 +49,9 @@ const Art = (() => {
 
   // --- element drawings (local coords, centred on the element) -------------
 
-  const bumper = (r) => `
-    <ellipse rx="${r * 1.55}" ry="${r * 0.42}" fill="none" stroke="${K}" stroke-width="${r * 0.28}" transform="rotate(-16)"/>
-    <circle r="${r}" fill="${R}" stroke="${K}" stroke-width="${r * 0.18}"/>
-    <path d="M${-r * 0.55},${-r * 0.2} A${r * 0.6},${r * 0.6} 0 0 1 ${-r * 0.1},${-r * 0.62}" fill="none" stroke="${P}" stroke-width="${r * 0.16}" stroke-linecap="round"/>
-    <ellipse rx="${r * 1.55}" ry="${r * 0.42}" fill="none" stroke="${M}" stroke-width="${r * 0.12}" transform="rotate(-16)" stroke-dasharray="${r * 2.4} ${r * 2.2}" stroke-dashoffset="${r * 1.2}"/>
-    <path d="${star(r * 0.2, r * 0.15, r * 0.38, r * 0.15, 5)}" fill="${P}" stroke="${K}" stroke-width="${r * 0.06}"/>`;
-
-  const ufo = (r) => `<g transform="scale(${r / 30})">
-    <ellipse rx="40" ry="16" cy="6" fill="${T}" stroke="${K}" stroke-width="5"/>
-    ${[-26, -9, 9, 26].map((x) => `<circle cx="${x}" cy="10" r="3.2" fill="${M}" stroke="${K}" stroke-width="1.5"/>`).join('')}
-    <path d="M-20,0 A20,22 0 0 1 20,0Z" fill="${P}" stroke="${K}" stroke-width="5"/>
-    <path d="M-11,-8 A11,11 0 0 1 -2,-16" stroke="${K}" stroke-width="2.5" fill="none" stroke-linecap="round"/>
-    <circle r="31" fill="none" stroke="${R}" stroke-width="2" stroke-dasharray="3 5"/></g>`;
-
-  const spinner = (len, h) => {
-    const w = len / 2 - 3;
-    return `<rect x="${-len / 2}" y="${-h / 2}" width="${w}" height="${h}" fill="${M}" stroke="${K}" stroke-width="1.6"/>
-      <rect x="${len / 2 - w}" y="${-h / 2}" width="${w}" height="${h}" fill="${M}" stroke="${K}" stroke-width="1.6"/>
-      <circle r="${h * 0.6}" fill="${R}" stroke="${K}" stroke-width="1.6"/>`;
-  };
-
-  // Pennant-shaped drop target; its number is lettered on by lamps.js.
-  const drop = (w, h) => `<path d="M${-w / 2},${-h / 2} L${w / 2},${-h / 2} L${w / 2},${h / 2 - 3} L0,${h / 2 + 3} L${-w / 2},${h / 2 - 3}Z" fill="${R}" stroke="${K}" stroke-width="2.4" stroke-linejoin="round"/>`;
+  // Kit handed to the table's own art pieces.
+  const kit = { P, P2, K, R, T, M, F, star: (...a) => star(...a), at: (...a) => at(...a) };
+  const A = TABLE.art;
 
   // Pivot at 0,0; the rounded tip reaches exactly `len`.
   const flipper = (len, rp, rt) => {
@@ -114,18 +100,10 @@ const Art = (() => {
 
   // --- shared lamp-insert shapes (unlit here, lit versions in lamps.js) ---
 
+  // Lamp inserts come from the table; `ink` names a spot-ink role.
   const INSERTS = {
-    arrows: [
-      { key: 'leftRamp', x: 140, y: 388, rot: -28, s: 1, color: R },
-      { key: 'rightRamp', x: 260, y: 388, rot: 28, s: 1, color: T },
-      { key: 'orbit', x: 58, y: 420, rot: -28, s: 0.85, color: M },
-      { key: 'scoop', x: 200, y: 383, rot: 0, s: 0.7, color: M },
-    ],
-    multipliers: [2, 3, 4, 5].map((n, i) => ({ n, x: 155 + i * 30, y: 460, r: 10 })),
-    chapters: ['I', 'II', 'III', 'IV', 'V'].map((t, i) => ({ t, x: 150 + i * 25, y: 518 })),
-    rowLetters: { y: 95, r: 8.5 },
-    extraBall: { x: 166, y: 549, w: 68, h: 15, label: 'EXTRA BALL' },
-    shootAgain: { x: 160, y: 578, w: 80, h: 16, label: 'SHOOT AGAIN' },
+    ...LAYOUT.inserts,
+    arrows: LAYOUT.inserts.arrows.map((a) => ({ ...a, color: INK[a.ink] })),
   };
 
   const arrowPath = (s) => `M0,${-12 * s} L${8 * s},${8 * s} L0,${3 * s} L${-8 * s},${8 * s}Z`;
@@ -136,18 +114,10 @@ const Art = (() => {
     const L = LAYOUT;
     const { cx, cy } = L.arch;
     const field = `M8,700 L8,${cy} A${L.outerR},${L.outerR} 0 0 1 392,${cy} L392,700Z`;
-    let rays = '';
-    for (let i = 0; i < 28; i += 2) {
-      const a1 = (i / 28) * Math.PI * 2;
-      const a2 = ((i + 1) / 28) * Math.PI * 2;
-      rays += `M${L.ufo.x},${L.ufo.y} L${L.ufo.x + Math.cos(a1) * 800},${L.ufo.y + Math.sin(a1) * 800} L${L.ufo.x + Math.cos(a2) * 800},${L.ufo.y + Math.sin(a2) * 800}Z`;
-    }
     const orbitEnd = arcPoint(L.orbitGuide.r, L.orbitGuide.endDeg);
     const shooterEnd = arcPoint(L.guideR, L.shooterWall.endDeg);
 
     let s = `<defs>
-      <pattern id="ht" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="3.5" cy="3.5" r="1.3" fill="${T}"/></pattern>
-      <pattern id="htr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="3" cy="3" r="1.1" fill="${R}"/></pattern>
       <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="${P2}"/><line x1="0" y1="0" x2="0" y2="6" stroke="${K}" stroke-width="1.2" stroke-opacity=".35"/></pattern>
       <clipPath id="pf"><path d="${field}"/></clipPath>
       <filter id="rshadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="4" dy="6" stdDeviation="1.5" flood-color="${K}" flood-opacity=".35"/></filter>
@@ -155,13 +125,7 @@ const Art = (() => {
     <rect width="400" height="700" fill="${K}"/>
     <g clip-path="url(#pf)">
       <rect width="400" height="700" fill="${P}"/>
-      <path d="${rays}" fill="${P2}"/>
-      <circle cx="340" cy="560" r="120" fill="url(#ht)" opacity=".3"/>
-      <ellipse cx="340" cy="560" rx="200" ry="34" fill="none" stroke="${T}" stroke-width="9" opacity=".22" transform="rotate(-18 340 560)"/>
-      <circle cx="70" cy="150" r="60" fill="url(#htr)" opacity=".22"/>
-      <g fill="${K}" opacity=".7">
-        <path d="${star(300, 60, 6, 2.2, 4)}"/><path d="${star(110, 60, 5, 1.8, 4)}"/><path d="${star(140, 440, 5, 1.8, 4)}"/><path d="${star(270, 470, 6, 2.2, 4)}"/><path d="${star(300, 250, 4, 1.5, 4)}"/>
-      </g>
+      ${A.backdrop(L, kit)}
     </g>`;
 
     // walls & guides
@@ -193,19 +157,20 @@ const Art = (() => {
     // unlit inserts & playfield lettering
     s += INSERTS.arrows.map((a) => at(a.x, a.y, `<path d="${arrowPath(a.s)}" fill="${P2}" stroke="${K}" stroke-width="2" stroke-linejoin="round"/>`, a.rot)).join('');
     s += INSERTS.multipliers.map((m) => `<circle cx="${m.x}" cy="${m.y}" r="${m.r}" fill="${P2}" stroke="${K}" stroke-width="1.8"/><text x="${m.x}" y="${m.y + 3.5}" text-anchor="middle" font-family="${SLAB}" font-size="9" fill="${K}">${m.n}×</text>`).join('');
-    s += `<text x="200" y="500" text-anchor="middle" font-family="${SLAB}" font-size="25" fill="${R}" stroke="${K}" stroke-width="1">ROCKET ROW</text>`;
+    const titleSize = Math.min(25, 330 / TABLE.name.length);
+    s += `<text x="200" y="${INSERTS.title.y}" text-anchor="middle" font-family="${SLAB}" font-size="${titleSize.toFixed(1)}" fill="${R}" stroke="${K}" stroke-width="1">${TABLE.name.toUpperCase()}</text>`;
     s += INSERTS.chapters.map((c) => `<rect x="${c.x - 10}" y="${c.y - 8}" width="20" height="16" rx="3" fill="${P2}" stroke="${K}" stroke-width="1.6"/><text x="${c.x}" y="${c.y + 4}" text-anchor="middle" font-family="${SLAB}" font-size="9" fill="${K}">${c.t}</text>`).join('');
     const eb = INSERTS.extraBall;
     const sa = INSERTS.shootAgain;
-    s += `<text x="200" y="539" text-anchor="middle" font-family="${TYPE}" font-size="7" fill="${K}" letter-spacing="1.5">A SERIAL IN FIVE CHAPTERS</text>
+    s += `<text x="200" y="539" text-anchor="middle" font-family="${TYPE}" font-size="7" fill="${K}" letter-spacing="1.5">${A.subtitle}</text>
       <rect x="${eb.x}" y="${eb.y}" width="${eb.w}" height="${eb.h}" rx="${eb.h / 2}" fill="${P2}" stroke="${K}" stroke-width="1.6"/><text x="200" y="${eb.y + 10.5}" text-anchor="middle" font-family="${TYPE}" font-size="7.5" fill="${K}">${eb.label}</text>
       <rect x="${sa.x}" y="${sa.y}" width="${sa.w}" height="${sa.h}" rx="${sa.h / 2}" fill="${P2}" stroke="${K}" stroke-width="1.8"/><text x="200" y="${sa.y + 11.5}" text-anchor="middle" font-family="${TYPE}" font-size="7.5" fill="${K}">${sa.label}</text>`;
     const ro = L.rollovers;
     s += [ro.inL, ro.inR].map((x) => at(x, ro.y, `<circle r="7" fill="${P2}" stroke="${K}" stroke-width="1.6"/><path d="${star(0, 0.5, 5, 2, 5)}" fill="${F}" stroke="${K}" stroke-width=".8"/>`)).join('');
-    s += `<text transform="translate(380 470) rotate(-90)" font-family="${TYPE}" font-size="7.5" fill="${K}" letter-spacing="1.5">SKILL SHOT ▸ LIGHT R·O·W</text>`;
+    s += `<text transform="translate(380 470) rotate(-90)" font-family="${TYPE}" font-size="7.5" fill="${K}" letter-spacing="1.5">${A.sideText}</text>`;
 
-    // tractor beam, scoop, kickout saucer
-    s += `<path d="M${L.ufo.x - 15},${L.ufo.y + 15} L${L.ufo.x + 15},${L.ufo.y + 15} L${L.ufo.x + 32},${L.ufo.y + 62} L${L.ufo.x - 32},${L.ufo.y + 62}Z" fill="url(#ht)" opacity=".7"/>
+    // the table's decoration round its centrepiece, then scoop and kickout saucer
+    s += `${A.decor ? A.decor(L, kit) : ''}
       <rect x="${L.scoop.x - 14}" y="${L.scoop.y - 6}" width="28" height="12" rx="6" fill="${K}"/><rect x="${L.scoop.x - 11}" y="${L.scoop.y - 3}" width="22" height="6" rx="3" fill="#000"/>`;
     s += at(L.kickout.x, L.kickout.y, `<circle r="12" fill="${M}" stroke="${K}" stroke-width="2.4"/><circle r="7.5" fill="${K}"/>`);
 
@@ -216,11 +181,24 @@ const Art = (() => {
     s += `<rect x="150" y="660" width="100" height="40" fill="${K}"/>
       <path d="M8,652 L130,652 Q150,652 162,672 L238,672 Q250,652 270,652 L${L.shooterWall.x},652 L${L.shooterWall.x},700 L8,700Z" fill="${F}" stroke="${K}" stroke-width="5" stroke-linejoin="round"/>
       <rect x="46" y="660" width="98" height="34" rx="2" fill="${P}" stroke="${K}" stroke-width="1.6"/>
-      <text font-family="${TYPE}" font-size="5.2" fill="${K}"><tspan x="50" y="669">RAMPS ADVANCE THE CHAPTER.</tspan><tspan x="50" y="677">CHAPTER V LIGHTS SAUCER</tspan><tspan x="50" y="685">MULTIBALL AT THE UFO.</tspan><tspan x="50" y="692" fill="${R}">R·O·W LANES = BONUS ×</tspan></text>
+      <text font-family="${TYPE}" font-size="5.2" fill="${K}">${apronLines(A.apronLeft, 50, 669, 'start')}</text>
       <rect x="256" y="660" width="98" height="34" rx="2" fill="${P}" stroke="${K}" stroke-width="1.6"/>
-      <text font-family="${TYPE}" font-size="5.6" fill="${K}" text-anchor="middle"><tspan x="305" y="670">3 BALLS PER TURN</tspan><tspan x="305" y="679" font-family="${SLAB}" font-size="8" fill="${R}">NEXT WEEK:</tspan><tspan x="305" y="689">CHAPTER II AWAITS!</tspan></text>`;
+      <text font-family="${TYPE}" font-size="5.6" fill="${K}" text-anchor="middle">${apronLines(A.apronRight, 305, 670, 'middle')}</text>`;
 
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 700" preserveAspectRatio="none" aria-hidden="true">${s}</svg>`;
+  }
+
+  // Apron card lines: a string, { red: text } in the table's red ink, or
+  // { slab: text } as a slab headline.
+  function apronLines(lines, x, y0, anchor) {
+    let y = y0;
+    return lines.map((line) => {
+      const t = typeof line === 'string' ? line : line.red || line.slab;
+      const attrs = line.red ? ` fill="${R}"` : line.slab ? ` font-family="${SLAB}" font-size="8" fill="${R}"` : '';
+      const out = `<tspan x="${x}" y="${y}" text-anchor="${anchor}"${attrs}>${t}</tspan>`;
+      y += line.slab ? 9.5 : 8;
+      return out;
+    }).join('');
   }
 
   function ramp(c) {
@@ -271,12 +249,12 @@ const Art = (() => {
   const L = LAYOUT;
   const SPRITES = {
     ball: sprite(ball(10), 11.5),
-    pop: sprite(bumper(L.popR), L.popR * 1.7),
-    ufo: sprite(ufo(32), 46),
-    spinner: sprite(spinner(L.spinner.len, L.spinner.h), L.spinner.len / 2 + 1, L.spinner.h / 2 + 3),
-    drop: sprite(drop(L.drops.w, L.drops.h), L.drops.w / 2 + 2, L.drops.h / 2 + 5),
+    pop: sprite(A.pop(L.popR, kit), A.popSpriteR(L.popR)),
+    centerpiece: sprite(A.centerpiece(L.centerpiece.r, kit), A.centerpieceSpriteR(L.centerpiece.r)),
+    spinner: sprite(A.spinner(L.spinner.len, L.spinner.h, kit), L.spinner.len / 2 + 1, L.spinner.h / 2 + 3),
+    drop: sprite(A.drop(L.drops.w, L.drops.h, kit), L.drops.w / 2 + 2, L.drops.h / 2 + 5),
     flipper: flipperSprite(L.flippers.left.len, L.flippers.left.pivotR, L.flippers.left.tipR),
-    miniFlipper: flipperSprite(L.flippers.mini.len, L.flippers.mini.pivotR, L.flippers.mini.tipR),
+    miniFlipper: L.flippers.mini ? flipperSprite(L.flippers.mini.len, L.flippers.mini.pivotR, L.flippers.mini.tipR) : null,
     standup: { off: sprite(standup(false), 5.5, 10.5), on: sprite(standup(true), 5.5, 10.5) },
     slingLeft: { off: slingSprite(L.slings.left, false), on: slingSprite(L.slings.left, true) },
     slingRight: { off: slingSprite(L.slings.right, false), on: slingSprite(L.slings.right, true) },

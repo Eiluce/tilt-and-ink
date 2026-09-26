@@ -23,7 +23,7 @@ class Lamps {
 
     // The UFO's tractor beam pulses when the scoop is lit for multiball.
     if (state.beam) {
-      const { x, y } = LAYOUT.ufo;
+      const { x, y } = LAYOUT.centerpiece;
       ctx.save();
       ctx.globalAlpha = 0.25 + 0.2 * Math.sin(now / 120);
       ctx.fillStyle = teal;
@@ -215,7 +215,7 @@ Lamps.HALO_SPOTS = (() => {
     orbit: [[L.spinner.x, L.spinner.y + 14, 16]],
     spinner: [[L.spinner.x, L.spinner.y, 16]],
     lanes: L.rolloverLanes.xs.map((x) => [x, 95, 13]),
-    ufo: [[L.ufo.x, L.ufo.y, 44]],
+    centerpiece: [[L.centerpiece.x, L.centerpiece.y, L.centerpiece.r + 14]],
     scoop: [[L.scoop.x, L.scoop.y, 18]],
     kickout: [[L.kickout.x, L.kickout.y, 19]],
   };

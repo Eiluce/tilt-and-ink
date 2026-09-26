@@ -180,7 +180,10 @@ function addScore(source, label, { at, mult = 1, echo = true } = {}) {
 
 const missions = new MissionControl({ addScore, fx, announce, isAwake: (source) => scoring.isAwake(source) });
 
-const BUMPER_WORDS = ['BOP!', 'BONK!', 'POW!', 'BAM!'];
+const TEXT = TABLE.text; // this table's wording (tableDefs/)
+document.getElementById('table-name').textContent = TABLE.name;
+document.title = `${TABLE.name} — Tilt & Ink`;
+const BUMPER_WORDS = TEXT.bumperWords;
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
 // Point halfway between the ball and what it hit, for placing hit effects.
@@ -223,7 +226,7 @@ function updateMissionPanel(now) {
   }
   missionEls.rank.textContent = v.rank;
   missionEls['rank-next'].textContent = v.toNext;
-  missionEls['mission-label'].textContent = v.label === 'Mission active' ? 'Mission' : 'Next mission';
+  missionEls['mission-label'].textContent = v.label === 'Mission active' ? 'Mission' : 'Offered';
   missionEls['mission-name'].textContent = v.name;
   missionEls['mission-goal'].textContent = v.goal;
   missionEls['mission-count'].textContent = v.count;
@@ -342,19 +345,19 @@ function chainPop(from) {
 }
 
 const ufo = new Bumper(world, {
-  x: L.ufo.x,
-  y: L.ufo.y,
-  radius: L.ufo.r,
+  x: L.centerpiece.x,
+  y: L.centerpiece.y,
+  radius: L.centerpiece.r,
   kickSpeed: 5,
-  label: 'UFO',
-  texture: S.ufo,
+  label: TEXT.centerpiece,
+  texture: S.centerpiece,
 });
 on(ufo.body, (ball) => {
   ufo.hit(ball);
-  if (!addScore('ufo', 'UFO', { at: { x: L.ufo.x, y: L.ufo.y - 30 } })) return;
+  if (!addScore('ufo', TEXT.centerpiece, { at: { x: L.centerpiece.x, y: L.centerpiece.y - 30 } })) return;
   missions.event('ufo');
-  fx.ring(L.ufo.x, L.ufo.y, INK.teal, L.ufo.r, L.ufo.r + 24);
-  fx.burst(ball.position.x, ball.position.y - 10, 'ZAP!', INK.teal);
+  fx.ring(L.centerpiece.x, L.centerpiece.y, INK.teal, L.centerpiece.r, L.centerpiece.r + 24);
+  fx.burst(ball.position.x, ball.position.y - 10, TEXT.centerpieceHit, INK.teal);
   fx.shake(160, 2.5);
 });
 
@@ -450,7 +453,7 @@ function rampMade(name) {
   const relay = game.rampChain.ramp && game.rampChain.ramp !== name && now < game.rampChain.until;
   const end = L.ramps[name][L.ramps[name].length - 1];
   if (!addScore('ramp', 'ramp', { at: { x: end[0], y: end[1] + 20 } })) return;
-  fx.burst(end[0], end[1] + 4, 'ZOOM!', INK.mustard);
+  fx.burst(end[0], end[1] + 4, TEXT.rampHit, INK.mustard);
   game.rampChain = { ramp: name, until: now + RAMP_CHAIN_MS };
   missions.event('ramp');
   if (relay) missions.event('rampCombo');
@@ -462,9 +465,8 @@ function advanceChapter() {
   game.chapters += 1;
   addScore('chapter', `Chapter ${ROMAN[game.chapters - 1]}`, { mult: game.chapters });
   const multiballLit = game.chapters === 5 && awake('saucerJackpot') && awake('scoop');
-  announce(multiballLit ? 'Chapter V! Shoot the UFO scoop for multiball' : `Chapter ${ROMAN[game.chapters - 1]}`);
-  const subs = ['The Saucer Men', 'Peril on Planet X', 'The Ray Gun Rumble', 'Trapped in the Nebula', multiballLit ? 'The Tractor Beam! Shoot the scoop' : 'The Tractor Beam'];
-  fx.title(`Chapter ${ROMAN[game.chapters - 1]}`, subs[game.chapters - 1]);
+  announce(multiballLit ? TEXT.multiballLit : `Chapter ${ROMAN[game.chapters - 1]}`);
+  fx.title(`Chapter ${ROMAN[game.chapters - 1]}`, multiballLit ? TEXT.multiballCallout : TEXT.chapters[game.chapters - 1]);
 }
 
 const ramps = ['left', 'right'].map((name) => {
@@ -487,14 +489,14 @@ const scoop = new Hole(world, {
   onCapture: () => {
     missions.event('scoop');
     if (game.chapters < 5 || !awake('saucerJackpot')) {
-      addScore('scoop', 'tractor beam', { at: L.scoop });
+      addScore('scoop', TEXT.scoop, { at: L.scoop });
       fx.ring(L.scoop.x, L.scoop.y, INK.teal, 6, 28);
       return;
     }
     game.chapters = 0;
-    const jackpot = addScore('saucerJackpot', 'saucer jackpot', { at: L.scoop });
-    announce('Saucer multiball!', 3000);
-    fx.title('Saucer Multiball!', `Jackpot ${formatPoints(jackpot)}`, 2000);
+    const jackpot = addScore('saucerJackpot', TEXT.jackpot, { at: L.scoop });
+    announce(TEXT.multiball, 3000);
+    fx.title(TEXT.multiball, `Jackpot ${formatPoints(jackpot)}`, 2000);
     fx.shake(450, 6);
     game.ballSaveUntil = performance.now() + Math.max(ballSaveMs(), 8000);
     feedBallsFromScoop(2);
@@ -510,7 +512,7 @@ const kickout = new Hole(world, {
   x: L.kickout.x,
   y: L.kickout.y,
   holdMs: 700,
-  eject: () => ({ x: 0.6, y: 4 }),
+  eject: () => ({ x: L.kickout.eject[0], y: L.kickout.eject[1] }),
   onCapture: () => {
     addScore('kickout', 'kickout', { at: L.kickout });
     fx.ring(L.kickout.x, L.kickout.y, INK.mustard, 8, 26);
@@ -519,7 +521,7 @@ const kickout = new Hole(world, {
       game.extraBallLit = false;
       game.extraBalls += 1;
       announce('Extra ball!');
-      fx.title('Extra Ball!', 'The serial continues');
+      fx.title('Extra Ball!', TEXT.extraBall);
       updateHud();
     }
   },
@@ -601,8 +603,9 @@ function makeFlipper(cfg, side, texture) {
 }
 const leftFlipper = makeFlipper(L.flippers.left, 'left', S.flipper);
 const rightFlipper = makeFlipper(L.flippers.right, 'right', S.flipper);
-const miniFlipper = makeFlipper(L.flippers.mini, 'mini', S.miniFlipper);
-const flippers = [leftFlipper, rightFlipper, miniFlipper];
+// Some tables have a small upper flipper on the right button too.
+const miniFlipper = L.flippers.mini ? makeFlipper(L.flippers.mini, 'mini', S.miniFlipper) : null;
+const flippers = [leftFlipper, rightFlipper, miniFlipper].filter(Boolean);
 
 // Perfect Flip capstone: flipping just as the ball lands on a flipper sends
 // it 25% faster (briefly allowed past the usual speed cap).
@@ -768,7 +771,7 @@ function magnetTarget() {
   if (game.chapters >= 5) return L.scoop;
   const key = missions.active ? missions.halos()[0] : null;
   const spot = key && Lamps.HALO_SPOTS[key] ? Lamps.HALO_SPOTS[key][0] : null;
-  return spot ? { x: spot[0], y: spot[1] } : { x: L.ufo.x, y: L.ufo.y };
+  return spot ? { x: spot[0], y: spot[1] } : { x: L.centerpiece.x, y: L.centerpiece.y };
 }
 
 function steerToMagnet() {
@@ -875,7 +878,7 @@ function endBall() {
     game.turnActive = false;
     const earned = scoring.bankTurn();
     announce(`Turn over: ${formatPoints(scoring.score)} points, +${formatPoints(earned)} Tickets`, 0);
-    setTimeout(() => fx.title('To Be Continued…', `${formatPoints(scoring.score)} points · +${formatPoints(earned)} Tickets`, 3500), BONUS_CARD_MS);
+    setTimeout(() => fx.title(TEXT.turnOver, `${formatPoints(scoring.score)} points · +${formatPoints(earned)} Tickets`, 3500), BONUS_CARD_MS);
     updateHud();
     return;
   }
@@ -1113,11 +1116,11 @@ window.addEventListener('keydown', (event) => {
   }
   if (RIGHT_KEYS.has(event.code)) {
     rightFlipper.setActive(true);
-    miniFlipper.setActive(true);
+    miniFlipper?.setActive(true);
     if (!event.repeat) {
       laneChange(1);
       perfectFlip(rightFlipper);
-      perfectFlip(miniFlipper);
+      if (miniFlipper) perfectFlip(miniFlipper);
     }
   }
   // Keys 1-6 fire the skill in that loadout slot.
@@ -1136,7 +1139,7 @@ window.addEventListener('keyup', (event) => {
   if (LEFT_KEYS.has(event.code)) leftFlipper.setActive(false);
   if (RIGHT_KEYS.has(event.code)) {
     rightFlipper.setActive(false);
-    miniFlipper.setActive(false);
+    miniFlipper?.setActive(false);
   }
   if (PLUNGER_KEYS.has(event.code) && plunger.charging) releasePlunger();
 });

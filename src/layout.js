@@ -1,6 +1,13 @@
-// Rocket Row (table 1) geometry. Both the physics (main.js) and the art
-// (art.js) read from here, so a wall or target can't be moved in one without
-// the other. Units are canvas px on the 400 x 700 table; angles in degrees.
+// Table geometry. Units are canvas px on the 400 x 700 table; angles in
+// degrees. Both the physics (main.js) and the art (art.js) read LAYOUT, so a
+// wall or target can't be moved in one without the other.
+//
+// FRAME is the cabinet every table shares: outer wall and arch, shooter
+// lane, the left orbit (with its spinner and standups), side slopes,
+// inlanes, slingshots, the two main flippers and the top lanes. Each table
+// (src/tableDefs/) adds its own playfield inside it: pop bumpers, the
+// centrepiece and its scoop, kickout, drop targets, ramps, an optional mini
+// flipper, lamp inserts. tableSelect.js merges the two into LAYOUT.
 //
 // The lower playfield is mirrored around x = 200 (the flippers' centre line).
 // The shooter lane eats ~30px on the right, so the lower-left gets a matching
@@ -10,16 +17,13 @@ const deg = (d) => (d * Math.PI) / 180;
 
 const mirrorX = (points) => points.map(([x, y]) => [400 - x, y]);
 
-const RIGHT_RAMP = [
-  [282, 352], [300, 305], [330, 270], [330, 215],
-  [330, 160], [310, 125], [290, 112],
-];
+// Table definitions register here by table number (src/tableDefs/).
+const TABLE_DEFS = {};
 
-const LAYOUT = {
+const FRAME = {
   width: 400,
   height: 700,
   ballR: 9.5,
-  gravity: 0.42,
 
   // Outer wall and both top-arch guides share one centre.
   arch: { cx: 200, cy: 215 },
@@ -54,14 +58,8 @@ const LAYOUT = {
   },
 
   laneGuides: { xs: [146, 182, 218, 254], top: 64, bottom: 106, width: 7 },
-  rolloverLanes: { xs: [164, 200, 236], y: 82, letters: ['R', 'O', 'W'] },
+  rolloverLanes: { xs: [164, 200, 236], y: 82 }, // letters come from the table
 
-  pops: [[160, 160], [240, 160], [200, 212]],
-  popR: 20,
-  ufo: { x: 200, y: 300, r: 30 },
-  scoop: { x: 200, y: 356 },
-  kickout: { x: 118, y: 255 },
-  drops: { x: 200, y: 408, count: 3, spacing: 30, w: 24, h: 13 },
   spinner: { x: 29, y: 345, len: 20, h: 6 },
   orbitSensor: { x: 29, y: 290 },
   standups: { xs: [59, 353], ys: [280, 304, 328], w: 7, h: 18 },
@@ -76,13 +74,10 @@ const LAYOUT = {
     // pivotR / tipR: radii of the round pivot end and tip (art and physics).
     left: { x: 130, y: 612, rest: 30, active: -30, len: 64, pivotR: 9, tipR: 5 },
     right: { x: 270, y: 612, rest: 150, active: 210, len: 64, pivotR: 9, tipR: 5 },
-    mini: { x: 350, y: 398, rest: 165, active: 220, len: 40, pivotR: 7, tipR: 4 },
   },
 
   shooter: { x: 376.5, stopY: 650, pullTravel: 14 },
 
-  // Cubic bezier chains: P0, C1, C2, P1, C3, C4, P2.
-  ramps: { right: RIGHT_RAMP, left: mirrorX(RIGHT_RAMP) },
   rampHalfWidth: 13,
 
   drainY: 668,

@@ -151,6 +151,7 @@ body {
 
 #mission .tag,
 #mission-status {
+  white-space: nowrap;
   font-family: 'Special Elite', 'Courier New', monospace;
   font-size: 10px;
   letter-spacing: 0.06em;

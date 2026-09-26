@@ -23,20 +23,9 @@ const RANKS = [
 // main.js). tier: the rank index needed before it's offered. seconds: time
 // limit, if any. halos: which table features pulse while it's active.
 // The reward is the 'mission' source times MISSION_TIER_X[tier] (scoring.js).
-const MISSIONS = [
-  { id: 'flight', name: 'Flight School', goal: 'Make 3 ramp shots', event: 'ramp', count: 3, tier: 0, halos: ['ramps'] },
-  { id: 'asteroids', name: 'Asteroid Field', goal: 'Hit the pop bumpers 15 times', event: 'pop', count: 15, seconds: 35, tier: 0, halos: ['pops'] },
-  { id: 'target', name: 'Target Practice', goal: 'Clear the 1-2-3 drop targets', event: 'dropBank', count: 1, tier: 0, halos: ['drops'] },
-  { id: 'orbit', name: 'Orbit Run', goal: 'Shoot the left orbit twice', event: 'orbit', count: 2, tier: 1, halos: ['orbit'] },
-  { id: 'radio', name: 'Radio Contact', goal: 'Roll through the R·O·W lanes 5 times', event: 'lane', count: 5, tier: 1, halos: ['lanes'] },
-  { id: 'satellite', name: 'Satellite Sweep', goal: 'Spin the orbit spinner 15 times', event: 'spinner', count: 15, tier: 1, halos: ['spinner'] },
-  { id: 'saucer', name: 'Saucer Chase', goal: 'Hit the UFO 6 times', event: 'ufo', count: 6, seconds: 40, tier: 2, halos: ['ufo'] },
-  { id: 'relay', name: 'Ramp Relay', goal: 'Make a ramp, then the other one while its arrow blinks, twice', event: 'rampCombo', count: 2, seconds: 45, tier: 2, halos: ['ramps'] },
-  { id: 'rescue', name: 'Tractor Beam Rescue', goal: 'Shoot the UFO scoop twice', event: 'scoop', count: 2, tier: 2, halos: ['drops', 'scoop'] },
-  { id: 'cliffhanger', name: 'Cliffhanger', goal: 'Clear the drop targets 3 times', event: 'dropBank', count: 3, seconds: 60, tier: 3, halos: ['drops'] },
-  { id: 'doubleFeature', name: 'Double Feature', goal: 'Make 5 ramp shots', event: 'ramp', count: 5, seconds: 45, tier: 3, halos: ['ramps'] },
-  { id: 'finale', name: 'The Grand Finale', goal: 'Hit the UFO 10 times', event: 'ufo', count: 10, seconds: 45, tier: 4, halos: ['ufo'] },
-];
+// Each table has its own missions (TABLE.missions in tableDefs/), built
+// from the same events so the rules below work everywhere.
+const MISSIONS = TABLE.missions;
 
 // The scoring sources (scoring.js) that must be awake for a mission's
 // events to happen at all.
