@@ -16,8 +16,8 @@ const TABLES = [
   },
   {
     n: 2, name: 'Timber Hollow', world: 'Forest', serial: "The Woodsman's Curse", built: true,
-    inks: ['#4d7a35', '#d9772e'],
-    centerpiece: 'The Old Oak: owl-eye targets and a mouth scoop',
+    inks: ['#7fa33a', '#e3862c'],
+    centerpiece: 'The felled Old Oak: a roped woodpile over a hollow scoop',
     twist: 'Dense toadstool pops; moss inlanes briefly slow the ball',
     emblem: '<circle cx="44" cy="44" r="41" fill="#efe2c4" stroke="#1e1a16" stroke-width="3"/><path d="M44 14 L26 42 H34 L22 60 H66 L54 42 H62 Z" fill="#4d7a35" stroke="#1e1a16" stroke-width="3" stroke-linejoin="round"/><rect x="39" y="60" width="10" height="14" fill="#8a5a2b" stroke="#1e1a16" stroke-width="3"/><circle cx="38" cy="36" r="4" fill="#efe2c4" stroke="#1e1a16" stroke-width="2"/><circle cx="50" cy="36" r="4" fill="#efe2c4" stroke="#1e1a16" stroke-width="2"/><circle cx="38" cy="36" r="1.6" fill="#1e1a16"/><circle cx="50" cy="36" r="1.6" fill="#1e1a16"/><path d="M42 42 L44 45 L46 42" fill="#d9772e" stroke="#1e1a16" stroke-width="1.5"/>',
   },

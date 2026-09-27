@@ -67,9 +67,9 @@ Once the **Chapters** node is bought, Rocket Row is a movie serial in five chapt
 
 The second table, reached with the Timber Hollow pass. Same rules as Rocket Row (chapters, multiball at the centrepiece, missions), on its own layout and with its own mode:
 
-- **Layout:** five toadstool pop bumpers in a ring, the **Old Oak** in the middle (its hollow is the scoop), a **log flume** ramp that climbs the left side and crosses over the top, a **rope bridge** ramp on the right, a kickout left of the oak and three axe drop targets. No small upper flipper.
+- **Layout:** five pop bumpers in a ring, each a cluster of three red toadstools, the felled **Old Oak** in the middle as a roped woodpile (its hollow is the scoop), Rocket Row's pair of side ramps, a kickout left of the oak and three oak-leaf drop targets. No small upper flipper. Printed on a russet autumn board with tree rings, green pines and falling leaves.
 - **Twist:** gravity is a little stronger, and **moss** on the inlanes slows the ball as it rolls through.
-- **Timber!:** spinning the sawmill spinner fills the **SAW** meter (five teeth on the left). When it's full the oak wakes and its hollow lights: shoot it for 20 seconds where every toadstool hit also **chops** the oak for extra points. Chapter V multiball (Pinecone Multiball) takes priority at the hollow.
+- **Timber!:** spinning the log spinner fills the **SAW** meter (five teeth on the left). When it's full the oak wakes and its hollow lights: shoot it for 20 seconds where every toadstool hit also **chops** the oak for extra points. Chapter V multiball (Pinecone Multiball) takes priority at the hollow.
 - Its missions are forest-themed (Log Rolling, Toadstool Stomp, Owl Watch, Sawmill Shift, …) on the same kinds of shots.
 
 ## Upgrades and skills

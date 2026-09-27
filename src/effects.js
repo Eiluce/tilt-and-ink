@@ -27,7 +27,7 @@ class Effects {
     this.add({ kind: 'ring', x, y, color, r0, r1, dur: 320 });
   }
 
-  sparks(x, y, color = INK.ink) {
+  sparks(x, y, color = INK.print) {
     const angles = Array.from({ length: 7 }, () => Math.random() * Math.PI * 2);
     this.add({ kind: 'sparks', x, y, color, angles, dur: 260 });
   }
@@ -193,7 +193,7 @@ class Effects {
   // Comic speed lines trailing a fast ball, drawn under the balls.
   static speedLines(ctx, balls) {
     ctx.save();
-    ctx.strokeStyle = INK.ink;
+    ctx.strokeStyle = INK.print;
     ctx.lineCap = 'round';
     for (const ball of balls) {
       if (ball.plugin.mode === 'held') continue;

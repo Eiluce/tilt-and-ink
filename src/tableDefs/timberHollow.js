@@ -1,13 +1,13 @@
 // Table 2: Timber Hollow, "The Woodsman's Curse". A cursed lumber camp in a
-// haunted pine forest: five toadstool pop bumpers in a ring, the Old Oak
-// (owl eyes, a hollow for a scoop) at the centre, a log flume that climbs
-// the left side and crosses over the top, a rope-bridge ramp on the right,
-// axe drop targets, and a sawmill blade for the spinner.
+// haunted autumn forest: five pop bumpers of red toadstool clusters, the
+// felled Old Oak as a roped woodpile (a hollow for a scoop below it) at the
+// centre, Rocket Row's pair of side ramps, oak-leaf drop targets, and a log
+// for the spinner.
 //
 // Physics twist: a touch more gravity than Rocket Row, and moss on the
 // inlanes that slows the ball as it rolls through.
 //
-// Its own rule, "Timber!": spinning the saw fills a saw meter; a full meter
+// Its own rule, "Timber!": spinning the log fills a saw meter; a full meter
 // wakes the oak and lights its hollow, and shooting the hollow starts a
 // frenzy where every toadstool hit also chops the oak.
 
@@ -26,18 +26,14 @@ TABLE_DEFS[2] = (() => {
     kickout: { x: 142, y: 300, eject: [0.5, 4] },
     drops: { x: 200, y: 425, count: 3, spacing: 30, w: 24, h: 13 },
     flippers: {},
-    ramps: {
-      // The log flume: up the left side, then over the top to the right.
-      left: [[130, 380], [112, 330], [84, 280], [88, 220], [92, 150], [160, 104], [268, 122]],
-      // The rope bridge: a short climb up the right side.
-      right: [[276, 378], [296, 340], [322, 312], [324, 260], [326, 210], [318, 170], [296, 150]],
-    },
+    // Rocket Row's ramps: a mirrored pair climbing the sides to the top lanes.
+    ramps: TABLE_DEFS[1].layout.ramps,
     laneLetters: ['O', 'A', 'K'],
     pickupSpots: [[262, 300], [118, 215], [284, 215], [200, 470], [300, 440], [200, 196]],
     inserts: {
       arrows: [
-        { key: 'leftRamp', x: 142, y: 400, rot: -22, s: 1, ink: 'red' },
-        { key: 'rightRamp', x: 262, y: 398, rot: 24, s: 1, ink: 'teal' },
+        { key: 'leftRamp', x: 140, y: 388, rot: -28, s: 1, ink: 'red' },
+        { key: 'rightRamp', x: 260, y: 388, rot: 28, s: 1, ink: 'teal' },
         { key: 'orbit', x: 58, y: 420, rot: -28, s: 0.85, ink: 'mustard' },
         { key: 'scoop', x: 200, y: 380, rot: 0, s: 0.7, ink: 'mustard' },
       ],
@@ -47,77 +43,99 @@ TABLE_DEFS[2] = (() => {
       extraBall: { x: 166, y: 549, w: 68, h: 15, label: 'EXTRA BALL' },
       shootAgain: { x: 160, y: 578, w: 80, h: 16, label: 'SHOOT AGAIN' },
       title: { y: 500 },
-      // The saw meter: five teeth along the left, lit as the saw spins.
+      // The saw meter: five teeth along the left, lit as the log spins.
       saw: Array.from({ length: SAW_LAMPS }, (_, i) => ({ x: 84 + i * 11, y: 438 - i * 4 })),
     },
   };
 
   const BARK = '#7a4f2a';
+  const TIMBER = '#c89a5f';
+  const PINE = '#3f5a26';
+  const CAP = '#c23b22'; // toadstool red
 
   return {
     n: 2,
     name: 'Timber Hollow',
     layout,
-    inks: { red: '#c95f2a', teal: '#4d7a35' },
+    inks: { red: '#e3862c', teal: '#7fa33a' },
+    // Printed on an autumn woodcut board, russet instead of poster paper.
+    stock: { field: '#6e3a20', fieldAlt: '#7c4428', print: '#f1dcae', title: '#f1dcae', hatch: '#552c18', apron: '#3a2414', ground: '#170d08' },
 
     art: {
-      // A toadstool cap from above: rust cap, paper spots.
-      pop: (r, { P, K, R }) => `
-        <circle r="${r + 3}" fill="${K}" opacity=".18" cx="2" cy="3"/>
-        <circle r="${r}" fill="${R}" stroke="${K}" stroke-width="${r * 0.16}"/>
-        ${[[-0.35, -0.3, 0.22], [0.3, -0.35, 0.17], [0.38, 0.25, 0.2], [-0.25, 0.38, 0.15], [0, 0, 0.14]]
-          .map(([x, y, s]) => `<circle cx="${x * r}" cy="${y * r}" r="${s * r}" fill="${P}" stroke="${K}" stroke-width="${r * 0.05}"/>`).join('')}`,
+      // Three red toadstools growing together, seen from above, paper spots.
+      pop: (r, { P, K }) => {
+        const cap = (x, y, k) => `<circle cx="${x * r}" cy="${y * r}" r="${k * r}" fill="${CAP}" stroke="${K}" stroke-width="${r * 0.11}"/>
+          ${[[-0.3, -0.25, 0.2], [0.3, -0.1, 0.16], [-0.05, 0.35, 0.17]].map(([dx, dy, sz]) => `<circle cx="${(x + dx * k) * r}" cy="${(y + dy * k) * r}" r="${sz * k * r}" fill="${P}"/>`).join('')}`;
+        return `<circle r="${r + 3}" fill="${K}" opacity=".18" cx="2" cy="3"/>
+          ${cap(0.42, 0.34, 0.52)}${cap(-0.44, 0.3, 0.55)}${cap(0, -0.3, 0.66)}`;
+      },
       popSpriteR: (r) => r + 6,
 
-      // The Old Oak: a gnarled trunk seen from above, with an owl in its knot.
-      centerpiece: (r, { P, K, M }) => `
-        <path d="M0,${-r} C${r * 0.7},${-r * 1.05} ${r * 1.1},${-r * 0.5} ${r * 1.02},0 C${r * 1.08},${r * 0.6} ${r * 0.55},${r * 1.05} 0,${r} C${-r * 0.6},${r * 1.02} ${-r * 1.1},${r * 0.55} ${-r},0 C${-r * 1.05},${-r * 0.6} ${-r * 0.55},${-r * 1.02} 0,${-r}Z" fill="${BARK}" stroke="${K}" stroke-width="${r * 0.14}"/>
-        ${[0.72, 0.48].map((k) => `<circle r="${r * k}" fill="none" stroke="${K}" stroke-width="${r * 0.04}" opacity=".45"/>`).join('')}
-        <circle cx="${-r * 0.3}" cy="${-r * 0.1}" r="${r * 0.24}" fill="${P}" stroke="${K}" stroke-width="${r * 0.07}"/>
-        <circle cx="${r * 0.3}" cy="${-r * 0.1}" r="${r * 0.24}" fill="${P}" stroke="${K}" stroke-width="${r * 0.07}"/>
-        <circle cx="${-r * 0.3}" cy="${-r * 0.08}" r="${r * 0.1}" fill="${K}"/><circle cx="${r * 0.3}" cy="${-r * 0.08}" r="${r * 0.1}" fill="${K}"/>
-        <path d="M${-r * 0.1},${r * 0.14} L0,${r * 0.32} L${r * 0.1},${r * 0.14}Z" fill="${M}" stroke="${K}" stroke-width="${r * 0.04}"/>`,
-      centerpieceSpriteR: (r) => r * 1.2,
+      // The Old Oak, felled: a woodpile of its logs, cut ends out (rings
+      // round a red heart), roped together.
+      centerpiece: (r, { K, R }) => {
+        const k = 0.4;
+        const logs = [[-0.72, 0.56], [0, 0.56], [0.72, 0.56], [-0.36, -0.06], [0.36, -0.06], [0, -0.68]]
+          .map(([x, y]) => `<circle cx="${x * r}" cy="${y * r}" r="${k * r}" fill="${BARK}" stroke="${K}" stroke-width="${r * 0.07}"/>
+            <circle cx="${x * r}" cy="${y * r}" r="${k * r * 0.78}" fill="${TIMBER}"/>
+            ${[0.55, 0.3].map((q) => `<circle cx="${x * r}" cy="${y * r}" r="${k * r * q}" fill="none" stroke="${BARK}" stroke-width="${r * 0.025}"/>`).join('')}
+            <circle cx="${x * r}" cy="${y * r}" r="${r * 0.03}" fill="${R}"/>`).join('');
+        return `<circle r="${r * 1.2}" fill="${K}" opacity=".22" cx="3" cy="4"/>
+          ${logs}
+          <path d="M${-r * 1.15},${r * 0.26} Q0,${r * 0.14} ${r * 1.15},${r * 0.26}" fill="none" stroke="#cdb27a" stroke-width="${r * 0.08}" stroke-dasharray="${r * 0.12} ${r * 0.06}"/>`;
+      },
+      centerpieceSpriteR: (r) => r * 1.35,
 
-      // A sawmill blade.
-      spinner: (len, h, { K, M }) => {
-        const teeth = [];
-        for (let x = -len / 2; x < len / 2; x += 3) teeth.push(`L${x + 1.5},${-h / 2 - 2} L${x + 3},${-h / 2}`);
-        return `<path d="M${-len / 2},${-h / 2} ${teeth.join(' ')} L${len / 2},${h / 2} L${-len / 2},${h / 2}Z" fill="#b9bcc0" stroke="${K}" stroke-width="1.3" stroke-linejoin="round"/>
-          <circle r="${h * 0.45}" fill="${M}" stroke="${K}" stroke-width="1.3"/>`;
+      // A small log with a cut end and a green sprout.
+      spinner: (len, h, { K, T }) => `<rect x="${-len / 2}" y="${-h / 2}" width="${len}" height="${h}" rx="${h / 2}" fill="${BARK}" stroke="${K}" stroke-width="1.2"/>
+        <path d="M${-len / 2 + 4},${-h / 6} L${len / 2 - 5},${-h / 6} M${-len / 2 + 6},${h / 5} L${len / 2 - 3},${h / 5}" stroke="${K}" stroke-width=".7" opacity=".6"/>
+        <ellipse cx="${len / 2 - h / 2}" rx="${h * 0.32}" ry="${h * 0.42}" fill="${TIMBER}" stroke="${K}" stroke-width=".8"/>
+        <circle cx="${-len / 4}" cy="${-h / 2}" r="1.6" fill="${T}" stroke="${K}" stroke-width=".6"/>`,
+
+      // A lobed oak leaf; its number is lettered on by lamps.js.
+      drop: (w, h, { K, T }) => {
+        const edge = Array.from({ length: 13 }, (_, i) => {
+          const t = i / 12;
+          return [-w / 2 + t * w, (i % 2 ? 0.75 : 1) * Math.sin(t * Math.PI) * (h / 2 + 2)];
+        });
+        const top = edge.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${(-y).toFixed(1)}`).join(' ');
+        const bottom = edge.slice().reverse().map(([x, y]) => `L${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
+        return `<path d="${top} ${bottom}Z" fill="${T}" stroke="${K}" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M${-w / 2 - 2},0 L${w / 2 - 2},0" stroke="${K}" stroke-width="1" opacity=".55"/>`;
       },
 
-      // An axe head; its number is lettered on by lamps.js.
-      drop: (w, h, { K, R }) => `<path d="M${-w / 2},${-h / 2} L${w / 2 - 3},${-h / 2 - 2} Q${w / 2 + 2},0 ${w / 2 - 3},${h / 2 + 2} L${-w / 2},${h / 2}Z" fill="${R}" stroke="${K}" stroke-width="2.2" stroke-linejoin="round"/>`,
-
-      // Printed under everything: tree rings spreading from the oak, pines.
-      backdrop: (L, { P2, K, T }) => {
+      // Printed under everything: tree rings spreading from the oak, green
+      // pines, and falling leaves (mostly still green, some turned).
+      backdrop: (L, { FD2, T, K }) => {
         const c = L.centerpiece;
         const rings = [70, 120, 175, 235, 300, 370, 445]
-          .map((r, i) => `<circle cx="${c.x}" cy="${c.y}" r="${r}" fill="none" stroke="${P2}" stroke-width="${i % 2 ? 14 : 22}"/>`).join('');
+          .map((r, i) => `<circle cx="${c.x}" cy="${c.y}" r="${r}" fill="none" stroke="${FD2}" stroke-width="${i % 2 ? 14 : 22}"/>`).join('');
         const pine = (x, y, s) => `<path d="M${x},${y - 40 * s} L${x + 16 * s},${y - 12 * s} L${x + 8 * s},${y - 12 * s} L${x + 22 * s},${y + 12 * s} L${x - 22 * s},${y + 12 * s} L${x - 8 * s},${y - 12 * s} L${x - 16 * s},${y - 12 * s}Z"/>`;
+        const leaf = (x, y, s, rot, fill) => `<path transform="translate(${x} ${y}) rotate(${rot}) scale(${s})" d="M0,-10 C6,-6 7,4 0,10 C-7,4 -6,-6 0,-10Z M0,-10 L0,12" fill="${fill}" stroke="${K}" stroke-width="1"/>`;
+        const leafInks = [T, '#e3862c', T, '#e3a92b', '#5e8c31', '#b8452a'];
+        const leaves = [[280, 150, 1.1, -50], [110, 330, 1, 80], [250, 360, 1.1, 10], [60, 470, 1.1, -20], [340, 460, 1.4, 60], [260, 560, 1, 140], [140, 590, 1.2, -100], [330, 370, 0.9, 45]]
+          .map(([x, y, sc, r], i) => leaf(x, y, sc, r, leafInks[i % leafInks.length])).join('');
         return `<defs>
             <pattern id="moss" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(30)"><circle cx="3" cy="3" r="1.3" fill="${T}"/></pattern>
           </defs>
           ${rings}
-          <g fill="url(#moss)" opacity=".35">${pine(330, 560, 2.2)}${pine(62, 175, 1.5)}${pine(300, 70, 1)}</g>
-          <g fill="${K}" opacity=".55">${pine(115, 445, 0.28)}${pine(290, 470, 0.32)}${pine(300, 245, 0.22)}</g>`;
+          <g fill="${PINE}" opacity=".8">${pine(330, 560, 2.2)}${pine(62, 175, 1.5)}${pine(300, 70, 1)}</g>
+          <g fill="url(#moss)" opacity=".6">${pine(330, 560, 2.2)}${pine(62, 175, 1.5)}${pine(300, 70, 1)}</g>
+          <g fill="${T}" opacity=".45">${pine(115, 445, 0.28)}${pine(290, 470, 0.32)}${pine(300, 245, 0.22)}</g>
+          ${leaves}`;
       },
 
-      // Roots round the hollow, and moss on the inlanes (the physics twist).
-      decor: (L, { K, T }) => {
-        const c = L.centerpiece;
-        const roots = [[-1, 1], [1, 1], [-1.4, 0.4], [1.4, 0.4]]
-          .map(([dx, dy]) => `<path d="M${c.x + dx * 12},${c.y + 18} Q${c.x + dx * 30},${c.y + 30 * dy + 18} ${c.x + dx * 38},${c.y + 44 * dy + 14}" fill="none" stroke="${BARK}" stroke-width="5" stroke-linecap="round"/>`).join('');
+      // Moss on the inlanes (the physics twist) and the saw meter.
+      decor: (L, { K, T, PR }) => {
         const ro = L.rollovers;
         const moss = [ro.inL, ro.inR].map((x) => `<ellipse cx="${x}" cy="${ro.y + 4}" rx="11" ry="26" fill="${T}" opacity=".35"/><ellipse cx="${x}" cy="${ro.y + 4}" rx="11" ry="26" fill="url(#moss)" opacity=".6"/>`).join('');
         const saw = L.inserts.saw.map((s) => `<path d="M${s.x - 4},${s.y + 4} L${s.x},${s.y - 5} L${s.x + 4},${s.y + 4}Z" fill="#e6d4ae" stroke="${K}" stroke-width="1.4" stroke-linejoin="round"/>`).join('');
-        return `${moss}${roots}${saw}<text x="${L.inserts.saw[0].x - 2}" y="${L.inserts.saw[0].y + 14}" font-family="'Special Elite', monospace" font-size="6" fill="${K}" letter-spacing="1">SAW</text>`;
+        return `${moss}${saw}<text x="${L.inserts.saw[0].x - 2}" y="${L.inserts.saw[0].y + 14}" font-family="'Special Elite', monospace" font-size="6" fill="${PR}" letter-spacing="1">SAW</text>`;
       },
 
       subtitle: "THE WOODSMAN'S CURSE",
       sideText: 'SKILL SHOT ▸ LIGHT O·A·K',
-      apronLeft: ['RAMPS ADVANCE THE CHAPTER.', 'SPIN THE SAW TO WAKE THE OAK,', 'THEN SHOOT ITS HOLLOW.', { red: 'MOSS SLOWS THE INLANES' }],
+      apronLeft: ['RAMPS ADVANCE THE CHAPTER.', 'SPIN THE LOG TO WAKE THE OAK,', 'THEN SHOOT ITS HOLLOW.', { red: 'MOSS SLOWS THE INLANES' }],
       apronRight: ["THE WOODSMAN'S CURSE", { slab: 'NEXT WEEK:' }, 'DEEPER IN THE WOODS!'],
     },
 
@@ -139,14 +157,14 @@ TABLE_DEFS[2] = (() => {
     missions: [
       { id: 'th-flume', name: 'Log Rolling', goal: 'Make 3 ramp shots', event: 'ramp', count: 3, tier: 0, halos: ['ramps'] },
       { id: 'th-stomp', name: 'Toadstool Stomp', goal: 'Hit the toadstools 20 times', event: 'pop', count: 20, seconds: 35, tier: 0, halos: ['pops'] },
-      { id: 'th-axes', name: 'Axe Practice', goal: 'Clear the axe targets', event: 'dropBank', count: 1, tier: 0, halos: ['drops'] },
+      { id: 'th-axes', name: 'Raking Leaves', goal: 'Clear the leaf targets', event: 'dropBank', count: 1, tier: 0, halos: ['drops'] },
       { id: 'th-owl', name: 'Owl Watch', goal: 'Shoot the left orbit twice', event: 'orbit', count: 2, tier: 1, halos: ['orbit'] },
       { id: 'th-trail', name: 'Trail Markers', goal: 'Roll through the O·A·K lanes 5 times', event: 'lane', count: 5, tier: 1, halos: ['lanes'] },
-      { id: 'th-sawmill', name: 'Sawmill Shift', goal: 'Spin the saw 20 times', event: 'spinner', count: 20, tier: 1, halos: ['spinner'] },
+      { id: 'th-sawmill', name: 'Sawmill Shift', goal: 'Spin the log 20 times', event: 'spinner', count: 20, tier: 1, halos: ['spinner'] },
       { id: 'th-knock', name: 'Knock on Wood', goal: 'Hit the Old Oak 6 times', event: 'ufo', count: 6, seconds: 40, tier: 2, halos: ['centerpiece'] },
-      { id: 'th-bridge', name: 'Flume and Bridge', goal: 'Make a ramp, then the other one while its arrow blinks, twice', event: 'rampCombo', count: 2, seconds: 45, tier: 2, halos: ['ramps'] },
+      { id: 'th-bridge', name: 'Up and Over', goal: 'Make a ramp, then the other one while its arrow blinks, twice', event: 'rampCombo', count: 2, seconds: 45, tier: 2, halos: ['ramps'] },
       { id: 'th-hollow', name: 'Into the Hollow', goal: "Shoot the oak's hollow twice", event: 'scoop', count: 2, tier: 2, halos: ['scoop'] },
-      { id: 'th-lumberjack', name: 'Lumberjack', goal: 'Clear the axe targets 3 times', event: 'dropBank', count: 3, seconds: 60, tier: 3, halos: ['drops'] },
+      { id: 'th-lumberjack', name: 'Lumberjack', goal: 'Clear the leaf targets 3 times', event: 'dropBank', count: 3, seconds: 60, tier: 3, halos: ['drops'] },
       { id: 'th-logdrive', name: 'Log Drive', goal: 'Make 5 ramp shots', event: 'ramp', count: 5, seconds: 45, tier: 3, halos: ['ramps'] },
       { id: 'th-curse', name: "The Woodsman's Curse", goal: 'Hit the Old Oak 10 times', event: 'ufo', count: 10, seconds: 45, tier: 4, halos: ['centerpiece'] },
     ],
@@ -209,7 +227,7 @@ TABLE_DEFS[2] = (() => {
         tick(now) {
           if (timberUntil && now >= timberUntil && game.turnActive) {
             timberUntil = 0;
-            fx.title('The Oak Stands', 'Spin the saw to wake it again', 1200);
+            fx.title('The Oak Stands', 'Spin the log to wake it again', 1200);
           }
         },
 

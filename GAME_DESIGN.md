@@ -111,7 +111,7 @@ Sugar Rush Bakery and Boiler Room Big Band from the original list are dropped fo
 
 **Implemented (table system):** `src/layout.js` holds the cabinet every table shares (outer wall and arch, shooter lane, left orbit with its spinner and standups, side slopes, inlanes, slings, the two main flippers, top lanes). Each built table is a definition in `src/tableDefs/`: its playfield (pops, centrepiece and scoop, kickout, drops, ramps, optional mini flipper, lamp inserts, pickup spots), two spot inks, art pieces (pop, centrepiece, spinner, drop target, backdrop, decor, wording on the playfield and apron), texts, missions (same events, own names) and optionally its own rules as hooks (spinner, inlane, pop, scoop, tick, lamps). `src/tableSelect.js` merges the pick into `LAYOUT`; switching tables (Tables tab, between turns) saves the pick and reloads.
 
-**Timber Hollow's rules:** *Timber!* — 20 spinner turns fill the SAW meter; a full meter wakes the oak and lights its hollow; shooting it starts 20 s where each toadstool hit also scores a `chop` (base 40, Rules branch). Chapter V multiball takes priority at the hollow. Moss in each inlane keeps 55% of the ball's speed. Checked: 0 traps in 888 drops, both ramps makeable.
+**Timber Hollow's rules:** *Timber!* — 20 spinner turns fill the SAW meter; a full meter wakes the oak and lights its hollow; shooting it starts 20 s where each toadstool hit also scores a `chop` (base 40, Rules branch). Chapter V multiball takes priority at the hollow. Moss in each inlane keeps 55% of the ball's speed. Ramps are Rocket Row's pair. Checked: no traps in 400 random drops, both ramps makeable (about 16 in 60 aimed shots each, as on Rocket Row).
 
 ### 4.4 Difficulty Scaling Across Tables
 

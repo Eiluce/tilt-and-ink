@@ -15,20 +15,40 @@
 
 // `red` and `teal` are the table's two spot-ink roles (Rocket Row's are
 // literally red and teal); every table shares the rest.
-const INK = {
-  paper: '#efe2c4',
-  aged: '#e6d4ae',
-  ink: '#1e1a16',
-  red: '#d2452f',
-  teal: '#2e7f86',
-  mustard: '#e3a92b',
-  foxing: '#c8b48c',
-  steel: '#55504a',
-  ...TABLE.inks,
-};
+//
+// The playfield stock is per table too (TABLE.stock): `field` is what the
+// playfield is printed on, `fieldAlt` its backdrop tone, `print` the ink for
+// lettering printed straight on the field, `title` the table's name,
+// `hatch` the dead-space fill, `apron` the apron and `ground` the page round
+// the cabinet. Rocket Row prints on the poster paper itself. Lamp inserts,
+// cards and ramps stay on paper whatever the field.
+const INK = (() => {
+  const base = {
+    paper: '#efe2c4',
+    aged: '#e6d4ae',
+    ink: '#1e1a16',
+    red: '#d2452f',
+    teal: '#2e7f86',
+    mustard: '#e3a92b',
+    foxing: '#c8b48c',
+    steel: '#55504a',
+    ...TABLE.inks,
+  };
+  return {
+    field: base.paper,
+    fieldAlt: base.aged,
+    print: base.ink,
+    title: base.red,
+    hatch: base.aged,
+    apron: base.foxing,
+    ground: '#17130f',
+    ...base,
+    ...TABLE.stock,
+  };
+})();
 
 const Art = (() => {
-  const { paper: P, aged: P2, ink: K, red: R, teal: T, mustard: M, foxing: F } = INK;
+  const { paper: P, aged: P2, ink: K, red: R, teal: T, mustard: M, foxing: F, field: FD, fieldAlt: FD2, print: PR } = INK;
   const TYPE = "'Special Elite', 'Courier New', monospace";
   const SLAB = "Rye, Georgia, serif";
 
@@ -50,7 +70,7 @@ const Art = (() => {
   // --- element drawings (local coords, centred on the element) -------------
 
   // Kit handed to the table's own art pieces.
-  const kit = { P, P2, K, R, T, M, F, star: (...a) => star(...a), at: (...a) => at(...a) };
+  const kit = { P, P2, K, R, T, M, F, FD, FD2, PR, star: (...a) => star(...a), at: (...a) => at(...a) };
   const A = TABLE.art;
 
   // Pivot at 0,0; the rounded tip reaches exactly `len`.
@@ -118,13 +138,13 @@ const Art = (() => {
     const shooterEnd = arcPoint(L.guideR, L.shooterWall.endDeg);
 
     let s = `<defs>
-      <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="${P2}"/><line x1="0" y1="0" x2="0" y2="6" stroke="${K}" stroke-width="1.2" stroke-opacity=".35"/></pattern>
+      <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="${INK.hatch}"/><line x1="0" y1="0" x2="0" y2="6" stroke="${PR}" stroke-width="1.2" stroke-opacity=".35"/></pattern>
       <clipPath id="pf"><path d="${field}"/></clipPath>
       <filter id="rshadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="4" dy="6" stdDeviation="1.5" flood-color="${K}" flood-opacity=".35"/></filter>
     </defs>
     <rect width="400" height="700" fill="${K}"/>
     <g clip-path="url(#pf)">
-      <rect width="400" height="700" fill="${P}"/>
+      <rect width="400" height="700" fill="${FD}"/>
       ${A.backdrop(L, kit)}
     </g>`;
 
@@ -150,7 +170,7 @@ const Art = (() => {
     // top rollover lanes (letters unlit)
     const lg = L.laneGuides;
     s += lg.xs.map((x) => `<rect x="${x - lg.width / 2}" y="${lg.top}" width="${lg.width}" height="${lg.bottom - lg.top}" rx="3.5" fill="${K}"/>${post(x, lg.top, 4)}${post(x, lg.bottom, 4)}`).join('');
-    s += L.rolloverLanes.xs.map((x, i) => `<line x1="${x}" y1="70" x2="${x}" y2="82" stroke="${K}" stroke-width="1.6"/>
+    s += L.rolloverLanes.xs.map((x, i) => `<line x1="${x}" y1="70" x2="${x}" y2="82" stroke="${PR}" stroke-width="1.6"/>
       <circle cx="${x}" cy="${INSERTS.rowLetters.y}" r="${INSERTS.rowLetters.r}" fill="${P2}" stroke="${K}" stroke-width="1.8"/>
       <text x="${x}" y="${INSERTS.rowLetters.y + 4}" text-anchor="middle" font-family="${SLAB}" font-size="11" fill="${K}">${L.rolloverLanes.letters[i]}</text>`).join('');
 
@@ -158,16 +178,16 @@ const Art = (() => {
     s += INSERTS.arrows.map((a) => at(a.x, a.y, `<path d="${arrowPath(a.s)}" fill="${P2}" stroke="${K}" stroke-width="2" stroke-linejoin="round"/>`, a.rot)).join('');
     s += INSERTS.multipliers.map((m) => `<circle cx="${m.x}" cy="${m.y}" r="${m.r}" fill="${P2}" stroke="${K}" stroke-width="1.8"/><text x="${m.x}" y="${m.y + 3.5}" text-anchor="middle" font-family="${SLAB}" font-size="9" fill="${K}">${m.n}×</text>`).join('');
     const titleSize = Math.min(25, 280 / TABLE.name.length); // fits between the slings
-    s += `<text x="200" y="${INSERTS.title.y}" text-anchor="middle" font-family="${SLAB}" font-size="${titleSize.toFixed(1)}" fill="${R}" stroke="${K}" stroke-width="1">${TABLE.name.toUpperCase()}</text>`;
+    s += `<text x="200" y="${INSERTS.title.y}" text-anchor="middle" font-family="${SLAB}" font-size="${titleSize.toFixed(1)}" fill="${INK.title}" stroke="${K}" stroke-width="1">${TABLE.name.toUpperCase()}</text>`;
     s += INSERTS.chapters.map((c) => `<rect x="${c.x - 10}" y="${c.y - 8}" width="20" height="16" rx="3" fill="${P2}" stroke="${K}" stroke-width="1.6"/><text x="${c.x}" y="${c.y + 4}" text-anchor="middle" font-family="${SLAB}" font-size="9" fill="${K}">${c.t}</text>`).join('');
     const eb = INSERTS.extraBall;
     const sa = INSERTS.shootAgain;
-    s += `<text x="200" y="539" text-anchor="middle" font-family="${TYPE}" font-size="7" fill="${K}" letter-spacing="1.5">${A.subtitle}</text>
+    s += `<text x="200" y="539" text-anchor="middle" font-family="${TYPE}" font-size="7" fill="${PR}" letter-spacing="1.5">${A.subtitle}</text>
       <rect x="${eb.x}" y="${eb.y}" width="${eb.w}" height="${eb.h}" rx="${eb.h / 2}" fill="${P2}" stroke="${K}" stroke-width="1.6"/><text x="200" y="${eb.y + 10.5}" text-anchor="middle" font-family="${TYPE}" font-size="7.5" fill="${K}">${eb.label}</text>
       <rect x="${sa.x}" y="${sa.y}" width="${sa.w}" height="${sa.h}" rx="${sa.h / 2}" fill="${P2}" stroke="${K}" stroke-width="1.8"/><text x="200" y="${sa.y + 11.5}" text-anchor="middle" font-family="${TYPE}" font-size="7.5" fill="${K}">${sa.label}</text>`;
     const ro = L.rollovers;
     s += [ro.inL, ro.inR].map((x) => at(x, ro.y, `<circle r="7" fill="${P2}" stroke="${K}" stroke-width="1.6"/><path d="${star(0, 0.5, 5, 2, 5)}" fill="${F}" stroke="${K}" stroke-width=".8"/>`)).join('');
-    s += `<text transform="translate(380 470) rotate(-90)" font-family="${TYPE}" font-size="7.5" fill="${K}" letter-spacing="1.5">${A.sideText}</text>`;
+    s += `<text transform="translate(380 470) rotate(-90)" font-family="${TYPE}" font-size="7.5" fill="${PR}" letter-spacing="1.5">${A.sideText}</text>`;
 
     // the table's decoration round its centrepiece, then scoop and kickout saucer
     s += `${A.decor ? A.decor(L, kit) : ''}
@@ -179,7 +199,7 @@ const Art = (() => {
 
     // apron over the drain
     s += `<rect x="150" y="660" width="100" height="40" fill="${K}"/>
-      <path d="M8,652 L130,652 Q150,652 162,672 L238,672 Q250,652 270,652 L${L.shooterWall.x},652 L${L.shooterWall.x},700 L8,700Z" fill="${F}" stroke="${K}" stroke-width="5" stroke-linejoin="round"/>
+      <path d="M8,652 L130,652 Q150,652 162,672 L238,672 Q250,652 270,652 L${L.shooterWall.x},652 L${L.shooterWall.x},700 L8,700Z" fill="${INK.apron}" stroke="${K}" stroke-width="5" stroke-linejoin="round"/>
       <rect x="46" y="660" width="98" height="34" rx="2" fill="${P}" stroke="${K}" stroke-width="1.6"/>
       <text font-family="${TYPE}" font-size="5.2" fill="${K}">${apronLines(A.apronLeft, 50, 669, 'start')}</text>
       <rect x="256" y="660" width="98" height="34" rx="2" fill="${P}" stroke="${K}" stroke-width="1.6"/>

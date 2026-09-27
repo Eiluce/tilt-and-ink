@@ -188,6 +188,7 @@ const missions = new MissionControl({ addScore, fx, announce, isAwake: (source) 
 const TEXT = TABLE.text; // this table's wording (tableDefs/)
 document.getElementById('table-name').textContent = TABLE.name;
 document.title = `${TABLE.name} — Tilt & Ink`;
+document.documentElement.style.setProperty('--ground', INK.ground);
 const BUMPER_WORDS = TEXT.bumperWords;
 const pick = (list) => list[Math.floor(Math.random() * list.length)];
 
@@ -590,7 +591,7 @@ const pickups = new Pickups({
   onCollect: (t) => {
     const golden = t.golden;
     addScore('pickup', golden ? 'golden star' : 'star', { at: t, mult: golden ? 10 : 1 });
-    fx.sparks(t.x, t.y, golden ? INK.mustard : INK.ink);
+    fx.sparks(t.x, t.y, golden ? INK.mustard : INK.print);
     if (golden) fx.burst(t.x, t.y - 16, 'GOLD!', INK.mustard);
   },
 });
@@ -678,7 +679,7 @@ function perfectFlip(flipper) {
 const FLIPPER_UP_SPEED = 0.55;
 
 // Dormant elements: a sprite drawn faded, or a printed feature washed over
-// with paper on the lamp layer. `awake` says what switches each one on.
+// with the field's stock on the lamp layer. `awake` says what switches each one on.
 const DORMANT_SPRITES = [
   { awake: () => awake('ufo'), bodies: () => [ufo.body] },
   { awake: () => awake('spinnerTurn'), bodies: () => [spinner.body] },
@@ -706,8 +707,8 @@ const wasAwake = {};
 
 function drawDormant(ctx, now) {
   ctx.save();
-  ctx.fillStyle = INK.paper;
-  ctx.strokeStyle = INK.paper;
+  ctx.fillStyle = INK.field;
+  ctx.strokeStyle = INK.field;
   ctx.lineCap = 'round';
   for (const d of DORMANT_PRINTS) {
     let alpha = 0.72;
