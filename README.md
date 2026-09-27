@@ -1,6 +1,6 @@
 # Tilt & Ink
 
-A browser pinball game with 1930s pulp-serial art. You score by actually playing pinball, and your score feeds a long-term upgrade tree. Three tables are built: **Rocket Row: The Saucer Men**, **Timber Hollow: The Woodsman's Curse** and **Davy Jones' Deep: Terror of Twenty Fathoms**.
+A browser pinball game with 1930s pulp-serial art. You score by actually playing pinball, and your score feeds a long-term upgrade tree. Four tables are built: **Rocket Row: The Saucer Men**, **Timber Hollow: The Woodsman's Curse**, **Davy Jones' Deep: Terror of Twenty Fathoms** and **Mount Cinder: Fury of the Fire God**.
 
 The full game design is in [GAME_DESIGN.md](GAME_DESIGN.md).
 
@@ -82,6 +82,15 @@ The third table, reached with the Davy Jones' Deep pass. Same rules again, under
 - **Twist:** **water drag** slows the ball everywhere, so weak flips fall short of the ramps, and a **current** (the chevrons) carries a ball that is already heading up the left orbit.
 - **Release the Kraken:** each Kraken hit opens its **EYE** a step (five lamps on the left). A full eye lights the maw: shoot it for 20 seconds of **Kraken Attack**, where the fish stand straight back up and every cleared bank is a **kraken feast**. Chapter V multiball (Kraken Multiball) takes priority at the maw.
 - Its missions are sea-themed (Man the Rigging, Jellyfish Bloom, Staring Contest, Full Nets, …) on the same kinds of shots.
+
+## Mount Cinder
+
+The fourth table, reached with the Mount Cinder pass, and the fastest so far:
+
+- **Layout:** three fire-pit pop bumpers, a **lava lake** in the middle (its **lava tube** is the scoop), Rocket Row's pair of side ramps as lava channels, a kickout left of the lake, three pumice-stone drop targets and a tiki-torch spinner. Printed on charcoal rock with lava cracks spreading from the lake, embers and smoke; the slingshots are lava rock.
+- **Twist:** the heaviest gravity yet, and three **steam vents** (the round grates). Each one glows blue for a moment, then blasts any ball rolling over it in a random direction (never straight down at the drain). Wait for the glow to pass.
+- **Eruption:** each ramp pours magma into the **MAGMA** gauge (five lamps on the left). The fifth ramp erupts the volcano: a jackpot appears over the lava lake and drains second by second for 15 seconds. Shoot the lava tube to collect what's left. Chapter V multiball (Fire God Multiball) takes priority at the tube.
+- Its missions are volcano-themed (Lava Run, Stoke the Fires, Pumice Toss, Wake the Mountain, …) on the same kinds of shots.
 
 ## Upgrades and skills
 

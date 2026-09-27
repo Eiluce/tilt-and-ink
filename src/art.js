@@ -213,8 +213,8 @@ const Art = (() => {
     // unlit inserts & playfield lettering
     s += INSERTS.arrows.map((a) => at(a.x, a.y, `<path d="${arrowPath(a.s)}" fill="${P2}" stroke="${K}" stroke-width="2" stroke-linejoin="round"/>`, a.rot)).join('');
     s += INSERTS.multipliers.map((m) => `<circle cx="${m.x}" cy="${m.y}" r="${m.r}" fill="${P2}" stroke="${K}" stroke-width="1.8"/><text x="${m.x}" y="${m.y + 3.5}" text-anchor="middle" font-family="${SLAB}" font-size="9" fill="${K}">${m.n}×</text>`).join('');
-    const titleSize = Math.min(25, 280 / TABLE.name.length); // fits between the slings
-    s += `<text x="200" y="${INSERTS.title.y}" text-anchor="middle" font-family="${SLAB}" font-size="${titleSize.toFixed(1)}" fill="${INK.title}" stroke="${K}" stroke-width="1">${TABLE.name.toUpperCase()}</text>`;
+    const titleSize = Math.min(25, 280 / TABLE.name.length); // a first guess; fitTitle() measures
+    s += `<text id="pf-title" x="200" y="${INSERTS.title.y}" text-anchor="middle" font-family="${SLAB}" font-size="${titleSize.toFixed(1)}" fill="${INK.title}" stroke="${K}" stroke-width="1">${TABLE.name.toUpperCase()}</text>`;
     s += INSERTS.chapters.map((c) => `<rect x="${c.x - 10}" y="${c.y - 8}" width="20" height="16" rx="3" fill="${P2}" stroke="${K}" stroke-width="1.6"/><text x="${c.x}" y="${c.y + 4}" text-anchor="middle" font-family="${SLAB}" font-size="9" fill="${K}">${c.t}</text>`).join('');
     const eb = INSERTS.extraBall;
     const sa = INSERTS.shootAgain;
@@ -301,5 +301,20 @@ const Art = (() => {
     slingRight: { off: slingSprite(L.slings.right, false), on: slingSprite(L.slings.right, true) },
   };
 
-  return { playfieldSVG, SPRITES, INSERTS, arrowPath, star };
+  // Shrinks the printed title until it fits between the slingshots. Rye's
+  // letters vary a lot in width, so this measures the real text, once the
+  // font has loaded (measuring the fallback font would fit the wrong text).
+  const TITLE_MAX_W = 190; // the slings' kicking faces are ~200 apart at the title's baseline
+  function fitTitle() {
+    const fit = () => {
+      const el = document.getElementById('pf-title');
+      if (!el) return;
+      const w = el.getComputedTextLength();
+      if (w > TITLE_MAX_W) el.setAttribute('font-size', ((Number(el.getAttribute('font-size')) * TITLE_MAX_W) / w).toFixed(1));
+    };
+    if (document.fonts) document.fonts.load(`25px ${SLAB}`).then(fit, fit);
+    else fit();
+  }
+
+  return { playfieldSVG, fitTitle, SPRITES, INSERTS, arrowPath, star };
 })();

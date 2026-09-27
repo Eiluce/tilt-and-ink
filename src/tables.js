@@ -29,11 +29,11 @@ const TABLES = [
     emblem: '<circle cx="44" cy="44" r="41" fill="#0f2a3b" stroke="#1e1a16" stroke-width="3"/><path d="M28 46 C24 58 32 62 28 72 M38 46 C36 58 42 62 38 74 M50 46 C52 58 46 62 50 74 M60 46 C64 58 56 62 60 72" fill="none" stroke="#1e1a16" stroke-width="6" stroke-linecap="round"/><path d="M28 46 C24 58 32 62 28 72 M38 46 C36 58 42 62 38 74 M50 46 C52 58 46 62 50 74 M60 46 C64 58 56 62 60 72" fill="none" stroke="#e2674a" stroke-width="3" stroke-linecap="round"/><path d="M24 46 C24 24 64 24 64 46 Z" fill="#e2674a" stroke="#1e1a16" stroke-width="3" stroke-linejoin="round"/><ellipse cx="44" cy="38" rx="8" ry="5.5" fill="#efe2c4" stroke="#1e1a16" stroke-width="2"/><circle cx="44" cy="38" r="3" fill="#e3a92b"/><ellipse cx="44" cy="38" rx="0.9" ry="2.6" fill="#1e1a16"/><circle cx="68" cy="22" r="4" fill="none" stroke="#5cc8b2" stroke-width="2"/><circle cx="72" cy="32" r="2.5" fill="none" stroke="#5cc8b2" stroke-width="2"/>',
   },
   {
-    n: 4, name: 'Mount Cinder', world: 'Volcano', serial: 'Fury of the Fire God',
-    inks: ['#c9421c', '#e8b52a'],
-    centerpiece: 'A tiki-faced volcano with a magma gauge',
-    twist: 'The fastest table; steam vents kick the ball',
-    emblem: '<circle cx="44" cy="44" r="41" fill="#efe2c4" stroke="#1e1a16" stroke-width="3"/><path d="M14 72 L34 32 H54 L74 72 Z" fill="#3b2f3f" stroke="#1e1a16" stroke-width="3" stroke-linejoin="round"/><path d="M34 32 L40 44 L44 36 L48 46 L54 32 Z" fill="#c9421c" stroke="#1e1a16" stroke-width="2.5" stroke-linejoin="round"/><path d="M38 26 C34 18 42 18 40 10 M48 26 C52 18 46 16 50 8" fill="none" stroke="#e8b52a" stroke-width="3" stroke-linecap="round"/><rect x="36" y="52" width="6" height="4" fill="#e8b52a" stroke="#1e1a16" stroke-width="1.5"/><rect x="46" y="52" width="6" height="4" fill="#e8b52a" stroke="#1e1a16" stroke-width="1.5"/><path d="M38 62 H50" stroke="#e8b52a" stroke-width="3"/>',
+    n: 4, name: 'Mount Cinder', world: 'Volcano', serial: 'Fury of the Fire God', built: true,
+    inks: ['#9fd8ff', '#ff7a1a'],
+    centerpiece: 'A lava lake over a lava-tube scoop',
+    twist: 'The heaviest gravity; steam vents blast the ball',
+    emblem: '<circle cx="44" cy="44" r="41" fill="#2a2220" stroke="#1e1a16" stroke-width="3"/><path d="M14 72 L34 36 H54 L74 72 Z" fill="#4a3c36" stroke="#1e1a16" stroke-width="3" stroke-linejoin="round"/><path d="M34 36 L40 48 L44 40 L48 50 L54 36 Z" fill="#ff7a1a" stroke="#1e1a16" stroke-width="2.5" stroke-linejoin="round"/><path d="M42 42 L44 40 L46 44" fill="none" stroke="#f2d024" stroke-width="1.5"/><circle cx="38" cy="24" r="6" fill="#9fd8ff" opacity=".8"/><circle cx="48" cy="18" r="7" fill="#9fd8ff" opacity=".6"/><circle cx="56" cy="26" r="5" fill="#9fd8ff" opacity=".5"/>',
   },
   {
     n: 5, name: 'Frostbite Peak', world: 'Arctic', serial: 'The Abominable Expedition',

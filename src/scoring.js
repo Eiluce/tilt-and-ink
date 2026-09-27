@@ -48,6 +48,7 @@ const SOURCES = {
   // Tables' own modes (tableDefs/): awake from the start, the mode gates it.
   chop: { base: 40, branch: 'rules', bonus: 0.25, charge: 'pop' }, // Timber Hollow's Timber!
   feast: { base: 300, branch: 'rules', shot: true, bonus: 0.5, charge: 'feature' }, // Davy Jones' Deep's Kraken Attack
+  eruption: { base: 1500, branch: 'rules', shot: true, bonus: 0.5, charge: 'feature' }, // Mount Cinder's hurry-up, times what's left
 };
 
 // Mission reward multiplier by tier (see MISSIONS in missions.js).

@@ -25,6 +25,7 @@ engine.velocityIterations = 8;
 // Three stacked layers: the printed playfield (inline SVG, so its lettering
 // can use the page fonts), the lamp canvas, then Matter's canvas on top.
 document.getElementById('playfield-art').innerHTML = Art.playfieldSVG();
+Art.fitTitle();
 const lampLayer = new Lamps(document.getElementById('lamps'));
 const fx = new Effects(document.getElementById('fx'), document.getElementById('table-wrap'));
 
@@ -475,6 +476,7 @@ function rampMade(name) {
   game.rampChain = { ramp: name, until: now + RAMP_CHAIN_MS };
   missions.event('ramp');
   if (relay) missions.event('rampCombo');
+  tableRules.ramp?.(name); // e.g. Mount Cinder's magma
   advanceChapter();
 }
 
@@ -608,7 +610,7 @@ const pickups = new Pickups({
 
 // The table's own rules (TABLE.rules in tableDefs/), if it has any. It gets
 // a small API and main.js calls its hooks: newTurn, spinner, inlane, pop,
-// centerpiece, dropBank, scoop, tick, lamps, scoopLit.
+// centerpiece, dropBank, ramp, scoop, tick, lamps, scoopLit.
 const tableRules = TABLE.rules ? TABLE.rules({
   addScore,
   fx,
@@ -619,6 +621,7 @@ const tableRules = TABLE.rules ? TABLE.rules({
   Body,
   velocityOf,
   balls,
+  valueOf: (source) => scoring.value(source), // one hit's points right now
   // How long a cleared drop bank waits before standing back up.
   setDropResetMs: (ms) => {
     drops.resetDelayMs = ms;
