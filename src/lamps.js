@@ -135,7 +135,7 @@ class Lamps {
     ctx.save();
     ctx.font = `${LAYOUT.drops.h * 0.85}px Rye, Georgia, serif`;
     ctx.textAlign = 'center';
-    ctx.fillStyle = INK.paper;
+    ctx.fillStyle = TABLE.art.dropNumber || INK.paper; // a table with light targets letters them in ink
     bank.targets.forEach((t, i) => {
       if (t.dropped) return;
       ctx.fillText(String(i + 1), t.body.position.x, t.body.position.y + LAYOUT.drops.h * 0.3);

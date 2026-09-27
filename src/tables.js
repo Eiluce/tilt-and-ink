@@ -22,11 +22,11 @@ const TABLES = [
     emblem: '<circle cx="44" cy="44" r="41" fill="#efe2c4" stroke="#1e1a16" stroke-width="3"/><path d="M44 14 L26 42 H34 L22 60 H66 L54 42 H62 Z" fill="#4d7a35" stroke="#1e1a16" stroke-width="3" stroke-linejoin="round"/><rect x="39" y="60" width="10" height="14" fill="#8a5a2b" stroke="#1e1a16" stroke-width="3"/><circle cx="38" cy="36" r="4" fill="#efe2c4" stroke="#1e1a16" stroke-width="2"/><circle cx="50" cy="36" r="4" fill="#efe2c4" stroke="#1e1a16" stroke-width="2"/><circle cx="38" cy="36" r="1.6" fill="#1e1a16"/><circle cx="50" cy="36" r="1.6" fill="#1e1a16"/><path d="M42 42 L44 45 L46 42" fill="#d9772e" stroke="#1e1a16" stroke-width="1.5"/>',
   },
   {
-    n: 3, name: "Davy Jones' Deep", world: 'Ocean', serial: 'Terror of Twenty Fathoms',
-    inks: ['#1f5c86', '#e0654f'],
-    centerpiece: 'The Kraken: tentacle ramps and a blinking eye',
-    twist: "Water drag: weak flips don't make the ramps",
-    emblem: '<circle cx="44" cy="44" r="41" fill="#efe2c4" stroke="#1e1a16" stroke-width="3"/><path d="M24 46 C24 24 64 24 64 46 Z" fill="#e0654f" stroke="#1e1a16" stroke-width="3" stroke-linejoin="round"/><path d="M28 46 C24 58 32 62 28 72 M38 46 C36 58 42 62 38 74 M50 46 C52 58 46 62 50 74 M60 46 C64 58 56 62 60 72" fill="none" stroke="#1e1a16" stroke-width="3" stroke-linecap="round"/><circle cx="37" cy="38" r="5" fill="#efe2c4" stroke="#1e1a16" stroke-width="2"/><circle cx="37" cy="38" r="2" fill="#1e1a16"/><circle cx="68" cy="22" r="4" fill="none" stroke="#1f5c86" stroke-width="2"/><circle cx="72" cy="32" r="2.5" fill="none" stroke="#1f5c86" stroke-width="2"/>',
+    n: 3, name: "Davy Jones' Deep", world: 'Ocean', serial: 'Terror of Twenty Fathoms', built: true,
+    inks: ['#5cc8b2', '#e2674a'],
+    centerpiece: "The Kraken, whose eye opens over its maw",
+    twist: "Water drag: weak flips don't make the ramps; a current up the left orbit",
+    emblem: '<circle cx="44" cy="44" r="41" fill="#0f2a3b" stroke="#1e1a16" stroke-width="3"/><path d="M28 46 C24 58 32 62 28 72 M38 46 C36 58 42 62 38 74 M50 46 C52 58 46 62 50 74 M60 46 C64 58 56 62 60 72" fill="none" stroke="#1e1a16" stroke-width="6" stroke-linecap="round"/><path d="M28 46 C24 58 32 62 28 72 M38 46 C36 58 42 62 38 74 M50 46 C52 58 46 62 50 74 M60 46 C64 58 56 62 60 72" fill="none" stroke="#e2674a" stroke-width="3" stroke-linecap="round"/><path d="M24 46 C24 24 64 24 64 46 Z" fill="#e2674a" stroke="#1e1a16" stroke-width="3" stroke-linejoin="round"/><ellipse cx="44" cy="38" rx="8" ry="5.5" fill="#efe2c4" stroke="#1e1a16" stroke-width="2"/><circle cx="44" cy="38" r="3" fill="#e3a92b"/><ellipse cx="44" cy="38" rx="0.9" ry="2.6" fill="#1e1a16"/><circle cx="68" cy="22" r="4" fill="none" stroke="#5cc8b2" stroke-width="2"/><circle cx="72" cy="32" r="2.5" fill="none" stroke="#5cc8b2" stroke-width="2"/>',
   },
   {
     n: 4, name: 'Mount Cinder', world: 'Volcano', serial: 'Fury of the Fire God',

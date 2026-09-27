@@ -374,6 +374,7 @@ on(ufo.body, (ball) => {
   fx.ring(L.centerpiece.x, L.centerpiece.y, INK.teal, L.centerpiece.r, L.centerpiece.r + 24);
   fx.burst(ball.position.x, ball.position.y - 10, TEXT.centerpieceHit, INK.teal);
   fx.shake(160, 2.5);
+  tableRules.centerpiece?.(); // e.g. opening the Kraken's eye
 });
 
 const spinner = new Spinner(world, {
@@ -413,6 +414,7 @@ const drops = new DropTargetBank(world, {
   },
   onCleared: () => {
     missions.event('dropBank');
+    tableRules.dropBank?.(); // e.g. the Kraken's feast
     game.bankClears += 1;
     if (stat('extraBall') && game.bankClears === EXTRA_BALL_AT_CLEAR && game.extraBalls < EXTRA_BALLS_PER_TURN && !game.extraBallLit) {
       game.extraBallLit = true;
@@ -606,7 +608,7 @@ const pickups = new Pickups({
 
 // The table's own rules (TABLE.rules in tableDefs/), if it has any. It gets
 // a small API and main.js calls its hooks: newTurn, spinner, inlane, pop,
-// scoop, tick, lamps, scoopLit.
+// centerpiece, dropBank, scoop, tick, lamps, scoopLit.
 const tableRules = TABLE.rules ? TABLE.rules({
   addScore,
   fx,
@@ -616,6 +618,11 @@ const tableRules = TABLE.rules ? TABLE.rules({
   INK,
   Body,
   velocityOf,
+  balls,
+  // How long a cleared drop bank waits before standing back up.
+  setDropResetMs: (ms) => {
+    drops.resetDelayMs = ms;
+  },
   spawnPickup: () => {
     if (awake('pickup')) pickups.spawn(performance.now());
   },
@@ -850,7 +857,7 @@ function createBall(x, y, mode) {
   const ball = Bodies.circle(x, y, L.ballR, {
     restitution: 0.6,
     friction: 0.05,
-    frictionAir: 0.0015,
+    frictionAir: BALL_AIR,
     density: 0.08,
     label: 'ball',
     collisionFilter: { category: CAT.BALL, mask: 0 },
@@ -1293,6 +1300,15 @@ Object.assign(window, {
     scoring.tickets += n;
     scoring.lifetimeTickets += n;
     scoring.save();
+    updateHud();
+  },
+  // Debug: __setTickets(5e6) sets the balance outright. Lifetime Tickets
+  // (which gate the table passes) rise to match but never drop.
+  __setTickets: (n) => {
+    scoring.tickets = Math.max(0, n);
+    scoring.lifetimeTickets = Math.max(scoring.lifetimeTickets, scoring.tickets);
+    scoring.save();
+    updateHud();
   },
 });
 

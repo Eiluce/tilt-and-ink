@@ -22,9 +22,15 @@ const BALL_MASKS = {
   held: 0,
 };
 
+// Matter's air drag on the ball: the share of speed lost per 1/60 s tick.
+const BALL_AIR = 0.0015;
+
 function setBallMode(ball, mode) {
   ball.plugin.mode = mode;
   ball.collisionFilter.mask = BALL_MASKS[mode];
+  // Tables can thicken the air (Davy Jones' Deep's water drag), but never
+  // in the shooter lane, so every table's plunger reaches the same places.
+  ball.frictionAir = mode === 'playfield' || mode === 'ramp' ? LAYOUT.ballAir || BALL_AIR : BALL_AIR;
   // Balls up on a ramp are drawn a touch bigger so they read as raised.
   const s = mode === 'ramp' ? 0.29 : 0.25;
   ball.render.sprite.xScale = s;
