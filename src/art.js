@@ -1,12 +1,12 @@
 // Table art, "Pulp Serial Poster" direction: cream poster stock, black press
 // ink, the table's two spot inks and mustard for rewards. The shared cabinet
-// parts (walls, guides, lanes, flippers, slings, inserts, ramps, apron) are
+// parts (walls, guides, lanes, flippers, slings, inserts, ramps, drain) are
 // drawn here; each table's own pieces (pop bumpers, centrepiece, spinner,
 // drop targets, backdrop, wording) come from its definition (TABLE.art).
 //
 // Everything is hand-coded SVG built from LAYOUT, in two kinds:
 //  - playfieldSVG(): the static printed playfield (walls, guides, ramps,
-//    unlit lamp inserts, apron). Injected inline into the page so its text
+//    unlit lamp inserts, drain). Injected inline into the page so its text
 //    can use the page's web fonts.
 //  - SPRITES: moving/reacting parts, rendered as data-URI images on the
 //    Matter bodies. Drawn at 4x and shown at 0.25 scale like the old assets.
@@ -19,8 +19,7 @@
 // The playfield stock is per table too (TABLE.stock): `field` is what the
 // playfield is printed on, `fieldAlt` its backdrop tone, `print` the ink for
 // lettering printed straight on the field, `title` the table's name,
-// `hatch` the dead-space fill, `apron` the apron and `ground` the page round
-// the cabinet. Rocket Row prints on the poster paper itself. Lamp inserts,
+// `hatch` the dead-space fill and `ground` the page round the cabinet. Rocket Row prints on the poster paper itself. Lamp inserts,
 // cards and ramps stay on paper whatever the field.
 const INK = (() => {
   const base = {
@@ -40,7 +39,6 @@ const INK = (() => {
     print: base.ink,
     title: base.red,
     hatch: base.aged,
-    apron: base.foxing,
     ground: '#17130f',
     ...base,
     ...TABLE.stock,
@@ -197,28 +195,11 @@ const Art = (() => {
     // raised ramps
     s += ramp(L.ramps.left) + ramp(L.ramps.right);
 
-    // apron over the drain
-    s += `<rect x="150" y="660" width="100" height="40" fill="${K}"/>
-      <path d="M8,652 L130,652 Q150,652 162,672 L238,672 Q250,652 270,652 L${L.shooterWall.x},652 L${L.shooterWall.x},700 L8,700Z" fill="${INK.apron}" stroke="${K}" stroke-width="5" stroke-linejoin="round"/>
-      <rect x="46" y="660" width="98" height="34" rx="2" fill="${P}" stroke="${K}" stroke-width="1.6"/>
-      <text font-family="${TYPE}" font-size="5.2" fill="${K}">${apronLines(A.apronLeft, 50, 669, 'start')}</text>
-      <rect x="256" y="660" width="98" height="34" rx="2" fill="${P}" stroke="${K}" stroke-width="1.6"/>
-      <text font-family="${TYPE}" font-size="5.6" fill="${K}" text-anchor="middle">${apronLines(A.apronRight, 305, 670, 'middle')}</text>`;
+    // the drain: a plain gutter below the playfield (the view is cropped at
+    // LAYOUT.viewHeight, just under it)
+    s += `<rect x="8" y="652" width="${L.shooterWall.x - 8}" height="48" fill="${K}"/>`;
 
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 700" preserveAspectRatio="none" aria-hidden="true">${s}</svg>`;
-  }
-
-  // Apron card lines: a string, { red: text } in the table's red ink, or
-  // { slab: text } as a slab headline.
-  function apronLines(lines, x, y0, anchor) {
-    let y = y0;
-    return lines.map((line) => {
-      const t = typeof line === 'string' ? line : line.red || line.slab;
-      const attrs = line.red ? ` fill="${R}"` : line.slab ? ` font-family="${SLAB}" font-size="8" fill="${R}"` : '';
-      const out = `<tspan x="${x}" y="${y}" text-anchor="${anchor}"${attrs}>${t}</tspan>`;
-      y += line.slab ? 9.5 : 8;
-      return out;
-    }).join('');
   }
 
   function ramp(c) {

@@ -74,7 +74,7 @@ The second table, reached with the Timber Hollow pass. Same rules as Rocket Row 
 
 ## Upgrades and skills
 
-Tickets you bank at the end of each turn buy permanent upgrades. Press <kbd>U</kbd> (or click **Upgrade Tree** in the side panel) to open the tree. The game pauses while it's open, and upgrades apply straight away.
+Tickets you bank at the end of each turn buy permanent upgrades. Between turns, press <kbd>U</kbd> (or click **Upgrade Tree** at the top right of the page) to open the tree. It can't be opened mid-turn: the button greys out until the turn ends. Upgrades apply straight away.
 
 The tree is drawn as an art deco tower in black and gold. Every diamond is an upgrade, and a straight line leads up from it to the upgrades it unlocks. Bought diamonds fill with their branch's colour, and diamonds you can afford now pulse. Each branch climbs its own lanes, and each table is one step of the tower: buy a table's pass on the centre line to open the next step. A stepped line in another branch's colour means an upgrade also needs something from that branch, and hovering an upgrade lights up everything it needs. Drag to pan, use the mouse wheel to zoom, and click a diamond to see what it does and buy it. The screen has two more tabs: **Tables** shows a lobby card for each of the eight tables, and **Skill loadout** chooses which skill sits on which key.
 

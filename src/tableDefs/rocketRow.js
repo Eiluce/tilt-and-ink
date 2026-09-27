@@ -113,8 +113,6 @@ TABLE_DEFS[1] = (() => {
 
       subtitle: 'A SERIAL IN FIVE CHAPTERS',
       sideText: 'SKILL SHOT ▸ LIGHT R·O·W',
-      apronLeft: ['RAMPS ADVANCE THE CHAPTER.', 'CHAPTER V LIGHTS SAUCER', 'MULTIBALL AT THE UFO.', { red: 'R·O·W LANES = BONUS ×' }],
-      apronRight: ['THE SAUCER MEN', { slab: 'NEXT WEEK:' }, 'CHAPTER II AWAITS!'],
     },
 
     // Wording used on the table and in the title cards.

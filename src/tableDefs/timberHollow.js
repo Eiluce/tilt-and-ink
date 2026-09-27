@@ -59,7 +59,7 @@ TABLE_DEFS[2] = (() => {
     layout,
     inks: { red: '#e3862c', teal: '#7fa33a' },
     // Printed on an autumn woodcut board, russet instead of poster paper.
-    stock: { field: '#6e3a20', fieldAlt: '#7c4428', print: '#f1dcae', title: '#f1dcae', hatch: '#552c18', apron: '#3a2414', ground: '#170d08' },
+    stock: { field: '#6e3a20', fieldAlt: '#7c4428', print: '#f1dcae', title: '#f1dcae', hatch: '#552c18', ground: '#170d08' },
 
     art: {
       // Three red toadstools growing together, seen from above, paper spots.
@@ -135,8 +135,6 @@ TABLE_DEFS[2] = (() => {
 
       subtitle: "THE WOODSMAN'S CURSE",
       sideText: 'SKILL SHOT ▸ LIGHT O·A·K',
-      apronLeft: ['RAMPS ADVANCE THE CHAPTER.', 'SPIN THE LOG TO WAKE THE OAK,', 'THEN SHOOT ITS HOLLOW.', { red: 'MOSS SLOWS THE INLANES' }],
-      apronRight: ["THE WOODSMAN'S CURSE", { slab: 'NEXT WEEK:' }, 'DEEPER IN THE WOODS!'],
     },
 
     text: {

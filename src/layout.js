@@ -81,4 +81,13 @@ const FRAME = {
   rampHalfWidth: 13,
 
   drainY: 668,
+  // The table is shown down to here (style.css crops the rest): the drain
+  // gutter under the playfield, with the plunger's head still in view.
+  viewHeight: 672,
 };
+
+// Canvas pixels per table unit: the screen's pixel ratio times how far
+// style.css scales the table up to fill the window height. Fixed at load.
+const RENDER_SCALE = typeof window === 'undefined'
+  ? 1
+  : (window.devicePixelRatio || 1) * Math.max(1, (window.innerHeight - 32) / FRAME.viewHeight);

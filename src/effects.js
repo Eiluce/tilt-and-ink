@@ -4,11 +4,10 @@
 // are drawn under the ball, on the lamp canvas (see speedLines()).
 class Effects {
   constructor(canvas, shakeTarget) {
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = LAYOUT.width * dpr;
-    canvas.height = LAYOUT.height * dpr;
+    canvas.width = LAYOUT.width * RENDER_SCALE;
+    canvas.height = LAYOUT.height * RENDER_SCALE;
     this.ctx = canvas.getContext('2d');
-    this.ctx.scale(dpr, dpr);
+    this.ctx.scale(RENDER_SCALE, RENDER_SCALE);
     this.shakeTarget = shakeTarget;
     this.items = [];
     this.card = null;

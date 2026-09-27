@@ -31,11 +31,14 @@ body {
   padding: 16px;
 }
 
-/* The table keeps its 400 x 700 proportions and scales to the window. */
+/* The table fills the window height. It shows the 400 x 700 table down to
+   y 672 (LAYOUT.viewHeight): the layers are drawn 700 tall and the wrap
+   crops the bottom, under the drain. RENDER_SCALE (layout.js) keeps the
+   canvases sharp at this size. */
 #table-wrap {
   position: relative;
-  height: min(700px, calc(100vh - 32px));
-  aspect-ratio: 400 / 700;
+  height: calc(100vh - 32px);
+  aspect-ratio: 400 / 672;
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
@@ -47,7 +50,7 @@ body {
   /* Matter sets an inline pixel width/height on its canvas; override it so
      all three layers scale together. */
   width: 100% !important;
-  height: 100% !important;
+  height: calc(100% * 700 / 672) !important;
   display: block;
 }
 
@@ -60,7 +63,7 @@ body {
 #hud {
   width: 240px;
   /* same height as the table beside it */
-  height: min(700px, calc(100vh - 32px));
+  height: calc(100vh - 32px);
   box-sizing: border-box;
   overflow-y: auto;
   background: var(--paper);
@@ -204,11 +207,6 @@ body {
   margin-top: 4px;
 }
 
-.hud-actions #open-upgrades {
-  flex: 1;
-  margin-top: 0;
-}
-
 #help-toggle {
   width: 36px;
   font: 400 18px 'Rye', Georgia, serif;
@@ -350,7 +348,6 @@ kbd {
 
 #open-upgrades,
 #open-tables {
-  margin-top: 10px;
   font: 600 14px 'Fredoka', sans-serif;
   color: var(--paper);
   background: var(--ink);
@@ -358,6 +355,18 @@ kbd {
   border-radius: 4px;
   padding: 8px 10px;
   cursor: pointer;
+}
+
+/* Pinned to the page's top right, over everything but the Upgrade Tree. */
+#open-upgrades {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 5;
+  font-size: 15px;
+  padding: 10px 14px;
+  border: 2px solid var(--paper);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
 }
 
 #open-tables {
@@ -380,12 +389,70 @@ kbd {
   color: var(--mustard);
 }
 
-#open-upgrades:hover,
+#open-upgrades:not(:disabled):hover,
 #open-upgrades:focus-visible,
-#open-tables:hover,
+#open-tables:not(:disabled):hover,
 #open-tables:focus-visible {
   background: var(--red);
   color: var(--paper);
+}
+
+/* During a turn the tree waits: the buttons grey out. */
+#open-upgrades:disabled,
+#open-tables:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* Between turns, a title card on the table says how to start. */
+#table-wrap > #start-prompt {
+  height: 100% !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: none;
+}
+
+/* puts the card just above the drop targets, clear of the flippers */
+#start-prompt::before {
+  content: '';
+  flex: 0 0 56%;
+}
+
+#start-prompt[hidden] {
+  display: none !important;
+}
+
+#start-prompt .card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 12px 26px 14px;
+  background: rgba(30, 26, 22, 0.88);
+  color: var(--paper);
+  outline: 2px solid var(--paper);
+  outline-offset: -6px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+  animation: prompt-pulse 1.6s ease-in-out infinite;
+}
+
+#start-prompt b {
+  font: 400 26px 'Rye', Georgia, serif;
+  letter-spacing: 0.03em;
+}
+
+#start-prompt span {
+  font: 15px 'Special Elite', monospace;
+  color: var(--mustard);
+}
+
+@keyframes prompt-pulse {
+  50% { transform: scale(1.04); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #start-prompt .card { animation: none; }
 }
 
 #open-tables b {

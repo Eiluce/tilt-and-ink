@@ -37,7 +37,7 @@ const render = Render.create({
     height: L.height,
     wireframes: false,
     background: 'transparent',
-    pixelRatio: window.devicePixelRatio || 1,
+    pixelRatio: RENDER_SCALE,
   },
 });
 Render.run(render);
@@ -158,6 +158,9 @@ if (TABLE.n > upgrades.tablesReached()) {
 
 const scoreEl = document.getElementById('score');
 const ballInfoEl = document.getElementById('ball-info');
+const startPromptEl = document.getElementById('start-prompt');
+// The Upgrade Tree (and its Tables tab) only opens between turns.
+const treeButtons = ['open-upgrades', 'open-tables'].map((id) => document.getElementById(id));
 const messageEl = document.getElementById('message');
 let messageTimer;
 
@@ -274,6 +277,11 @@ function updateScorePanel(now) {
 }
 
 function updateHud() {
+  startPromptEl.hidden = game.turnActive;
+  for (const btn of treeButtons) {
+    btn.disabled = game.turnActive;
+    btn.title = game.turnActive ? 'Opens between turns' : '';
+  }
   if (!game.turnActive) {
     ballInfoEl.textContent = 'Press Space to start a turn';
     return;
@@ -1132,7 +1140,8 @@ function laneChange(dir) {
 
 window.addEventListener('keydown', (event) => {
   if (event.code === 'KeyU' || (event.code === 'Escape' && upgradeScreen.isOpen)) {
-    upgradeScreen.toggle();
+    if (upgradeScreen.isOpen || !game.turnActive) upgradeScreen.toggle();
+    else if (!event.repeat) announce('The Upgrade Tree opens between turns', 2000);
     return;
   }
   if (paused) return;
