@@ -133,6 +133,19 @@ TABLE_DEFS[2] = (() => {
         return `${moss}${saw}<text x="${L.inserts.saw[0].x - 2}" y="${L.inserts.saw[0].y + 14}" font-family="'Special Elite', monospace" font-size="6" fill="${PR}" letter-spacing="1">SAW</text>`;
       },
 
+      // Ramps as forest trails: a pine-green deck with bone edges and bone
+      // chevrons pointing up the ramp, like painted trail markers.
+      rampDeck: (c, d, { PR, along, at }) => `<path d="${d}" fill="none" stroke="${PR}" stroke-width="22" stroke-linecap="round"/>
+        <path d="${d}" fill="none" stroke="${PINE}" stroke-width="17" stroke-linecap="round"/>
+        ${along(c, 22, 20).map((p) => at(p.x.toFixed(1), p.y.toFixed(1), `<path d="M-3,-6 L4,0 L-3,6" fill="none" stroke="${PR}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>`, p.deg.toFixed(1))).join('')}`,
+
+      // Slingshots stamped with a small bone pine that lights up when kicked.
+      sling: {
+        fill: PINE,
+        rubber: () => '#f1dcae',
+        pattern: (lit, xy) => `<polygon points="${[[97, 513], [100.5, 524], [99, 524], [102, 534], [100, 534], [103, 543], [92, 543], [94, 534], [92, 534], [94, 524], [93.5, 524]].map(([x, y]) => xy(x, y).join(',')).join(' ')}" fill="${lit ? '#e3a92b' : '#f1dcae'}" stroke="#1e1a16" stroke-width=".9" stroke-linejoin="round"/>`,
+      },
+
       subtitle: "THE WOODSMAN'S CURSE",
       sideText: 'SKILL SHOT ▸ LIGHT O·A·K',
     },

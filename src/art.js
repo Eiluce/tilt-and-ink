@@ -67,8 +67,26 @@ const Art = (() => {
 
   // --- element drawings (local coords, centred on the element) -------------
 
+  // Evenly spaced points up a ramp's centreline (a bezier chain), from
+  // `from` past the mouth to `to` short of the end, each with its heading in
+  // degrees: for tables that print motifs along their ramp decks.
+  const along = (c, step, from = 14, to = 10) => {
+    const pts = sampleBezierChain(c, 60);
+    const lens = [0];
+    for (let i = 1; i < pts.length; i++) lens.push(lens[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+    const out = [];
+    let i = 1;
+    for (let d = from; d <= lens[lens.length - 1] - to; d += step) {
+      while (lens[i] < d) i++;
+      const [a, b] = [pts[i - 1], pts[i]];
+      const t = (d - lens[i - 1]) / (lens[i] - lens[i - 1]);
+      out.push({ x: a[0] + (b[0] - a[0]) * t, y: a[1] + (b[1] - a[1]) * t, deg: (Math.atan2(b[1] - a[1], b[0] - a[0]) * 180) / Math.PI });
+    }
+    return out;
+  };
+
   // Kit handed to the table's own art pieces.
-  const kit = { P, P2, K, R, T, M, F, FD, FD2, PR, star: (...a) => star(...a), at: (...a) => at(...a) };
+  const kit = { P, P2, K, R, T, M, F, FD, FD2, PR, star: (...a) => star(...a), at: (...a) => at(...a), along };
   const A = TABLE.art;
 
   // Pivot at 0,0; the rounded tip reaches exactly `len`.
@@ -87,6 +105,13 @@ const Art = (() => {
   // only the kicking face (first vertex to last, see slingshot.js) carries
   // the rubber band, inside the edge, so the line the ball bounces off is
   // the line you see. `lit` flashes the rubber when it kicks.
+  //
+  // A table can restyle it with art.sling: { fill, rubber(lit), pattern(lit,
+  // xy) }. The pattern is printed under the rubber, placed in the left
+  // slingshot's playfield coordinates: xy(x, y) maps them onto this one
+  // (the right slingshot is its mirror image).
+  const SL = LAYOUT.slings.left;
+  const slc = [(SL[0][0] + SL[1][0] + SL[2][0]) / 3, (SL[0][1] + SL[1][1] + SL[2][1]) / 3];
   let slingClips = 0;
   const sling = (verts, lit) => {
     const [A, , C] = verts;
@@ -105,6 +130,19 @@ const Art = (() => {
     const band = (d) => `${(A[0] + nx * d).toFixed(1)},${(A[1] + ny * d).toFixed(1)} ${(C[0] + nx * d).toFixed(1)},${(C[1] + ny * d).toFixed(1)}`;
     const id = `sling-clip-${slingClips++}`;
     const inner = verts.map(([x, y]) => `${(cx + (x - cx) * 0.4).toFixed(1)},${(cy + (y - cy) * 0.4).toFixed(1)}`).join(' ');
+    const look = TABLE.art.sling; // (A here is the first vertex)
+    const mirrored = verts[2][0] < verts[1][0];
+    const xy = (x, y) => [((mirrored ? -1 : 1) * (x - slc[0])).toFixed(2), (y - slc[1]).toFixed(2)];
+    if (look) {
+      return `<defs><clipPath id="${id}"><polygon points="${pts(verts)}"/></clipPath></defs>
+        <polygon points="${pts(verts)}" fill="${look.fill}"/>
+        <g clip-path="url(#${id})">${look.pattern ? look.pattern(lit, xy) : ''}
+          <polyline points="${band(3.5)}" fill="none" stroke="${look.rubber(lit)}" stroke-width="7"/>
+          <polyline points="${band(7.5)}" fill="none" stroke="${K}" stroke-width="1.4"/>
+        </g>
+        <polygon points="${pts(verts)}" fill="none" stroke="${K}" stroke-width="1.6" stroke-linejoin="round"/>
+        <polyline points="${pts([A, C])}" fill="none" stroke="${K}" stroke-width="2.4" stroke-linecap="round"/>`;
+    }
     return `<defs><clipPath id="${id}"><polygon points="${pts(verts)}"/></clipPath></defs>
       <polygon points="${pts(verts)}" fill="${R}"/>
       <g clip-path="url(#${id})">
@@ -202,6 +240,8 @@ const Art = (() => {
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 700" preserveAspectRatio="none" aria-hidden="true">${s}</svg>`;
   }
 
+  // A table can print its own deck (art.rampDeck(c, d, kit)) inside the
+  // black outline; the ramp's shape and entrance lip stay the same.
   function ramp(c) {
     const d = bezierPath(c);
     // Entrance lip across the mouth, perpendicular to the ramp's first leg.
@@ -213,8 +253,8 @@ const Art = (() => {
     const ny = (dx / len) * 13;
     return `<g filter="url(#rshadow)">
       <path d="${d}" fill="none" stroke="${K}" stroke-width="28" stroke-linecap="round"/>
-      <path d="${d}" fill="none" stroke="#f7efdc" stroke-width="21" stroke-linecap="round"/>
-      <path d="${d}" fill="none" stroke="${R}" stroke-width="3.5" stroke-dasharray="7 9"/>
+      ${A.rampDeck ? A.rampDeck(c, d, kit) : `<path d="${d}" fill="none" stroke="#f7efdc" stroke-width="21" stroke-linecap="round"/>
+      <path d="${d}" fill="none" stroke="${R}" stroke-width="3.5" stroke-dasharray="7 9"/>`}
       <line x1="${x0 + nx}" y1="${y0 + ny}" x2="${x0 - nx}" y2="${y0 - ny}" stroke="${K}" stroke-width="7" stroke-linecap="round"/>
       <line x1="${x0 + nx}" y1="${y0 + ny}" x2="${x0 - nx}" y2="${y0 - ny}" stroke="${M}" stroke-width="3.5" stroke-linecap="round"/>
     </g>`;

@@ -169,6 +169,34 @@ TABLE_DEFS[3] = (() => {
         return `${current}${eye}<text x="${L.inserts.eye[0].x - 2}" y="${L.inserts.eye[0].y + 14}" font-family="'Special Elite', monospace" font-size="6" fill="${PR}" letter-spacing="1">EYE</text>`;
       },
 
+      // Ramps as glass tubes: glow green over the board, a bone highlight
+      // down one side, bubbles rising inside.
+      rampDeck: (c, d, { FD, T, PR, along, at }) => {
+        const side = along(c, 3, 6, 6).map((p) => {
+          const n = ((p.deg - 90) * Math.PI) / 180;
+          return `${(p.x + Math.cos(n) * 6).toFixed(1)},${(p.y + Math.sin(n) * 6).toFixed(1)}`;
+        }).join(' ');
+        const bubbles = along(c, 19, 18).map((p, i) => at(p.x.toFixed(1), p.y.toFixed(1), `<circle cy="${[-3, 2, -1, 4][i % 4]}" r="${[2.2, 1.5, 2.8, 1.8][i % 4]}" fill="none" stroke="${PR}" stroke-width="1" opacity=".85"/>`, p.deg.toFixed(1))).join('');
+        return `<path d="${d}" fill="none" stroke="${FD}" stroke-width="22" stroke-linecap="round"/>
+          <path d="${d}" fill="none" stroke="${T}" stroke-width="22" stroke-linecap="round" opacity=".32"/>
+          <polyline points="${side}" fill="none" stroke="${PR}" stroke-width="2" stroke-linecap="round" opacity=".7"/>${bubbles}`;
+      },
+
+      // Slingshots as scallop shells: bone with coral ribs fanning from the
+      // corner to the rubber, which is glow green (mustard when kicked).
+      sling: {
+        fill: '#f3ead6',
+        rubber: (lit) => (lit ? '#e3a92b' : '#5cc8b2'),
+        pattern: (lit, xy) => {
+          const [a, b, c] = FRAME.slings.left; // top, corner, bottom
+          return [0.15, 0.3, 0.45, 0.6, 0.75, 0.9].map((t) => {
+            const [x1, y1] = xy(...b);
+            const [x2, y2] = xy(a[0] + (c[0] - a[0]) * t, a[1] + (c[1] - a[1]) * t);
+            return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${lit ? '#e3a92b' : '#e2674a'}" stroke-width="1.6"/>`;
+          }).join('');
+        },
+      },
+
       dropNumber: '#1e1a16', // press ink: paper numbers vanish on yellow fish
       subtitle: 'TERROR OF TWENTY FATHOMS',
       sideText: 'SKILL SHOT ▸ LIGHT S·E·A',

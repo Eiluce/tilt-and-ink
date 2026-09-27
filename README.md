@@ -69,7 +69,7 @@ Once the **Chapters** node is bought, Rocket Row is a movie serial in five chapt
 
 The second table, reached with the Timber Hollow pass. Same rules as Rocket Row (chapters, multiball at the centrepiece, missions), on its own layout and with its own mode:
 
-- **Layout:** five pop bumpers in a ring, each a cluster of three red toadstools, the felled **Old Oak** in the middle as a roped woodpile (its hollow is the scoop), Rocket Row's pair of side ramps, a kickout left of the oak and three oak-leaf drop targets. No small upper flipper. Printed on a russet autumn board with tree rings, green pines and falling leaves.
+- **Layout:** five pop bumpers in a ring, each a cluster of three red toadstools, the felled **Old Oak** in the middle as a roped woodpile (its hollow is the scoop), Rocket Row's pair of side ramps, a kickout left of the oak and three oak-leaf drop targets. No small upper flipper. Printed on a russet autumn board with tree rings, green pines and falling leaves; the ramps are pine-green trails with bone markers, and the slingshots are stamped with a small pine.
 - **Twist:** gravity is a little stronger, and **moss** on the inlanes slows the ball as it rolls through.
 - **Timber!:** spinning the log spinner fills the **SAW** meter (five teeth on the left). When it's full the oak wakes and its hollow lights: shoot it for 20 seconds where every toadstool hit also **chops** the oak for extra points. Chapter V multiball (Pinecone Multiball) takes priority at the hollow.
 - Its missions are forest-themed (Log Rolling, Toadstool Stomp, Owl Watch, Sawmill Shift, …) on the same kinds of shots.
@@ -78,7 +78,7 @@ The second table, reached with the Timber Hollow pass. Same rules as Rocket Row 
 
 The third table, reached with the Davy Jones' Deep pass. Same rules again, under the sea:
 
-- **Layout:** three moon-jellyfish pop bumpers, the **Kraken** in a whirlpool in the middle (its maw is the scoop), Rocket Row's pair of side ramps, a kickout left of the Kraken, three yellow-fish drop targets and a swordfish spinner. No small upper flipper. Printed on a dark blue-black board with light falling from the surface, kelp, glowing specks and bubbles.
+- **Layout:** three moon-jellyfish pop bumpers, the **Kraken** in a whirlpool in the middle (its maw is the scoop), Rocket Row's pair of side ramps, a kickout left of the Kraken, three yellow-fish drop targets and a swordfish spinner. No small upper flipper. Printed on a dark blue-black board with light falling from the surface, kelp, glowing specks and bubbles; the ramps are glass tubes with bubbles inside, and the slingshots are scallop shells.
 - **Twist:** **water drag** slows the ball everywhere, so weak flips fall short of the ramps, and a **current** (the chevrons) carries a ball that is already heading up the left orbit.
 - **Release the Kraken:** each Kraken hit opens its **EYE** a step (five lamps on the left). A full eye lights the maw: shoot it for 20 seconds of **Kraken Attack**, where the fish stand straight back up and every cleared bank is a **kraken feast**. Chapter V multiball (Kraken Multiball) takes priority at the maw.
 - Its missions are sea-themed (Man the Rigging, Jellyfish Bloom, Staring Contest, Full Nets, …) on the same kinds of shots.
