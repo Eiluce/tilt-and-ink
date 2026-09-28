@@ -42,9 +42,13 @@ const MISSION_NEEDS = {
 };
 
 class MissionControl {
-  constructor({ addScore, fx, announce, isAwake = () => true }) {
+  // valueOf(source): one hit's points now (scoring.value); rankBonus(): the
+  // % to all points each rank earns (0 until Mission Control is bought).
+  constructor({ addScore, fx, announce, isAwake = () => true, valueOf = () => 0, rankBonus = () => 0 }) {
     this.addScore = addScore;
     this.isAwake = isAwake;
+    this.valueOf = valueOf;
+    this.rankBonus = rankBonus;
     this.fx = fx;
     this.announce = announce;
     this.completedTotal = 0;
@@ -151,18 +155,19 @@ class MissionControl {
     this.active = null;
     this.completedIds.add(m.id);
     this.completedTotal += 1;
-    this.addScore('mission', `mission: ${m.name}`, { mult: MISSION_TIER_X[m.tier] });
-    this.lastResult = { text: `${m.name} complete!`, until: performance.now() + 4000 };
+    const paid = this.addScore('mission', `mission: ${m.name}`, { mult: MISSION_TIER_X[m.tier] });
+    this.lastResult = { text: `Done +${formatPoints(paid)}`, until: performance.now() + 4000 };
 
     const newRank = this.rankFor(this.completedTotal);
     this.save();
     if (newRank > this.rank) {
       this.rank = newRank;
-      this.addScore('promotion', 'promotion', { mult: newRank });
-      this.fx.title(`Promoted to ${RANKS[newRank].name}!`, `${m.name} complete`, 2200);
+      const bonus = this.addScore('promotion', 'promotion', { mult: newRank });
+      const perRank = this.rankBonus();
+      this.fx.title(`Promoted to ${RANKS[newRank].name}!`, `+${formatPoints(paid + bonus)}${perRank ? `, and +${perRank}% to all points from now on` : ''}`, 2600);
       this.fx.shake(300, 4);
     } else {
-      this.fx.title('Mission Complete!', m.name, 1600);
+      this.fx.title('Mission Complete!', `${m.name}: +${formatPoints(paid)}`, 1800);
     }
     this.offerIndex = 0;
     this.offered = this.pool()[0];
@@ -172,7 +177,7 @@ class MissionControl {
     if (!this.active) return;
     const m = this.active.mission;
     this.active = null;
-    this.lastResult = { text: `${m.name} failed: ${reason}`, until: performance.now() + 4000 };
+    this.lastResult = { text: `Failed: ${reason}`, until: performance.now() + 4000 };
     this.fx.title('Mission Failed', reason, 1400);
     const list = this.pool();
     this.offered = list.length ? list[this.offerIndex % list.length] : null;
@@ -193,11 +198,21 @@ class MissionControl {
     return this.offered ? ['kickout'] : [];
   }
 
+  // What completing `m` pays right now (missions aren't multiplied by the
+  // combo, so this is exact).
+  reward(m) {
+    return this.valueOf('mission') * MISSION_TIER_X[m.tier];
+  }
+
   // Snapshot for the HUD panel.
   view(now) {
-    const rank = RANKS[this.rank].name;
+    const perRank = this.rankBonus();
+    const rank = RANKS[this.rank].name + (perRank && this.rank ? ` (+${perRank * this.rank}% to all points)` : '');
     const next = RANKS[this.rank + 1];
-    const toNext = next ? `${next.missions - this.completedTotal} more for ${next.name}` : 'Top rank';
+    const toNext = next
+      ? `${next.missions - this.completedTotal} more mission${next.missions - this.completedTotal === 1 ? '' : 's'} for ${next.name}${perRank ? `: +${perRank}% more` : ''}`
+      : 'Top rank';
+    const pays = (m) => `Pays ${formatPoints(this.reward(m))}.`;
     if (this.active) {
       const { mission: m, progress, timeLeftMs } = this.active;
       return {
@@ -205,7 +220,7 @@ class MissionControl {
         toNext,
         label: 'Mission active',
         name: m.name,
-        goal: m.goal,
+        goal: `${m.goal}. ${pays(m)}`,
         progress: progress / m.count,
         count: `${progress} / ${m.count}`,
         status: timeLeftMs === null ? '' : `${Math.ceil(timeLeftMs / 1000)}s left`,
@@ -219,7 +234,7 @@ class MissionControl {
       toNext,
       label: 'Mission offered',
       name: m ? m.name : '',
-      goal: m ? `${m.goal}${m.seconds ? ` in ${m.seconds}s` : ''}. Standups change it.` : '',
+      goal: m ? `${m.goal}${m.seconds ? ` in ${m.seconds}s` : ''}. ${pays(m)} Standups change it.` : '',
       progress: 0,
       count: '',
       status: result || 'Kickout accepts',

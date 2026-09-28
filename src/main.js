@@ -187,7 +187,14 @@ function addScore(source, label, { at, mult = 1, echo = true } = {}) {
   return total;
 }
 
-const missions = new MissionControl({ addScore, fx, announce, isAwake: (source) => scoring.isAwake(source) });
+const missions = new MissionControl({
+  addScore,
+  fx,
+  announce,
+  isAwake: (source) => scoring.isAwake(source),
+  valueOf: (source) => scoring.value(source),
+  rankBonus: () => stat('rankBonus'),
+});
 
 const TEXT = TABLE.text; // this table's wording (tableDefs/)
 document.getElementById('table-name').textContent = TABLE.name;
