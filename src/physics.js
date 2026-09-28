@@ -24,6 +24,9 @@ const BALL_MASKS = {
 
 // Matter's air drag on the ball: the share of speed lost per 1/60 s tick.
 const BALL_AIR = 0.0015;
+// The ball's friction against walls, flippers and posts, and its bounce.
+const BALL_FRICTION = 0.05;
+const BALL_BOUNCE = 0.6;
 
 function setBallMode(ball, mode) {
   ball.plugin.mode = mode;
@@ -31,6 +34,9 @@ function setBallMode(ball, mode) {
   // Tables can thicken the air (Davy Jones' Deep's water drag), but never
   // in the shooter lane, so every table's plunger reaches the same places.
   ball.frictionAir = mode === 'playfield' || mode === 'ramp' ? LAYOUT.ballAir || BALL_AIR : BALL_AIR;
+  // ... and make it slippery (Frostbite Peak's ice), again not in the shooter lane.
+  ball.friction = mode === 'playfield' ? LAYOUT.ballFriction ?? BALL_FRICTION : BALL_FRICTION;
+  ball.restitution = mode === 'playfield' ? LAYOUT.ballBounce ?? BALL_BOUNCE : BALL_BOUNCE;
   // Balls up on a ramp are drawn a touch bigger so they read as raised.
   const s = mode === 'ramp' ? 0.29 : 0.25;
   ball.render.sprite.xScale = s;

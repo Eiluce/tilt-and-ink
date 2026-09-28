@@ -36,11 +36,11 @@ const TABLES = [
     emblem: '<circle cx="44" cy="44" r="41" fill="#2a2220" stroke="#1e1a16" stroke-width="3"/><path d="M14 72 L34 36 H54 L74 72 Z" fill="#4a3c36" stroke="#1e1a16" stroke-width="3" stroke-linejoin="round"/><path d="M34 36 L40 48 L44 40 L48 50 L54 36 Z" fill="#ff7a1a" stroke="#1e1a16" stroke-width="2.5" stroke-linejoin="round"/><path d="M42 42 L44 40 L46 44" fill="none" stroke="#f2d024" stroke-width="1.5"/><circle cx="38" cy="24" r="6" fill="#9fd8ff" opacity=".8"/><circle cx="48" cy="18" r="7" fill="#9fd8ff" opacity=".6"/><circle cx="56" cy="26" r="5" fill="#9fd8ff" opacity=".5"/>',
   },
   {
-    n: 5, name: 'Frostbite Peak', world: 'Arctic', serial: 'The Abominable Expedition',
+    n: 5, name: 'Frostbite Peak', world: 'Arctic', serial: 'The Abominable Expedition', built: true,
     inks: ['#3f7fae', '#b23a6b'],
-    centerpiece: 'A yeti in an ice-cave scoop',
-    twist: 'Near-frictionless ice',
-    emblem: '<circle cx="44" cy="44" r="41" fill="#efe2c4" stroke="#1e1a16" stroke-width="3"/><path d="M12 70 L36 26 L46 42 L54 32 L76 70 Z" fill="#9fc6dd" stroke="#1e1a16" stroke-width="3" stroke-linejoin="round"/><path d="M30 37 L36 26 L42 37 L38 34 L36 38 L33 34 Z" fill="#efe2c4" stroke="#1e1a16" stroke-width="2" stroke-linejoin="round"/><g stroke="#b23a6b" stroke-width="2.5" stroke-linecap="round"><path d="M62 14 V28 M55 21 H69 M57 16 L67 26 M67 16 L57 26"/></g>',
+    centerpiece: 'The Yeti glaring out of its ice-cave scoop',
+    twist: 'Ice: the ball skids and keeps its speed',
+    emblem: '<circle cx="44" cy="44" r="41" fill="#dbe8ef" stroke="#1e1a16" stroke-width="3"/><path d="M12 70 L36 26 L46 42 L54 32 L76 70 Z" fill="#8fb0c4" stroke="#1e1a16" stroke-width="3" stroke-linejoin="round"/><path d="M30 37 L36 26 L42 37 L38 34 L36 38 L33 34 Z" fill="#ffffff" stroke="#1e1a16" stroke-width="2" stroke-linejoin="round"/><g stroke="#b23a6b" stroke-width="2.5" stroke-linecap="round"><path d="M62 14 V28 M55 21 H69 M57 16 L67 26 M67 16 L57 26"/></g><ellipse cx="30" cy="62" rx="3" ry="4" fill="#3f7fae"/><ellipse cx="38" cy="56" rx="3" ry="4" fill="#3f7fae"/>',
   },
   {
     n: 6, name: 'Tomb of Sekhmet', world: 'Desert', serial: 'Curse of the Sand Pharaoh',

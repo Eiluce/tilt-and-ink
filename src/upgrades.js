@@ -41,6 +41,8 @@ const STAT_BASE = {
   'awake.chop': 1, // table modes are gated by their own rules
   'awake.feast': 1,
   'awake.eruption': 1,
+  'awake.track': 1,
+  'awake.yetiPhoto': 1,
   balls: 1,
   ballSaveMs: 0,
   drainSave: 0,

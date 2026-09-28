@@ -49,6 +49,8 @@ const SOURCES = {
   chop: { base: 40, branch: 'rules', bonus: 0.25, charge: 'pop' }, // Timber Hollow's Timber!
   feast: { base: 300, branch: 'rules', shot: true, bonus: 0.5, charge: 'feature' }, // Davy Jones' Deep's Kraken Attack
   eruption: { base: 1500, branch: 'rules', shot: true, bonus: 0.5, charge: 'feature' }, // Mount Cinder's hurry-up, times what's left
+  track: { base: 150, branch: 'rules', bonus: 0.25, charge: 'feature' }, // Frostbite Peak's Yeti Hunt: a lit shot followed
+  yetiPhoto: { base: 2500, branch: 'rules', shot: true, bonus: 0.5, charge: 'feature' }, // ... and the photo at the ice cave
 };
 
 // Mission reward multiplier by tier (see MISSIONS in missions.js).

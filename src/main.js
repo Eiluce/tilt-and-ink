@@ -537,6 +537,7 @@ const kickout = new Hole(world, {
   onCapture: () => {
     addScore('kickout', 'kickout', { at: L.kickout });
     fx.ring(L.kickout.x, L.kickout.y, INK.mustard, 8, 26);
+    tableRules.kickout?.(); // e.g. Frostbite Peak's yeti tracks
     if (awake('mission')) missions.accept();
     if (game.extraBallLit) {
       game.extraBallLit = false;
@@ -584,6 +585,7 @@ on(orbitSensor, (ball) => {
   if (velocityOf(ball).y >= 0) return; // only counts on the way up
   if (!addScore('orbit', 'orbit', { at: ball.position })) return;
   missions.event('orbit');
+  tableRules.orbit?.(); // e.g. Frostbite Peak's yeti tracks
   fx.burst(ball.position.x + 14, ball.position.y, 'WHOOSH!', INK.paper);
   game.orbitFlashUntil = performance.now() + 1500;
 });
@@ -610,7 +612,8 @@ const pickups = new Pickups({
 
 // The table's own rules (TABLE.rules in tableDefs/), if it has any. It gets
 // a small API and main.js calls its hooks: newTurn, spinner, inlane, pop,
-// centerpiece, dropBank, ramp, scoop, tick, lamps, scoopLit.
+// centerpiece, dropBank, ramp, orbit, kickout, scoop, tick, lamps,
+// scoopLit.
 const tableRules = TABLE.rules ? TABLE.rules({
   addScore,
   fx,
@@ -858,8 +861,8 @@ function drawMagnet(ctx) {
 
 function createBall(x, y, mode) {
   const ball = Bodies.circle(x, y, L.ballR, {
-    restitution: 0.6,
-    friction: 0.05,
+    restitution: BALL_BOUNCE,
+    friction: BALL_FRICTION,
     frictionAir: BALL_AIR,
     density: 0.08,
     label: 'ball',

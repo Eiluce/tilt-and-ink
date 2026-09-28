@@ -1,6 +1,6 @@
 # Tilt & Ink
 
-A browser pinball game with 1930s pulp-serial art. You score by actually playing pinball, and your score feeds a long-term upgrade tree. Four tables are built: **Rocket Row: The Saucer Men**, **Timber Hollow: The Woodsman's Curse**, **Davy Jones' Deep: Terror of Twenty Fathoms** and **Mount Cinder: Fury of the Fire God**.
+A browser pinball game with 1930s pulp-serial art. You score by actually playing pinball, and your score feeds a long-term upgrade tree. Five tables are built: **Rocket Row: The Saucer Men**, **Timber Hollow: The Woodsman's Curse**, **Davy Jones' Deep: Terror of Twenty Fathoms**, **Mount Cinder: Fury of the Fire God** and **Frostbite Peak: The Abominable Expedition**.
 
 The full game design is in [GAME_DESIGN.md](GAME_DESIGN.md).
 
@@ -91,6 +91,15 @@ The fourth table, reached with the Mount Cinder pass, and the fastest so far:
 - **Twist:** the heaviest gravity yet, and three **steam vents** (the round grates). Each one glows blue for a moment, then blasts any ball rolling over it in a random direction (never straight down at the drain). Wait for the glow to pass.
 - **Eruption:** each ramp pours magma into the **MAGMA** gauge (five lamps on the left). The fifth ramp erupts the volcano: a jackpot appears over the lava lake and drains second by second for 15 seconds. Shoot the lava tube to collect what's left. Chapter V multiball (Fire God Multiball) takes priority at the tube.
 - Its missions are volcano-themed (Lava Run, Stoke the Fires, Pumice Toss, Wake the Mountain, …) on the same kinds of shots.
+
+## Frostbite Peak
+
+The fifth table, reached with the Frostbite Peak pass:
+
+- **Layout:** three penguin pop bumpers, the **Yeti** glaring out of an ice mound in the middle (its **ice cave** is the scoop), Rocket Row's pair of side ramps as ski slopes with slalom flags, a kickout left of the Yeti, three snowflake drop targets and a ski for the spinner. Printed on pale glacier ice with layered mountain ranges and falling snow; the slingshots are ice shards.
+- **Twist: ice.** The ball has no grip, keeps its speed and bounces more, so it skids and ricochets instead of settling. Catching it on a raised flipper and aiming are harder than anywhere else.
+- **Yeti Hunt:** the Yeti's **footprints** light up at one shot at a time (either ramp, the left orbit or the kickout). Hit that shot to follow the tracks, and the next footprints light somewhere else; unfollowed footprints move on after 15 seconds. Three tracks (the **TRACKS** lamps on the left) light the ice cave: shoot it to photograph the Yeti for a big award. Chapter V multiball (Avalanche Multiball) takes priority at the cave.
+- Its missions are snowy (Slalom, Penguin Colony, Catch the Flakes, The Abominable, …) on the same kinds of shots.
 
 ## Upgrades and skills
 
